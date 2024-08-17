@@ -65,6 +65,16 @@ public abstract class Script implements IScript {
         return done;
     }
 
+    public boolean sleepUntil(BooleanSupplier awaitedCondition, int checkConditionInterval, int time) {
+        boolean done;
+        long startTime = System.currentTimeMillis();
+        do {
+            done = awaitedCondition.getAsBoolean();
+            sleep(checkConditionInterval);
+        } while (!done && System.currentTimeMillis() - startTime < time);
+        return done;
+    }
+
     public void sleepUntilOnClientThread(BooleanSupplier awaitedCondition) {
         sleepUntilOnClientThread(awaitedCondition, 5000);
     }
