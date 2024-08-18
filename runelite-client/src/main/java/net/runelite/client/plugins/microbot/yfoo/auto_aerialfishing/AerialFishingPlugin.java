@@ -8,7 +8,8 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.TaskSubclasses.AerialFish;
+import net.runelite.client.plugins.microbot.yfoo.Task.Task;
+import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.TaskSubclasses.CatchAerialFish;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -29,7 +30,6 @@ public class AerialFishingPlugin extends Plugin {
     @Inject
     private OverlayManager overlayManager;
 
-    @Inject
     private AerialFishingScript aerialFishingScript;
 
     @Inject
@@ -44,6 +44,7 @@ public class AerialFishingPlugin extends Plugin {
     protected void startUp() throws Exception {
         log.info("Aerial Fishing Plugin started!");
         overlayManager.add(aerialFishingOverlay);
+        this.aerialFishingScript = new AerialFishingScript();
         aerialFishingScript.run(config);
     }
 
@@ -52,12 +53,13 @@ public class AerialFishingPlugin extends Plugin {
         log.info("Aerial Fishing Plugin stopped!");
         aerialFishingScript.shutdown();
         overlayManager.remove(aerialFishingOverlay);
+        Task.cleanupTasks();
     }
 
     @Subscribe
     public void onItemContainerChanged(ItemContainerChanged event) {
         if (event.getContainerId() == InventoryID.INVENTORY.getId()) {
-            AerialFish.getInstance().relayItemContainerChangeEvent(event);
+            CatchAerialFish.getInstance().relayItemContainerChangeEvent(event);
         }
     }
 }
