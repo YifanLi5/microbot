@@ -11,32 +11,36 @@ import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
-public class CutAerialFish extends Task {
+public class DisposeAerialFish extends Task {
+
+    // Todo: Roll between rapid use knife or single use and wait.
+    // If single use, afk a bit afterwards
 
     private static final List<String> aerialFishCatches = Arrays.asList("Bluegill", "Common tench", "Mottled eel", "Greater siren");
 
-    private static CutAerialFish instance;
+    private static DisposeAerialFish instance;
 
-    public static CutAerialFish getInstance() {
+    public static DisposeAerialFish getInstance() {
         if(instance == null) {
             throw new NullPointerException("ExcavatePlantIgnite is null");
         }
         return instance;
     }
 
-    public static CutAerialFish initInstance(Script script) {
-        instance = new CutAerialFish(script);
+    public static DisposeAerialFish initInstance(Script script) {
+        instance = new DisposeAerialFish(script);
         return instance;
     }
 
-    private CutAerialFish(Script script) {
+    private DisposeAerialFish(Script script) {
         super(script);
     }
 
     @Override
     public boolean shouldRun() throws InterruptedException {
-        log.info("cut aerial fish shouldrun");
-        return Rs2Inventory.contains(aerialFishCatches.toArray(new String[0])) && Rs2Inventory.hasItem(ItemID.KNIFE);
+        return Rs2Inventory.contains(aerialFishCatches.toArray(new String[0]))
+                && Rs2Inventory.hasItem(ItemID.KNIFE)
+                && Rs2Inventory.isFull();
     }
 
     @Override
