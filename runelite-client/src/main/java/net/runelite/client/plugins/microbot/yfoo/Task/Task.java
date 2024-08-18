@@ -42,7 +42,7 @@ public abstract class Task {
 
             return;
         }
-
+        Microbot.log("Running: " + task.getClass().getSimpleName());
         boolean result = task.runTask();
         if(result) {
             if(consecutiveFailsCounter > 0) log("Succeeded last task. consecutiveFailsCounter -> 0.");
@@ -64,6 +64,11 @@ public abstract class Task {
             setNextTask(task);
             script.sleep(1000);
         }
+    }
+
+    public static void cleanupTasks() {
+        Microbot.log("Clearing " + subclassInstances.size());
+        subclassInstances.clear();
     }
 
     private static Task nextTask() throws InterruptedException {

@@ -1,9 +1,7 @@
 package net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.TaskSubclasses;
 
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.InventoryID;
-import net.runelite.api.NPC;
-import net.runelite.api.Projectile;
+import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -16,33 +14,35 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Slf4j
-public class AerialFish extends Task {
+public class CatchAerialFish extends Task {
 
     private enum TaskState {
         FIND_FISHING_SPOT, INTERACT_FISHING_SPOT, WAIT_FOR_CATCH, SUCCESS
     }
     private NPC fishingSpot;
 
-    private static AerialFish instance;
+    private static CatchAerialFish instance;
 
-    public static AerialFish getInstance() {
+    public static CatchAerialFish getInstance() {
         if(instance == null) {
             throw new NullPointerException("ExcavatePlantIgnite is null");
         }
         return instance;
     }
 
-    public static AerialFish initInstance(Script script) {
-        instance = new AerialFish(script);
+    public static CatchAerialFish initInstance(Script script) {
+        instance = new CatchAerialFish(script);
         return instance;
     }
 
-    private AerialFish(Script script) {
+    private CatchAerialFish(Script script) {
         super(script);
     }
 
     @Override
     public boolean shouldRun() throws InterruptedException {
+        Microbot.log(String.format("%s, %s", !Rs2Inventory.isFull(), Rs2Inventory.contains("Fish chunks", "King worm")));
+
         return !Rs2Inventory.isFull() && Rs2Inventory.contains("Fish chunks", "King worm");
     }
 
@@ -60,33 +60,36 @@ public class AerialFish extends Task {
             case FIND_FISHING_SPOT:
                 fishingSpot = Rs2Npc.getNpc("Fishing spot");
                 if (fishingSpot == null) {
-                    log.warn("Fishing spot is null");
+                    Microbot.log("Fishing spot is null");
                     return runTaskRecursive(++failCount, state);
                 }
                 return runTaskRecursive(failCount, TaskState.INTERACT_FISHING_SPOT);
 
             case INTERACT_FISHING_SPOT:
                 if (!Rs2Npc.interact(fishingSpot, "Catch")) {
-                    log.warn("Failed interaction with fishing spot");
+                    Microbot.log("Failed interaction with fishing spot");
                     return runTaskRecursive(++failCount, state);
                 }
                 return runTaskRecursive(failCount, TaskState.WAIT_FOR_CATCH);
 
             case WAIT_FOR_CATCH:
-                boolean sentBird = script.sleepUntil(() -> getProjectileByIdAndTarget(1632, fishingSpot.getLocalLocation()), 2000);
+                boolean sentBird = script.sleepUntil(() -> getProjectileByIdAndTarget(1632, fishingSpot.getLocalLocation()), 1200);
                 if(!sentBird) {
-                    log.warn("Bird was not detected");
+                    Microbot.log("Did detect bird in flight.");
                     return runTaskRecursive(++failCount, TaskState.FIND_FISHING_SPOT);
                 }
 
-                invChanged.set(false);
-                boolean receivedCatch = script.sleepUntil(() -> invChanged.get(), 300, 2000);
-                if(receivedCatch) {
+                Client rlClient = Microbot.getClient();
+                int fishXpStart = rlClient.getSkillExperience(Skill.FISHING);
+                boolean gotXp = script.sleepUntil(() -> rlClient.getSkillExperience(Skill.FISHING) > fishXpStart, 3000);
+                Microbot.log("gotXp: " + gotXp);
+                if(gotXp) {
                     return runTaskRecursive(failCount, TaskState.SUCCESS);
                 }
                 else return runTaskRecursive(++failCount, TaskState.FIND_FISHING_SPOT);
 
             case SUCCESS:
+                Microbot.log("Got fish!");
                 return true;
 
             default:
