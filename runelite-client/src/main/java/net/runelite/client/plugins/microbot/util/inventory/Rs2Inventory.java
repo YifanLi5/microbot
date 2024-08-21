@@ -7,7 +7,9 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grandexchange.Rs2GrandExchange;
@@ -23,8 +25,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -436,7 +438,8 @@ public class Rs2Inventory {
                 items()) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(300, 600);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -452,7 +455,8 @@ public class Rs2Inventory {
                 items().stream().filter(x -> x.id == id).collect(Collectors.toList())) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(300, 600);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -468,7 +472,8 @@ public class Rs2Inventory {
                 items().stream().filter(x -> Arrays.stream(ids).anyMatch(id -> id == x.id)).collect(Collectors.toList())) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(300, 600);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -484,7 +489,8 @@ public class Rs2Inventory {
                 items().stream().filter(x -> x.name.equalsIgnoreCase(name)).collect(Collectors.toList())) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(300, 600);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -500,7 +506,8 @@ public class Rs2Inventory {
                 items().stream().filter(x -> Arrays.stream(names).anyMatch(name -> name.equalsIgnoreCase(x.name))).collect(Collectors.toList())) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(300, 600);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -516,7 +523,8 @@ public class Rs2Inventory {
                 items().stream().filter(predicate).collect(Collectors.toList())) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(150, 300);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -603,7 +611,8 @@ public class Rs2Inventory {
         for (Rs2Item item : itemsToDrop) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(150, 300);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -660,7 +669,8 @@ public class Rs2Inventory {
                 items().stream().filter(predicate).collect(Collectors.toList())) {
             if (item == null) continue;
             invokeMenu(item, "Drop");
-            sleep(300, 600);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -692,7 +702,8 @@ public class Rs2Inventory {
             if (totalPrice >= gpValue) continue;
 
             invokeMenu(item, "Drop");
-            sleep(300, 600);
+            if (!Rs2AntibanSettings.naturalMouse)
+                sleep(150, 300);
         }
         return true;
     }
@@ -1893,7 +1904,7 @@ public class Rs2Inventory {
      * @return List of Potion Items in Inventory
      */
     public static List<Rs2Item> getFilteredPotionItemsInInventory(String potionName) {
-        return getFilteredPotionItemsInInventory(Arrays.asList(potionName));
+        return getFilteredPotionItemsInInventory(Collections.singletonList(potionName));
     }
     
     /**
@@ -2037,6 +2048,26 @@ public class Rs2Inventory {
         isTrackingInventory = false;
         isInventoryChanged = false;
         return isInventoryChanged;
+    }
+
+    /**
+     * Moves the specified item to the specified slot in the inventory.
+     *
+     * @return
+     */
+    public static boolean moveItemToSlot(Rs2Item item, int slot) {
+        if (item == null) return false;
+        if (slot < 0 || slot >= CAPACITY) return false;
+        if (item.slot == slot) return false;
+
+        Widget inventory = getInventory();
+        if (inventory == null) return false;
+        Rectangle itemBounds = itemBounds(item);
+        Rectangle slotBounds = inventory.getDynamicChildren()[slot].getBounds();
+
+        Microbot.drag(itemBounds, slotBounds);
+
+        return true;
     }
 
     public static boolean dropEmptyVials() {
