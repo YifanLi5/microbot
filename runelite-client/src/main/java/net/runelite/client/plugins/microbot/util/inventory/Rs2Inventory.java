@@ -383,6 +383,7 @@ public class Rs2Inventory {
         return false;
     }
 
+
     /**
      * Drops the item with the specified ID from the inventory.
      *
@@ -1688,10 +1689,13 @@ public class Rs2Inventory {
      * Uses the given item in the inventory.
      *
      * @param rs2Item The item to use.
-     * @return True if the item is successfully used, false otherwise.
+     * @return True if the item is successfully used or is already selected, false otherwise.
      */
     public static boolean use(Rs2Item rs2Item) {
         if (rs2Item == null) return false;
+        if(rs2Item.getSlot() == Rs2Inventory.getSelectedItemIndex()) {
+            return true;
+        }
         return interact(rs2Item, "Use");
     }
 
