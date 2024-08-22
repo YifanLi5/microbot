@@ -55,11 +55,4 @@ public class AerialFishingPlugin extends Plugin {
         overlayManager.remove(aerialFishingOverlay);
         Task.cleanupTasks();
     }
-
-    @Subscribe
-    public void onItemContainerChanged(ItemContainerChanged event) {
-        if (event.getContainerId() == InventoryID.INVENTORY.getId()) {
-            CatchAerialFish.getInstance().relayItemContainerChangeEvent(event);
-        }
-    }
 }
