@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AerialFishingScript extends Script {
 
-    public static final String version = "0.17";
+    public static final String version = "0.18";
 
     public AerialFishingScript() {
         FilletAerialFish.initInstance(this);

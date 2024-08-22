@@ -8,6 +8,8 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 
+import java.text.DecimalFormat;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,16 +18,9 @@ import static net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.Util.
 @Slf4j
 public class FilletAerialFish extends Task {
     public enum FilletStyle {
-        SLOW(RngUtil.randomInclusive(1, 10)), FAST(RngUtil.randomInclusive(1, 10));
-
-        public final int executionWeight;
-
-        FilletStyle(int executionWeight) {
-            this.executionWeight = executionWeight;
-
-        }
+        SLOW, FAST;
     }
-    private static List<FilletStyle> filletStyles;
+    private static List<AbstractMap.SimpleEntry<FilletStyle, Integer>> filletStyles;
     private int numEmptySlotsToFillet;
 
     private static FilletAerialFish instance;
@@ -46,10 +41,20 @@ public class FilletAerialFish extends Task {
         super(script);
         Microbot.log(String.format("Next fillet will occur at %d empty slots", numEmptySlotsToFillet));
         numEmptySlotsToFillet = RngUtil.gaussian(5, 2, 0, 10);
-        filletStyles = Arrays.asList(FilletStyle.SLOW, FilletStyle.FAST);
+        filletStyles = Arrays.asList(
+                new AbstractMap.SimpleEntry<>(FilletStyle.SLOW, RngUtil.randomInclusive(1, 10)),
+                new AbstractMap.SimpleEntry<>(FilletStyle.FAST, RngUtil.randomInclusive(1, 10))
+        );
 
         StringBuilder builder = new StringBuilder();
-        filletStyles.forEach(filletStyle -> builder.append(String.format("%s :: %d, ", filletStyle.name(), filletStyle.executionWeight)));
+        double weightSum = filletStyles.stream()
+                .mapToDouble(AbstractMap.SimpleEntry::getValue)
+                .sum();
+        DecimalFormat df = new DecimalFormat("#0.0%");
+        filletStyles.forEach(filletStyle -> {
+            double percentage = (filletStyle.getValue() / weightSum);
+            builder.append(String.format("%s :: %d (~%s), ", filletStyle.getKey(), filletStyle.getValue(), df.format(percentage)));
+        });
         Microbot.log(builder.toString());
     }
 
@@ -70,13 +75,13 @@ public class FilletAerialFish extends Task {
     private boolean rollAndExecuteFilletStyle() {
         FilletStyle selectedStyle = null;
         int weightSum = filletStyles.stream()
-                .mapToInt(action -> action.executionWeight)
+                .mapToInt(AbstractMap.SimpleEntry::getValue)
                 .sum();
         int roll = RngUtil.randomInclusive(1, weightSum-1);
-        for (FilletStyle style : filletStyles) {
-            roll -= style.executionWeight;
+        for (AbstractMap.SimpleEntry<FilletStyle, Integer> mapping : filletStyles) {
+            roll -= mapping.getValue();
             if (roll <= 0) {
-                selectedStyle = style;
+                selectedStyle = mapping.getKey();
                 break;
             }
         }

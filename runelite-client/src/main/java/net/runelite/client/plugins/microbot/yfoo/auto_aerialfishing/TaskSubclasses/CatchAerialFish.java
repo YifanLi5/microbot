@@ -65,13 +65,13 @@ public class CatchAerialFish extends Task {
         boolean result = false;
         while (!result && failCount < 3) {
             if(failCount > 0) {
-                Microbot.log(String.format("Debug: %s, %s", result, failCount));
+                log.warn("Debug: {}, {}", result, failCount);
             }
             boolean deselected = !Rs2Inventory.isItemSelected() || Rs2Inventory.deselect();
             if(!deselected) {
                 Microbot.log("Failed to deselect");
                 script.sleep(600);
-                failCount++;
+                failCount += 1;
                 continue;
             }
             switch (state) {
@@ -80,7 +80,7 @@ public class CatchAerialFish extends Task {
                     fishingSpot = Rs2Npc.getNpc("Fishing spot");
                     if (fishingSpot == null) {
                         Microbot.log("Fishing spot is null");
-                        failCount++;
+                        failCount += 1;
                         continue;
                     }
                     state = TaskState.INTERACT_FISHING_SPOT;
@@ -90,7 +90,7 @@ public class CatchAerialFish extends Task {
                     //Microbot.log("Interacting with fishing spot...");
                     if (!Rs2Npc.interact(fishingSpot, "Catch")) {
                         Microbot.log("Failed interaction with fishing spot");
-                        failCount++;
+                        failCount += 1;
                         state = TaskState.FIND_FISHING_SPOT;
                         continue;
                     }
@@ -99,7 +99,7 @@ public class CatchAerialFish extends Task {
 
                     if (!sentBird) {
                         Microbot.log("Did detect bird in flight.");
-                        failCount++;
+                        failCount += 1;
                         state = TaskState.FIND_FISHING_SPOT;
                         continue;
                     }
@@ -111,7 +111,7 @@ public class CatchAerialFish extends Task {
                     boolean birdIsBack = script.sleepUntil(this::isBirdOnGlove, 4000);
                     if (!birdIsBack) {
                         Microbot.log("Bird did not come back???");
-                        failCount++;
+                        failCount += 1;
                         state = TaskState.FIND_FISHING_SPOT;
                     } else state = TaskState.SUCCESS;
                     break;

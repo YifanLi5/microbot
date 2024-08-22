@@ -1,5 +1,7 @@
 package net.runelite.client.plugins.microbot.yfoo.GeneralUtil;
 
+import net.runelite.client.plugins.microbot.Microbot;
+
 import java.util.concurrent.ThreadLocalRandom;
 
 
