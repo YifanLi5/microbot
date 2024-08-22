@@ -343,6 +343,10 @@ public class Microbot {
         return false;
     }
 
+    /**
+     * Logs a message to the Game's chat window. Some characters such as <, >, {, } cannot be rendered.
+     * @param message
+     */
     public static void log(String message) {
         if (!Microbot.isLoggedIn()) {
             System.out.println(message);

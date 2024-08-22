@@ -4,16 +4,16 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.TaskSubclasses.CatchAerialFish;
-import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.TaskSubclasses.DisposeAerialFish;
+import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.TaskSubclasses.FilletAerialFish;
 
 import java.util.concurrent.TimeUnit;
 
 public class AerialFishingScript extends Script {
 
-    public static final String version = "0.06";
+    public static final String version = "0.17";
 
     public AerialFishingScript() {
-        DisposeAerialFish.initInstance(this);
+        FilletAerialFish.initInstance(this);
         CatchAerialFish.initInstance(this);
     }
 
@@ -24,10 +24,11 @@ public class AerialFishingScript extends Script {
                 Microbot.log("Short circuit");
                 return;
             }
-            Microbot.log("Begin loop");
+
             try {
                 Task.runLoopIteration(this);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                Microbot.log(e.getMessage());
                 throw new RuntimeException(e);
             }
         }, 0, 600, TimeUnit.MILLISECONDS);
