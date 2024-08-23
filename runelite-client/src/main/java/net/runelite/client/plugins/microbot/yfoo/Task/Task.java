@@ -15,12 +15,13 @@ public abstract class Task {
     protected static Task nextTask;
 
     private static final ArrayList<Task> subclassInstances = new ArrayList<>();
-    private static int consecutiveFailsCounter = 0;
+    private static int consecutiveFailsCounter;
 
     public Task(Script script) {
         this.script = script;
         subclassInstances.add(this);
         log.info("Initialized task instance of type: {}", this.getClass().getCanonicalName());
+        consecutiveFailsCounter = 0;
     }
 
     public abstract boolean shouldRun() throws InterruptedException;
@@ -28,7 +29,14 @@ public abstract class Task {
     public abstract boolean runTask() throws InterruptedException;
 
     public static void runLoopIteration(Script script) throws InterruptedException {
+        if (consecutiveFailsCounter >= 3) {
+            Task.stopScriptNow = true;
+            Microbot.log("Stopping script, consecutiveFailsCounter >= 3");
+            script.sleep(1000);
+        }
+
         if (Task.stopScriptNow) {
+            Microbot.log("called script.shutdown()");
             script.shutdown();
             return;
         }
@@ -49,12 +57,7 @@ public abstract class Task {
             consecutiveFailsCounter = 0;
         } else ++consecutiveFailsCounter;
 
-        if (consecutiveFailsCounter >= 3) {
-            Task.stopScriptNow = true;
-            Microbot.log("Stopping script, consecutiveFailsCounter >= 3");
-            script.sleep(1000);
-            return;
-        }
+
 
         if(!result) {
             log(String.format("Failed task %s. ConsecutiveFailCounter: %d/5. Rerunning same task",

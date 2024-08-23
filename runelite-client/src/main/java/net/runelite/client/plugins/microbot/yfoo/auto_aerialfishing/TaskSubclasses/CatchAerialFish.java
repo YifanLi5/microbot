@@ -12,7 +12,9 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
+import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.AerialFishingOverlay;
 
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.Util.Constants.AERIAL_FISH;
@@ -24,7 +26,6 @@ public class CatchAerialFish extends Task {
     private enum TaskState {
         FIND_FISHING_SPOT, INTERACT_FISHING_SPOT, WAIT_FOR_CATCH, SUCCESS
     }
-    private NPC fishingSpot;
 
     private static CatchAerialFish instance;
 
@@ -40,6 +41,8 @@ public class CatchAerialFish extends Task {
         return instance;
     }
 
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
     private CatchAerialFish(Script script) {
         super(script);
     }
@@ -53,76 +56,56 @@ public class CatchAerialFish extends Task {
 
     @Override
     public boolean runTask() throws InterruptedException {
-        fishingSpot = null;
-        return runTaskIterative();
+        return runTaskWithTimeout();
     }
 
-    private boolean runTaskIterative() {
-        if(Rs2Inventory.isFull()) return true;
+    public boolean runTaskWithTimeout() throws InterruptedException {
+        Callable<Boolean> task = this::runTask2;
+        Future<Boolean> future = executor.submit(task);
 
-        TaskState state = TaskState.FIND_FISHING_SPOT;
-        int failCount = 0;
-        boolean result = false;
-        while (!result && failCount < 3) {
-            if(failCount > 0) {
-                log.warn("Debug: {}, {}", result, failCount);
-            }
-            boolean deselected = !Rs2Inventory.isItemSelected() || Rs2Inventory.deselect();
-            if(!deselected) {
-                Microbot.log("Failed to deselect");
-                script.sleep(600);
-                failCount += 1;
-                continue;
-            }
-            switch (state) {
-                case FIND_FISHING_SPOT:
-                    //Microbot.log("Finding fishing spot...");
-                    fishingSpot = Rs2Npc.getNpc("Fishing spot");
-                    if (fishingSpot == null) {
-                        Microbot.log("Fishing spot is null");
-                        failCount += 1;
-                        continue;
-                    }
-                    state = TaskState.INTERACT_FISHING_SPOT;
-                    break;
-
-                case INTERACT_FISHING_SPOT:
-                    //Microbot.log("Interacting with fishing spot...");
-                    if (!Rs2Npc.interact(fishingSpot, "Catch")) {
-                        Microbot.log("Failed interaction with fishing spot");
-                        failCount += 1;
-                        state = TaskState.FIND_FISHING_SPOT;
-                        continue;
-                    }
-
-                    boolean sentBird = script.sleepUntil(() -> !isBirdOnGlove(), 1200);
-
-                    if (!sentBird) {
-                        Microbot.log("Did detect bird in flight.");
-                        failCount += 1;
-                        state = TaskState.FIND_FISHING_SPOT;
-                        continue;
-                    }
-                    state = TaskState.WAIT_FOR_CATCH;
-                    break;
-
-                case WAIT_FOR_CATCH:
-                    //Microbot.log("Waiting for catch...");
-                    boolean birdIsBack = script.sleepUntil(this::isBirdOnGlove, 4000);
-                    if (!birdIsBack) {
-                        Microbot.log("Bird did not come back???");
-                        failCount += 1;
-                        state = TaskState.FIND_FISHING_SPOT;
-                    } else state = TaskState.SUCCESS;
-                    break;
-
-                case SUCCESS:
-                    //Microbot.log("Got fish!");
-                    result = true;
-                    break;
-            }
+        try {
+            // Wait for the task to complete with a timeout of 10 seconds
+            return future.get(10, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            Microbot.log("Task exceeded timeout of 10s.");
+            future.cancel(true); // Cancel the task if timeout occurs
+            return false;
+        } catch (ExecutionException e) {
+            Microbot.log("Task threw ExecutionException.");
+            return false;
         }
-        return result;
+    }
+
+    private boolean runTask2() {
+        boolean deselected = !Rs2Inventory.isItemSelected() || Rs2Inventory.deselect();
+        if(!deselected) {
+            Microbot.log("Failed to deselect");
+            return false;
+        }
+
+        NPC fishingSpot = Rs2Npc.getNpc("Fishing spot");
+        if (fishingSpot == null) {
+            Microbot.log("Fishing spot is null");
+            return false;
+        }
+
+        if (!Rs2Npc.interact(fishingSpot, "Catch")) {
+            Microbot.log("Failed interaction with fishing spot");
+            return false;
+        }
+
+        boolean sentBird = script.sleepUntil(() -> !isBirdOnGlove(), 1200);
+        if (!sentBird) {
+            Microbot.log("Did detect bird in flight.");
+            return false;
+        }
+        boolean birdIsBack = script.sleepUntil(this::isBirdOnGlove, 4000);
+        if (!birdIsBack) {
+            Microbot.log("Bird did not come back???");
+            return false;
+        }
+        AerialFishingOverlay.incrementNumCatches();
+        return true;
     }
 
     // When the bird is sent out. Glove's Id -> 22816. When it returns, Glove's Id -> 22817.
