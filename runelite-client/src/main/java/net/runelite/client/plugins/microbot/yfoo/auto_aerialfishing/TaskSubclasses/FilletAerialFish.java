@@ -7,10 +7,11 @@ import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
+import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.AerialFishingConfig;
 
 import java.text.DecimalFormat;
 import java.util.AbstractMap;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import static net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.Util.Constants.AERIAL_FISH;
@@ -18,10 +19,13 @@ import static net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.Util.
 @Slf4j
 public class FilletAerialFish extends Task {
     public enum FilletStyle {
-        SLOW, FAST;
+        SLOW, FAST, HYBRID;
     }
+
     private static List<AbstractMap.SimpleEntry<FilletStyle, Integer>> filletStyles;
     private int numEmptySlotsToFillet;
+
+    private AerialFishingConfig config;
 
     private static FilletAerialFish instance;
 
@@ -32,19 +36,25 @@ public class FilletAerialFish extends Task {
         return instance;
     }
 
-    public static FilletAerialFish initInstance(Script script) {
-        instance = new FilletAerialFish(script);
+    public static FilletAerialFish initInstance(Script script, AerialFishingConfig config) {
+        instance = new FilletAerialFish(script, config);
         return instance;
     }
 
-    private FilletAerialFish(Script script) {
+    private FilletAerialFish(Script script, AerialFishingConfig config) {
         super(script);
-        Microbot.log(String.format("Next fillet will occur at %d empty slots", numEmptySlotsToFillet));
+        Microbot.log(String.format("Next fillet will occur inventory has <= %d empty slots", numEmptySlotsToFillet));
         numEmptySlotsToFillet = RngUtil.gaussian(5, 2, 0, 10);
-        filletStyles = Arrays.asList(
-                new AbstractMap.SimpleEntry<>(FilletStyle.SLOW, RngUtil.randomInclusive(1, 10)),
-                new AbstractMap.SimpleEntry<>(FilletStyle.FAST, RngUtil.randomInclusive(1, 10))
-        );
+
+        filletStyles = new ArrayList<>();
+        if(config.allowFastFillet()) {
+            filletStyles.add(new AbstractMap.SimpleEntry<>(FilletStyle.FAST, RngUtil.randomInclusive(1, 10)));
+            filletStyles.add(new AbstractMap.SimpleEntry<>(FilletStyle.HYBRID, RngUtil.randomInclusive(1, 10)));
+        }
+
+        if(config.allowSlowFillet())
+            filletStyles.add(new AbstractMap.SimpleEntry<>(FilletStyle.SLOW, RngUtil.randomInclusive(1, 10)));
+
 
         StringBuilder builder = new StringBuilder();
         double weightSum = filletStyles.stream()
@@ -98,6 +108,9 @@ public class FilletAerialFish extends Task {
             case FAST:
                 result = fastFillet();
                 break;
+            case HYBRID:
+                result = hybridFillet();
+                break;
         }
 
         return result;
@@ -136,6 +149,26 @@ public class FilletAerialFish extends Task {
             Rs2Inventory.combineClosest(rs2Item -> rs2Item.getId() == ItemID.KNIFE, rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
             script.sleep(RngUtil.gaussian(200, 50, 0, 300));
         }
+        return true;
+    }
+
+    private boolean hybridFillet() {
+        Microbot.log("Rolled hybrid fillet");
+        int numFish = Rs2Inventory.count(rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
+        int loopIterations = numFish / RngUtil.randomInclusive(2, 4);
+        Microbot.log(String.format("Running %d combinations", loopIterations));
+        for(int i = 0; i < loopIterations; i++) {
+            Rs2Inventory.combineClosest(rs2Item -> rs2Item.getId() == ItemID.KNIFE, rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
+            script.sleep(RngUtil.gaussian(200, 50, 0, 300));
+        }
+
+        if(!script.sleepUntil(() -> !Microbot.isGainingExp, 40000)) {
+            return false;
+        }
+
+        int extraIdleTime = RngUtil.gaussian(5000, 1000, 1000, 10000);
+        Microbot.log(String.format("Simulating AFK for an additional %dms", extraIdleTime));
+        script.sleep(RngUtil.gaussian(5000, 1000, 1000, 10000));
         return true;
     }
 }
