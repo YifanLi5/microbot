@@ -23,7 +23,6 @@ public class AerialFishingScript extends Script {
         Task.stopScriptNow = false;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             if (!super.run() || !Microbot.isLoggedIn()) {
-                Microbot.log("Short circuit");
                 return;
             }
 

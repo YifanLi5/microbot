@@ -70,9 +70,15 @@ public class FilletAerialFish extends Task {
 
     @Override
     public boolean shouldRun() throws InterruptedException {
-        return Rs2Inventory.contains(rs2Item -> AERIAL_FISH.contains(rs2Item.getId()))
-                && Rs2Inventory.hasItem(ItemID.KNIFE)
-                && (Rs2Inventory.getEmptySlots() <= numEmptySlotsToFillet || Rs2Inventory.isFull());
+        boolean haveKnifeAndFish = Rs2Inventory.contains(rs2Item -> AERIAL_FISH.contains(rs2Item.getId()))
+                && Rs2Inventory.hasItem(ItemID.KNIFE);
+        boolean shouldFillet = Rs2Inventory.getEmptySlots() <= numEmptySlotsToFillet
+                || Rs2Inventory.isFull()
+                || !Rs2Inventory.contains(ItemID.KING_WORM, ItemID.FISH_CHUNKS);
+
+        Microbot.log("shouldFillet: " + shouldFillet);
+
+        return haveKnifeAndFish && shouldFillet;
     }
 
     @Override

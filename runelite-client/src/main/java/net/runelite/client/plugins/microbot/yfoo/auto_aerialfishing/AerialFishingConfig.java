@@ -6,6 +6,21 @@ import net.runelite.client.config.ConfigItem;
 
 @ConfigGroup("aerialFishing")
 public interface AerialFishingConfig extends Config {
+
+    @ConfigItem(
+            keyName = "guide",
+            name = "How to use",
+            description = "How to use this plugin",
+            position = 0
+    )
+    default String GUIDE() {
+        return (
+                "1. Go to Molch island. Grab the cormorant from the NPC.\n" +
+                "2. If you don't have bait or a knife, grab them from the island.\n" +
+                "3. Start the plugin at the edge of the water."
+        );
+    }
+
     @ConfigItem(
             keyName = "allowFastFillet",
             name = "Allow Fast Fillet",
