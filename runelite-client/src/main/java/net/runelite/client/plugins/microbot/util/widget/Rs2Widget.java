@@ -51,6 +51,14 @@ public class Rs2Widget {
         return false;
     }
 
+    public static boolean clickWidget(Widget widget) {
+        if (widget != null) {
+            Microbot.getMouse().click(widget.getBounds());
+            return true;
+        }
+        return false;
+    }
+
     public static boolean isWidgetVisible(WidgetInfo wiget) {
         return !Microbot.getClientThread().runOnClientThread(() -> getWidget(wiget) == null || getWidget(wiget).isHidden());
     }
