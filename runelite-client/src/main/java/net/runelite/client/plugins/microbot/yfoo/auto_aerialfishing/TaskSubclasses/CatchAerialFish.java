@@ -23,10 +23,6 @@ import static net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.Util.
 @Slf4j
 public class CatchAerialFish extends Task {
 
-    private enum TaskState {
-        FIND_FISHING_SPOT, INTERACT_FISHING_SPOT, WAIT_FOR_CATCH, SUCCESS
-    }
-
     private static CatchAerialFish instance;
 
     public static CatchAerialFish getInstance() {
