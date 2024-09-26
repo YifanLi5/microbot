@@ -1,12 +1,15 @@
 package net.runelite.client.plugins.microbot.example;
 
 import net.runelite.api.ItemID;
+import net.runelite.api.NPC;
 import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.GetInteractableUtil;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,9 +37,12 @@ public class ExampleScript extends Script {
             try {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
-                List<Integer> test = calculatePreparableFishAtCurrentLvl();
-                Microbot.log(test.stream().map(String::valueOf)
-                        .collect(Collectors.joining(",")));
+                NPC randomNpc = GetInteractableUtil.getRandomNPC(10686);
+                if(randomNpc == null) {
+                    Microbot.log("null npc");
+                } else {
+                    Microbot.log(randomNpc.getId() + " " + randomNpc.getWorldLocation());
+                }
 
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
