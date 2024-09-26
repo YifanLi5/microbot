@@ -47,6 +47,7 @@ public class CamdozaalMiningPlugin extends Plugin {
         log.info("Camdozaal Mining Plugin started!");
         CamdozaalFishingOverlay.resetStats();
         overlayManager.add(camdozaalFishingOverlay);
+        CamdozaalMiningOverlay.resetStats();
 
         this.camdozaalMiningScript = new CamdozaalMiningScript(config);
         camdozaalMiningScript.run();

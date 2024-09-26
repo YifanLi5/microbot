@@ -1,11 +1,13 @@
 package net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.fishing.TaskSubclasses;
 
 import net.runelite.api.ItemID;
+import net.runelite.api.NPC;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.GetInteractableUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 
@@ -47,7 +49,8 @@ public class CatchCamdozaalFish extends Task {
             }
             return true;
         }
-        if(!Rs2Npc.interact(10686)) {
+        NPC fishingSpot = GetInteractableUtil.getRandomNPC(10686);
+        if(!Rs2Npc.interact(fishingSpot)) {
             Microbot.log("Failed to interact with fishing spot.");
             return false;
         }

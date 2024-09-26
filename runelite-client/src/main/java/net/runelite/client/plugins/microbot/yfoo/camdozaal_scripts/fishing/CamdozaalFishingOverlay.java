@@ -12,8 +12,7 @@ import java.awt.*;
 public class CamdozaalFishingOverlay extends OverlayPanel {
 
     private static long startTime;
-    private final String version = "0.02";
-    private final String nameAndVersion = String.format("Camdozaal Fishing v%s", version);
+    private final String nameAndVersion = "Camdozaal Fishing 0.04";
 
     @Inject
     CamdozaalFishingOverlay(CamdozaalFishingPlugin plugin)
