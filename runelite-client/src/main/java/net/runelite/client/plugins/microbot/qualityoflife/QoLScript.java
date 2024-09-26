@@ -52,7 +52,7 @@ public class QoLScript extends Script {
                     handleWorkbenchActions();
                 }
 
-                if (QoLPlugin.executeLoadoutActions && !QoLPlugin.LOADOUT_TO_LOAD.isEmpty()) {
+                if (QoLPlugin.executeLoadoutActions && !QoLPlugin.loadoutToLoad.isEmpty()) {
                     handleInventorySetup();
                 }
 
@@ -64,7 +64,7 @@ public class QoLScript extends Script {
             } catch (Exception ex) {
                 log.error("Error in QoLScript execution: {}", ex.getMessage(), ex);
             }
-        }, 0, 5000, TimeUnit.MILLISECONDS);
+        }, 0, 300, TimeUnit.MILLISECONDS);
         return true;
     }
 
@@ -81,12 +81,12 @@ public class QoLScript extends Script {
         if (!openBank()) {
             Microbot.log("Bank did not open");
             QoLPlugin.executeLoadoutActions = false;
-            QoLPlugin.LOADOUT_TO_LOAD = "";
+            QoLPlugin.loadoutToLoad = "";
             return;
         }
 
         try {
-            Rs2InventorySetup inventorySetup = new Rs2InventorySetup(QoLPlugin.LOADOUT_TO_LOAD, mainScheduledFuture);
+            Rs2InventorySetup inventorySetup = new Rs2InventorySetup(QoLPlugin.loadoutToLoad, mainScheduledFuture);
 
             if (!inventorySetup.doesEquipmentMatch()) {
                 inventorySetup.loadEquipment();
@@ -95,10 +95,10 @@ public class QoLScript extends Script {
                 inventorySetup.loadInventory();
             }
             QoLPlugin.executeLoadoutActions = false;
-            QoLPlugin.LOADOUT_TO_LOAD = "";
+            QoLPlugin.loadoutToLoad = "";
         } catch (Exception ignored) {
             QoLPlugin.executeLoadoutActions = false;
-            QoLPlugin.LOADOUT_TO_LOAD = "";
+            QoLPlugin.loadoutToLoad = "";
             Microbot.pauseAllScripts = false;
             Microbot.log("Failed to load inventory setup");
         }
@@ -196,8 +196,8 @@ public class QoLScript extends Script {
     }
 
     private boolean openFurnace() {
-        sleepUntil(() -> Rs2Widget.isProductionWidgetOpen() || Rs2Widget.isGoldCraftingWidgetOpen(), 10000);
-        return Rs2Widget.isProductionWidgetOpen() || Rs2Widget.isGoldCraftingWidgetOpen();
+        sleepUntil(() -> Rs2Widget.isProductionWidgetOpen() || Rs2Widget.isGoldCraftingWidgetOpen() || Rs2Widget.isSilverCraftingWidgetOpen(), 10000);
+        return Rs2Widget.isProductionWidgetOpen() || Rs2Widget.isGoldCraftingWidgetOpen() || Rs2Widget.isSilverCraftingWidgetOpen();
     }
 
 
