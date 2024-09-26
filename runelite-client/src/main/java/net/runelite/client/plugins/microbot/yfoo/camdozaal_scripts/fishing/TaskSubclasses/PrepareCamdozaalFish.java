@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.fishing.TaskSubclasses;
 
+import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
 import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -9,6 +10,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.AnimationUtil;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.GetInteractableUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 
@@ -64,6 +66,8 @@ public class PrepareCamdozaalFish extends Task {
     public boolean runTask() throws InterruptedException {
         PrepareState state = PrepareState.DROP_UNPREPARABLE_FISH;
         int numFails = 0;
+        GameObject preparationTable = GetInteractableUtil.getRandomGameObject(PREPARATION_TABLE);
+        GameObject offeringTable = GetInteractableUtil.getRandomGameObject(OFFERING_TABLE);
         while(numFails < 3) {
             Microbot.log("PrepareCamdozaalFish state: " + state.name());
             if(state == PrepareState.DROP_UNPREPARABLE_FISH) {
@@ -86,22 +90,20 @@ public class PrepareCamdozaalFish extends Task {
             }
             else if(state == PrepareState.PREPARE) {
                 if(!Rs2Inventory.contains(rs2Item -> CAMDOZAAL_FISH.contains(rs2Item.getId()))) {
-                    state = PrepareState.ROLL_NEXT_TRIGGER;
+                    state = PrepareState.OFFER;
                     continue;
                 }
-                boolean startedPreparing = interactObjectHandleWidget(PREPARATION_TABLE, MAKE_STUFF_WIDGET_ROOT, PREPARE_FISH_CHILD_WIDGET_ID);
+                boolean startedPreparing = interactObjectHandleWidget(preparationTable, MAKE_STUFF_WIDGET_ROOT, PREPARE_FISH_CHILD_WIDGET_ID);
                 if(!startedPreparing) {
                     numFails++;
                     continue;
                 }
-                AnimationUtil.waitUntilPlayerStopsAnimating(3000);
-//                while(Rs2Player.isAnimating()) {
-//                    Rs2Player.waitForAnimation();
-//                }
+                AnimationUtil.waitUntilPlayerStopsAnimating(2500);
 
-                int additionalSleepTime = RngUtil.gaussian(3000, 1000, 0, 6000);
-                Microbot.log(String.format("Sleeping for an additional %dms", additionalSleepTime));
-                script.sleep(additionalSleepTime);
+//                int additionalSleepTime = RngUtil.gaussian(3000, 1000, 0, 6000);
+//                Microbot.log(String.format("Sleeping for an additional %dms", additionalSleepTime));
+//                script.sleep(additionalSleepTime);
+
                 if(!Rs2Inventory.contains(rs2Item -> CAMDOZAAL_FISH.contains(rs2Item.getId()))) {
                     state = PrepareState.OFFER;
                 }
@@ -111,15 +113,15 @@ public class PrepareCamdozaalFish extends Task {
                     state = PrepareState.CLEAN_INV;
                     continue;
                 }
-                boolean startedOffering = interactObjectHandleWidget(OFFERING_TABLE, MAKE_STUFF_WIDGET_ROOT, PREPARE_FISH_CHILD_WIDGET_ID);
+                boolean startedOffering = interactObjectHandleWidget(offeringTable, MAKE_STUFF_WIDGET_ROOT, PREPARE_FISH_CHILD_WIDGET_ID);
                 if(!startedOffering) {
                     numFails++;
                     continue;
                 }
-                AnimationUtil.waitUntilPlayerStopsAnimating(3000);
-                int additionalSleepTime = RngUtil.gaussian(3000, 1000, 0, 6000);
-                Microbot.log(String.format("Sleeping for an additional %dms", additionalSleepTime));
-                script.sleep(additionalSleepTime);
+                AnimationUtil.waitUntilPlayerStopsAnimating(2500);
+//                int additionalSleepTime = RngUtil.gaussian(3000, 1000, 0, 6000);
+//                Microbot.log(String.format("Sleeping for an additional %dms", additionalSleepTime));
+//                script.sleep(additionalSleepTime);
                 if(!Rs2Inventory.contains(rs2Item -> PREPARED_CAMDOZAAL_FISH.contains(rs2Item.getId()))) {
                     state = PrepareState.CLEAN_INV;
                 }
@@ -152,8 +154,8 @@ public class PrepareCamdozaalFish extends Task {
                 .collect(Collectors.toList());
     }
 
-    private boolean interactObjectHandleWidget(int objectId, int widgetRoot, int widgetChild) {
-        if(!Rs2GameObject.interact(objectId)) {
+    private boolean interactObjectHandleWidget(GameObject object, int widgetRoot, int widgetChild) {
+        if(!Rs2GameObject.interact(object)) {
             Microbot.log("Failed interact with offering table");
             return false;
         }
