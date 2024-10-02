@@ -36,10 +36,11 @@ public class SmashDeposits extends Task {
     }
 
     private int minEmptySlotsToTrigger;
+    private static final WorldPoint crusherPosition = new WorldPoint(2957, 5807, 0);
 
     private SmashDeposits(Script script) {
         super(script);
-        minEmptySlotsToTrigger = RngUtil.randomInclusive(4, 8);
+        minEmptySlotsToTrigger = RngUtil.randomInclusive(1, 2);
     }
 
     @Override
@@ -57,7 +58,6 @@ public class SmashDeposits extends Task {
             Microbot.log("SmashState: " + state);
             switch(state) {
                 case WALK_TO_ANVIL:
-                    WorldPoint crusherPosition = new WorldPoint(2957, 5807, 0);
                     boolean nearCrusher = Rs2Player.getWorldLocation().distanceTo(crusherPosition) <= 7;
                     if(!nearCrusher) {
                         Rs2Walker.walkTo(crusherPosition, 7);
@@ -65,8 +65,9 @@ public class SmashDeposits extends Task {
                         continue;
                     } else {
                         state = SmashState.SMASH_DEPOSITS;
+                        script.sleep(RngUtil.gaussian(600, 150, 0 ,1000));
+                        break;
                     }
-                    break;
                 case SMASH_DEPOSITS:
                     GameObject barroniteCrusher = Rs2GameObject.findObject(41551, new WorldPoint(2956, 5807, 0));
                     if(barroniteCrusher == null) {
@@ -100,8 +101,8 @@ public class SmashDeposits extends Task {
                     }
 
                     // Success!
-                    minEmptySlotsToTrigger = RngUtil.randomInclusive(4, 8);
-                    //setNextTask(BankAndReturn.getInstance());
+                    minEmptySlotsToTrigger = RngUtil.randomInclusive(1, 2);
+                    setNextTask(BankAndReturn.getInstance());
                     return true;
             }
             if(!script.isRunning()) {

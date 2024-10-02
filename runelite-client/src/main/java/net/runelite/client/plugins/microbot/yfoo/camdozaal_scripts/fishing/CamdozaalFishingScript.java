@@ -11,12 +11,15 @@ import java.util.concurrent.TimeUnit;
 public class CamdozaalFishingScript extends Script {
 
     public CamdozaalFishingScript(CamdozaalFishingConfig config) {
-        PrepareCamdozaalFish.initInstance(this);
-        CatchCamdozaalFish.initInstance(this);
     }
 
     public boolean run() {
         Task.stopScriptNow = false;
+        Task.resetStatics();
+
+        PrepareCamdozaalFish.initInstance(this);
+        CatchCamdozaalFish.initInstance(this);
+
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             if (!super.run() || !Microbot.isLoggedIn()) {
                 return;

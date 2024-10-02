@@ -14,8 +14,15 @@ public abstract class Task {
     public static boolean stopScriptNow = false;
     protected static Task nextTask;
 
-    private static final ArrayList<Task> subclassInstances = new ArrayList<>();
+    private static ArrayList<Task> subclassInstances;
     private static int consecutiveFailsCounter;
+
+    public static void resetStatics() {
+        stopScriptNow = false;
+        subclassInstances = new ArrayList<>();
+        consecutiveFailsCounter = 0;
+        nextTask = null;
+    }
 
     public Task(Script script) {
         this.script = script;
@@ -72,6 +79,7 @@ public abstract class Task {
     public static void cleanupTasks() {
         Microbot.log("Clearing " + subclassInstances.size());
         subclassInstances.clear();
+        subclassInstances = null;
     }
 
     private static Task nextTask() throws InterruptedException {
