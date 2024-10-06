@@ -14,6 +14,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.AnimationUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.InteractionUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
+import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.CamdozaalMiningConfig;
 
 public class SmashDeposits extends Task {
 
@@ -30,22 +31,25 @@ public class SmashDeposits extends Task {
         return instance;
     }
 
-    public static SmashDeposits initInstance(Script script) {
-        instance = new SmashDeposits(script);
+    public static SmashDeposits initInstance(Script script, CamdozaalMiningConfig config) {
+        instance = new SmashDeposits(script, config);
         return instance;
     }
 
+    private CamdozaalMiningConfig config;
     private int minEmptySlotsToTrigger;
     private static final WorldPoint crusherPosition = new WorldPoint(2957, 5807, 0);
 
-    private SmashDeposits(Script script) {
+    private SmashDeposits(Script script, CamdozaalMiningConfig config) {
         super(script);
+        this.config = config;
         minEmptySlotsToTrigger = RngUtil.randomInclusive(1, 2);
     }
 
     @Override
     public boolean shouldRun() throws InterruptedException {
-        return Rs2Inventory.getEmptySlots() <= minEmptySlotsToTrigger
+        return !config.dropBarroniteDeposits() &&
+                Rs2Inventory.getEmptySlots() <= minEmptySlotsToTrigger
                 && Rs2Player.getAnimation() == -1
                 && Rs2Inventory.contains(ItemID.BARRONITE_DEPOSIT);
     }
