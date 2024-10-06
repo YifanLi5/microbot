@@ -4,20 +4,26 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.BankAndReturn;
+import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.DropBarroniteDeposits;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.MineRocks;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.SmashDeposits;
 
 import java.util.concurrent.TimeUnit;
 
 public class CamdozaalMiningScript extends Script {
+
+    public CamdozaalMiningConfig config;
+
     public CamdozaalMiningScript(CamdozaalMiningConfig config) {
+        this.config = config;
 
     }
 
     public boolean run() {
         Task.resetStatics();
 
-        SmashDeposits.initInstance(this);
+        DropBarroniteDeposits.initInstance(this, config);
+        SmashDeposits.initInstance(this, config);
         MineRocks.initInstance(this);
         BankAndReturn.initInstance(this);
 
