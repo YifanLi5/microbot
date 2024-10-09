@@ -1,0 +1,89 @@
+package net.runelite.client.plugins.microbot.yfoo.Task;
+
+import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.Script;
+
+import java.util.ArrayList;
+
+import static net.runelite.client.plugins.microbot.Microbot.log;
+@Slf4j
+public abstract class Task {
+
+    protected Script script;
+    public static boolean stopScriptNow = false;
+    protected static Task nextTask;
+
+    private static final ArrayList<Task> subclassInstances = new ArrayList<>();
+    private static int consecutiveFailsCounter = 0;
+
+    public Task(Script script) {
+        this.script = script;
+        subclassInstances.add(this);
+        log.info("Initialized task instance of type: {}", this.getClass().getCanonicalName());
+    }
+
+    public abstract boolean shouldRun() throws InterruptedException;
+
+    public abstract boolean runTask() throws InterruptedException;
+
+    public static void runLoopIteration(Script script) throws InterruptedException {
+        if (Task.stopScriptNow) {
+            script.shutdown();
+            return;
+        }
+
+        Task task = Task.nextTask();
+        if(task == null) {
+            log(String.format("could not resolve a nextTask to run. ConsecutiveFailsCounter -> %s",
+                    ++consecutiveFailsCounter)
+            );
+            script.sleep(1000);
+
+            return;
+        }
+
+        boolean result = task.runTask();
+        if(result) {
+            if(consecutiveFailsCounter > 0) log("Succeeded last task. consecutiveFailsCounter -> 0.");
+            consecutiveFailsCounter = 0;
+        } else ++consecutiveFailsCounter;
+
+        if (consecutiveFailsCounter >= 3) {
+            Task.stopScriptNow = true;
+            Microbot.log("Stopping script, consecutiveFailsCounter >= 3");
+            script.sleep(1000);
+            return;
+        }
+
+        if(!result) {
+            log(String.format("Failed task %s. ConsecutiveFailCounter: %d/5. Rerunning same task",
+                    task.getClass().getSimpleName(),
+                    consecutiveFailsCounter
+            ));
+            setNextTask(task);
+            script.sleep(1000);
+        }
+    }
+
+    private static Task nextTask() throws InterruptedException {
+        if(Task.nextTask != null) {
+            Task temp = Task.nextTask;
+            Task.nextTask = null;
+            return temp;
+        }
+
+        Task nextTask = null;
+        for (Task task : Task.subclassInstances) {
+            if (task.shouldRun()) {
+                nextTask = task;
+                break;
+            }
+        }
+        return nextTask;
+    }
+
+    protected static void setNextTask(Task nextTask) {
+        Task.nextTask = nextTask;
+    }
+}
