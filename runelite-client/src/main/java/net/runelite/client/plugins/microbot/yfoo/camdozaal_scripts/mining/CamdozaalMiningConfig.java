@@ -17,4 +17,14 @@ public interface CamdozaalMiningConfig extends Config {
                 "Start script near mining veins in Camdozaal ruins"
         );
     }
+
+    @ConfigItem(
+            keyName = "DropDeposits",
+            name = "Drop Barronite Deposit",
+            description = "Should player drop the barronite chunks",
+            position = 1
+    )
+    default boolean dropBarroniteDeposits() {
+        return false;
+    }
 }

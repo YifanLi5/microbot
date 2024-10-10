@@ -3,21 +3,32 @@ package net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
+import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.BankAndReturn;
+import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.DropBarroniteDeposits;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.MineRocks;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses.SmashDeposits;
 
 import java.util.concurrent.TimeUnit;
 
 public class CamdozaalMiningScript extends Script {
+
+    public CamdozaalMiningConfig config;
+
     public CamdozaalMiningScript(CamdozaalMiningConfig config) {
-        SmashDeposits.initInstance(this);
-        MineRocks.initInstance(this);
+        this.config = config;
 
     }
 
     public boolean run() {
-        Task.stopScriptNow = false;
-        mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
+        Task.resetStatics();
+
+        DropBarroniteDeposits.initInstance(this, config);
+        SmashDeposits.initInstance(this, config);
+        MineRocks.initInstance(this);
+        BankAndReturn.initInstance(this);
+
+        this.mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            Microbot.log(String.format("(%d) Is script running? %s", this.hashCode(), this.isRunning()));
             if (!super.run() || !Microbot.isLoggedIn()) {
                 return;
             }

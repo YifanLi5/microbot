@@ -12,7 +12,7 @@ public class CamdozaalMiningOverlay extends OverlayPanel {
 
     private static long startTime;
 
-    private final String nameAndVersion = "Camdozaal Mining 0.04";
+    private final String nameAndVersion = "Camdozaal Mining 0.08";
 
     @Inject
     CamdozaalMiningOverlay(CamdozaalMiningPlugin plugin)
