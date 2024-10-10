@@ -13,15 +13,39 @@ import static net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.Util.C
 import static net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.Util.Constants.PREPARE_FISH_CHILD_WIDGET_ID;
 
 public class InteractionUtil {
-    public static boolean interactObjectHandleWidget(Script script, @Nonnull GameObject object, int widgetRoot, int widgetChild) {
+
+    public static boolean interactObjectAssertWidget(Script script, @Nonnull GameObject object, int widgetRoot, int widgetChild) throws InterruptedException {
         if(!Rs2GameObject.interact(object)) {
-            Microbot.log("Failed interact with offering table");
+            Microbot.log("Failed interact with GameObject: " + object.getId());
             return false;
         }
-        if(!script.sleepUntil(() -> Rs2Widget.isWidgetVisible(widgetRoot, widgetChild))) {
+
+        boolean foundWidget = false;
+        long timeStamp = System.currentTimeMillis();
+        while(System.currentTimeMillis() - timeStamp <= 4000) {
+            if(Rs2Player.isMoving()) {
+                timeStamp = System.currentTimeMillis();
+            }
+            if(Rs2Widget.isWidgetVisible(widgetRoot, widgetChild)) {
+                Microbot.log("Bank is open");
+                foundWidget = true;
+                break;
+            }
+            Thread.sleep(300);
+        }
+
+        if(!foundWidget) {
             Microbot.log("offering widget did not become visible");
             return false;
-        } else if (Rs2Player.isAnimating(1200)) {
+        }
+        return true;
+    }
+
+    public static boolean interactObjectHandleWidget(Script script, @Nonnull GameObject object, int widgetRoot, int widgetChild) throws InterruptedException {
+        if(!interactObjectAssertWidget(script, object, widgetRoot, widgetChild)) {
+            return false;
+        }
+        if (Rs2Player.isAnimating(1200)) {
             Microbot.log("Player immediately started animation without a widget interaction.");
             return true;
         }

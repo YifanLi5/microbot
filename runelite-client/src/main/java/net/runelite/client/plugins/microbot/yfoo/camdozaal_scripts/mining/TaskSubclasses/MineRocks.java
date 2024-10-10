@@ -48,7 +48,7 @@ public class MineRocks extends Task {
             Microbot.log("Player is already mining... Sleeping until player stops mining...");
             AnimationUtil.waitUntilPlayerStopsAnimating(3000);
             if(!Rs2Player.isAnimating()) {
-                int additionalSleepTime = RngUtil.gaussian(4000, 2000, 0, 7000);
+                int additionalSleepTime = RngUtil.gaussian(1500, 750, 0, 3500);
                 Microbot.log(String.format("Sleeping for an additional %dms", additionalSleepTime));
                 script.sleep(additionalSleepTime);
             }
