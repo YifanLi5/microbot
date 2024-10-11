@@ -19,7 +19,7 @@ import net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.Camdoz
 public class SmashDeposits extends Task {
 
     private enum SmashState {
-        WALK_TO_ANVIL, SMASH_DEPOSITS, WAIT_FOR_SMASH
+        WALK_TO_ANVIL, WAIT_FOR_SMASH
     }
 
     private static SmashDeposits instance;
@@ -62,45 +62,25 @@ public class SmashDeposits extends Task {
             Microbot.log("SmashState: " + state);
             switch(state) {
                 case WALK_TO_ANVIL:
-                    boolean nearCrusher = Rs2Player.getWorldLocation().distanceTo(crusherPosition) <= 7;
-                    if(!nearCrusher) {
-                        Rs2Walker.walkTo(crusherPosition, 7);
-                        script.sleep(1000);
-                        continue;
-                    } else {
-                        state = SmashState.SMASH_DEPOSITS;
+                    boolean interactedWithCrusher = Rs2Walker.walkToAndInteract(crusherPosition, object -> object.getId() == 41551, 7);
+                    if(interactedWithCrusher) {
+
+                        state = SmashState.WAIT_FOR_SMASH;
                         script.sleep(RngUtil.gaussian(600, 150, 0 ,1000));
                         break;
-                    }
-                case SMASH_DEPOSITS:
-                    GameObject barroniteCrusher = Rs2GameObject.findObject(41551, new WorldPoint(2956, 5807, 0));
-                    if(barroniteCrusher == null) {
-                        Microbot.log("Barronite crusher is null");
+                    } else {
                         numFails++;
                         script.sleep(600);
-                        continue;
-                    }
-                    boolean startedAnimationAfterInteraction = InteractionUtil.interactObjectAssertAnimation(script, barroniteCrusher);
-                    if(!startedAnimationAfterInteraction) {
-                        Microbot.log("Did not start animation after interacting with barronite crusher");
-                        numFails++;
-                        script.sleep(600);
-                        continue;
-                    }
-                    AnimationUtil.waitUntilPlayerStopsAnimating(4000);
-                    if(Rs2Inventory.contains(ItemID.BARRONITE_DEPOSIT)) {
                         continue;
                     }
 
-                    state = SmashState.WAIT_FOR_SMASH;
-                    break;
                 case WAIT_FOR_SMASH:
                     AnimationUtil.waitUntilPlayerStopsAnimating(3000);
                     if(Rs2Inventory.contains(ItemID.BARRONITE_DEPOSIT)) {
                         Microbot.log("Inventory still contains Barronite deposits despite smashing them, likely an error has occured");
                         numFails++;
                         script.sleep(600);
-                        state = SmashState.SMASH_DEPOSITS;
+                        state = SmashState.WALK_TO_ANVIL;
                         continue;
                     }
 

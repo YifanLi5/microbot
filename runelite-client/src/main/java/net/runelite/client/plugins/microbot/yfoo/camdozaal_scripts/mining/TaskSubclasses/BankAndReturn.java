@@ -53,8 +53,6 @@ public class BankAndReturn extends Task {
 
     private static final Predicate<Rs2Item> depositPredicate = item -> item.getName().startsWith("Ancient") || item.getName().startsWith("Uncut") || item.getId() == ItemID.BARRONITE_HEAD;
 
-    private static final List<Integer> depositList = Arrays.asList(ItemID.ANCIENT_CARCANET, ItemID.ANCIENT_LEDGER, ItemID.UNCUT_SAPPHIRE, ItemID.UNCUT_RUBY);
-
     public BankAndReturn(Script script) {
         super(script);
     }
@@ -62,7 +60,7 @@ public class BankAndReturn extends Task {
     @Override
     public boolean shouldRun() throws InterruptedException {
         // manually triggered after smash
-        return true;
+        return false;
     }
 
     @Override
@@ -76,17 +74,24 @@ public class BankAndReturn extends Task {
             Microbot.log("BankingState: " + state);
             switch (state) {
                 case WALK_TO_CHEST:
-                    boolean nearChest = Rs2Player.getWorldLocation().distanceTo(chestPosition) <= 7;
-                    if(!nearChest) {
-                        Rs2Walker.walkTo(chestPosition, 7);
-                        script.sleep(1000);
+                    boolean result = Rs2Walker.walkToAndInteract(chestPosition, object -> object.getId() == 41493, 7);
+                    if(result) {
+                        Microbot.log("Success!");
+                        state = BankingState.OPEN_BANK;
+                    } else {
+                        Microbot.log("Fail");
+                        numFails++;
+                        script.sleep(600);
                         continue;
                     }
 
-                    state = BankingState.OPEN_BANK;
                     break;
 
                 case OPEN_BANK:
+                    if(Rs2Bank.isOpen()) {
+                        state = BankingState.DEPOSIT;
+                        continue;
+                    }
                     GameObject chest = Rs2GameObject.findChest();
                     if(chest == null) {
                         Microbot.log("Bank Chest is null");
