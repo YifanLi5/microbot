@@ -69,6 +69,13 @@ public class ClientThread
 		scheduledFuture = scheduledExecutorService.submit(() -> method.call());
 	}
 
+	@SneakyThrows
+	public boolean runOnSeparateThread2(Callable<Boolean> method) {
+		if (scheduledFuture != null && !scheduledFuture.isDone()) return false;
+		scheduledFuture = scheduledExecutorService.submit(method);
+		return (boolean) scheduledFuture.get();
+	}
+
 
 	/**
 	 * Will run r on the game thread, at an unspecified point in the future.
