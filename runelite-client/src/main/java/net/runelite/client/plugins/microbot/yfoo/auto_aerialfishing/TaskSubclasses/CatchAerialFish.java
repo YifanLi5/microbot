@@ -104,7 +104,8 @@ public class CatchAerialFish extends Task {
         return true;
     }
 
-    // When the bird is sent out. Glove's Id -> 22816. When it returns, Glove's Id -> 22817.
+    // When the bird is sent out, the equipped weapon changes.
+    // Glove's Id -> 22816. When it returns, Glove's Id -> 22817.
     private boolean isBirdOnGlove() {
         Rs2Item equippedWeapon = Rs2Equipment.get(EquipmentInventorySlot.WEAPON);
         int weaponId = equippedWeapon != null ? equippedWeapon.getId() : -1;
