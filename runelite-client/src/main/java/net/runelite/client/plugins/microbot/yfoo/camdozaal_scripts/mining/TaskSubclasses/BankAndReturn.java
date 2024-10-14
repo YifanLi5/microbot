@@ -68,7 +68,6 @@ public class BankAndReturn extends Task {
         BankingState state = Rs2Inventory.contains(depositPredicate) ? BankingState.WALK_TO_CHEST : BankingState.RETURN_TO_MINE;
         WorldPoint returnPoint = randomMinePositions.get(RngUtil.randomInclusive(0, randomMinePositions.size()-1));
         int numFails = 0;
-        Microbot.log(String.format("Inside class. (%d) Is script running? %s", script.hashCode(), script.isRunning()));
 
         while(numFails < 3 && script.isRunning()) {
             Microbot.log("BankingState: " + state);

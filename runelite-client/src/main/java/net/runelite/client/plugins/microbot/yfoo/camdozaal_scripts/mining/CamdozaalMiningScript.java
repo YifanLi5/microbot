@@ -28,7 +28,6 @@ public class CamdozaalMiningScript extends Script {
         BankAndReturn.initInstance(this);
 
         this.mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
-            Microbot.log(String.format("(%d) Is script running? %s", this.hashCode(), this.isRunning()));
             if (!super.run() || !Microbot.isLoggedIn()) {
                 return;
             }
