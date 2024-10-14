@@ -215,7 +215,9 @@ public class Rs2Walker {
     public static boolean walkToAndInteract(WorldPoint target, Predicate<GameObject> objectFilter, int distance) {
         if (Rs2Tile.getReachableTilesFromTile(Rs2Player.getWorldLocation(), distance).containsKey(target)
                 || !Rs2Tile.isWalkable(LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), target)) && Rs2Player.getWorldLocation().distanceTo(target) <= distance) {
-            return true;
+            Microbot.log("No need to walk, very close to target. Attempting to preform interaction.");
+            GameObject object = Rs2GameObject.getGameObjects().stream().filter(objectFilter).findFirst().orElse(null);
+            return object != null && Rs2GameObject.interact(object);
         }
         if (currentTarget != null && currentTarget.equals(target) && ShortestPathPlugin.getMarker() != null && !Microbot.getClientThread().scheduledFuture.isDone())
             return false;
