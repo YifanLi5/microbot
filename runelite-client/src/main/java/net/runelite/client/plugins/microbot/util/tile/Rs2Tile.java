@@ -1,10 +1,7 @@
 package net.runelite.client.plugins.microbot.util.tile;
 
 import lombok.Getter;
-import net.runelite.api.Client;
-import net.runelite.api.CollisionDataFlag;
-import net.runelite.api.GraphicsObject;
-import net.runelite.api.Tile;
+import net.runelite.api.*;
 import net.runelite.api.coords.Direction;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
@@ -375,13 +372,19 @@ public class Rs2Tile {
     }
 
     public static WorldPoint getNearestWalkableTileWithLineOfSight(WorldPoint source) {
+        // check if source is walkable
+        if (!tileHasWalls(source)
+                && isValidTile(getTile(source.getX(), source.getY()))
+                && (isWalkable(LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), source.getX(), source.getY())) || isBankBooth(source))) {
+            return source;
+        }
+        //check if neightbours are walkable
         for (Direction direction : Direction.values()) {
             WorldPoint neighbour = getNeighbour(direction, source);
             if (neighbour.equals(Rs2Player.getWorldLocation())) continue;
             if (!tileHasWalls(neighbour)
                     && isValidTile(getTile(neighbour.getX(), neighbour.getY()))
-                    && isWalkable(LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), neighbour.getX(), neighbour.getY()))) {
-                System.out.println(neighbour);
+                    && (isWalkable(LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), neighbour.getX(), neighbour.getY())) || isBankBooth(neighbour))) {
                 return neighbour;
             }
         }
@@ -391,6 +394,15 @@ public class Rs2Tile {
 
     public static boolean tileHasWalls(WorldPoint source) {
         return Rs2GameObject.getWallObjects().stream().filter(x -> x.getWorldLocation().equals(source)).findFirst().orElse(null) != null;
+    }
+
+    public static boolean isBankBooth(WorldPoint source) {
+        GameObject gameObject = Rs2GameObject.getGameObjects().stream().filter(x -> x.getWorldLocation().equals(source)).findFirst().orElse(null);
+        if (gameObject != null) {
+            ObjectComposition objectComposition = Rs2GameObject.convertGameObjectToObjectComposition(gameObject);
+            return objectComposition != null && objectComposition.getName().equalsIgnoreCase("bank booth");
+        }
+        return false;
     }
 
     public static Tile getTile(int x, int y) {
@@ -404,7 +416,16 @@ public class Rs2Tile {
     }
 
     public static boolean isValidTile(Tile tile) {
-        byte flags = Microbot.getClient().getTileSettings()[tile.getRenderLevel()][tile.getSceneLocation().getX()][tile.getSceneLocation().getY()];
-        return flags == 4;
+        if (tile == null) return false;
+        int[][] flags = Microbot.getClient().getCollisionMaps()[Microbot.getClient().getPlane()].getFlags();
+        int data = flags[tile.getSceneLocation().getX()][tile.getSceneLocation().getY()];
+
+        Set<MovementFlag> movementFlags = MovementFlag.getSetFlags(data);
+
+        if (movementFlags.isEmpty())
+        {
+            return true;
+        }
+        return false;
     }
 }
