@@ -22,7 +22,7 @@ public class MineRocks extends Task {
 
     public static MineRocks getInstance() {
         if(instance == null) {
-            throw new NullPointerException("CatchAerialFish is null");
+            throw new NullPointerException("MineRocks is null");
         }
         return instance;
     }
@@ -73,7 +73,7 @@ public class MineRocks extends Task {
             Microbot.log("Failed interaction with Barronite Rocks");
             return false;
         }
-        script.sleepUntil(Rs2Player::isAnimating);
+        AnimationUtil.waitUntilPlayerStopsAnimating(5000);
         return true;
     }
 }
