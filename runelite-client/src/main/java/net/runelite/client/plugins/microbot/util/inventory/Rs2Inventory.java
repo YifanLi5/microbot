@@ -308,7 +308,7 @@ public class Rs2Inventory {
      *
      * @param names The names to check for.
      *
-     * @return True if the inventory contains all the specified names, false otherwise.
+     * @return True if the inventory contains any the specified names, false otherwise.
      */
     public static boolean contains(String... names) {
         return items().stream().anyMatch(x -> Arrays.stream(names).anyMatch(name -> name.equalsIgnoreCase(x.name)));
@@ -400,6 +400,7 @@ public class Rs2Inventory {
         }
         return false;
     }
+
 
     /**
      * Drops the item with the specified ID from the inventory.
@@ -1827,10 +1828,13 @@ public class Rs2Inventory {
      *
      * @param rs2Item The item to use.
      *
-     * @return True if the item is successfully used, false otherwise.
+     * @return True if the item is successfully used or already selected, false otherwise.
      */
     public static boolean use(Rs2Item rs2Item) {
         if (rs2Item == null) return false;
+        if(rs2Item.getSlot() == Rs2Inventory.getSelectedItemIndex()) {
+            return true;
+        }
         return interact(rs2Item, "Use");
     }
 
