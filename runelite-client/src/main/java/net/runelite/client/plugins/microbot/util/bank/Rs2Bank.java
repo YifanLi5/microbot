@@ -1416,6 +1416,7 @@ public class Rs2Bank {
         if (Rs2Bank.isOpen()) return true;
         Rs2Player.toggleRunEnergy(toggleRun);
         Microbot.status = "Walking to nearest bank " + bankLocation.toString();
+        Rs2Player.toggleRunEnergy(true);
         boolean result = bankLocation.getWorldPoint().distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation()) <= 8;
         if (result) {
             return Rs2Bank.useBank();
