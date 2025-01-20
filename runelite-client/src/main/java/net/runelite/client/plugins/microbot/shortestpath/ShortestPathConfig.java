@@ -148,8 +148,7 @@ public interface ShortestPathConfig extends Config {
             description = "Whether to include teleportation items from the player's inventory and equipment.<br>" +
                     "Options labelled (perm) only use permanent non-charge items.",
             position = 12,
-            section = sectionSettings,
-            hidden = true
+            section = sectionSettings
     )
     default TeleportationItem useTeleportationItems() {
         return TeleportationItem.INVENTORY;
@@ -331,6 +330,17 @@ public interface ShortestPathConfig extends Config {
         return true;
     }
 
+    @ConfigItem(
+            keyName = "useMagicCarpets",
+            name = "Use Magic Carpets",
+            description = "Whether to include magic carpets in the path.<br>",
+            position = 26,
+            section = sectionSettings
+    )
+    default boolean useMagicCarpets() {
+        return true;
+    }
+
     @ConfigSection(
             name = "Display",
             description = "Options for displaying the path on the world map, minimap and scene tiles",
@@ -380,6 +390,28 @@ public interface ShortestPathConfig extends Config {
     )
     default TileStyle pathStyle() {
         return TileStyle.TILES;
+    }
+
+    @ConfigItem(
+            keyName = "showETA",
+            name = "Show ETA Overlay",
+            description = "Whether to display the ETA in an overlay to your destination",
+            position = 29,
+            section = sectionDisplay
+    )
+    default boolean showETA() {
+        return false;
+    }
+
+    @ConfigItem(
+            keyName = "showETAInSeconds",
+            name = "Show ETA in Seconds",
+            description = "Whether to display the ETA in seconds vs mins:seconds",
+            position = 30,
+            section = sectionDisplay
+    )
+    default boolean showInSeconds() {
+        return false;
     }
 
     @ConfigSection(

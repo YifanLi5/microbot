@@ -97,6 +97,12 @@ public class Transport {
     @Getter
     private final Set<TransportVarbit> varbits = new HashSet<>();
 
+    /**
+     * Any varplayers to check for the transport to be valid. All must pass for a transport to be valid
+     */
+    @Getter
+    private final Set<TransportVarPlayer> varplayers = new HashSet<>();
+
     @Getter
     private int amtItemRequired = 0;
     @Getter
@@ -146,6 +152,9 @@ public class Transport {
         this.varbits.addAll(origin.varbits);
         this.varbits.addAll(destination.varbits);
 
+        this.varplayers.addAll(origin.varplayers);
+        this.varplayers.addAll(destination.varplayers);
+        
         //START microbot variables
         this.name = origin.getName();
         this.objectId = origin.getObjectId();
@@ -305,6 +314,30 @@ public class Transport {
             }
         }
 
+        if ((value = fieldMap.get("Varplayers")) != null && !value.trim().isEmpty()) {
+            for (String varplayerCheck : value.split(DELIM_MULTI)) {
+                String[] parts;
+                TransportVarPlayer.Operator operator;
+
+                if (varplayerCheck.contains(">")) {
+                    parts = varplayerCheck.split(">");
+                    operator = TransportVarPlayer.Operator.GREATER_THAN;
+                } else if (varplayerCheck.contains("<")) {
+                    parts = varplayerCheck.split("<");
+                    operator = TransportVarPlayer.Operator.LESS_THAN;
+                } else if (varplayerCheck.contains("=")) {
+                    parts = varplayerCheck.split("=");
+                    operator = TransportVarPlayer.Operator.EQUAL;
+                } else {
+                    throw new IllegalArgumentException("Invalid varplayer format: " + varplayerCheck);
+                }
+
+                int varplayerId = Integer.parseInt(parts[0]);
+                int varplayerValue = Integer.parseInt(parts[1]);
+                varplayers.add(new TransportVarPlayer(varplayerId, varplayerValue, operator));
+            }
+        }
+
         this.type = transportType;
         if (TransportType.AGILITY_SHORTCUT.equals(transportType) &&
                 (getRequiredLevel(Skill.RANGED) > 1 || getRequiredLevel(Skill.STRENGTH) > 1)) {
@@ -455,6 +488,7 @@ public class Transport {
         addTransports(transports, "teleportation_portals.tsv", TransportType.TELEPORTATION_PORTAL);
         addTransports(transports, "teleportation_spells.tsv", TransportType.TELEPORTATION_SPELL);
         addTransports(transports, "wilderness_obelisks.tsv", TransportType.WILDERNESS_OBELISK);
+        addTransports(transports, "magic_carpets.tsv", TransportType.MAGIC_CARPET);
         addTransports(transports, "npcs.tsv", TransportType.NPC);
         return transports;
     }

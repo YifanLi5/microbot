@@ -3,8 +3,11 @@ package net.runelite.client.plugins.microbot.playerassist;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.config.*;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
+import net.runelite.client.plugins.microbot.playerassist.enums.DefaultLooterStyle;
 import net.runelite.client.plugins.microbot.playerassist.enums.PlayStyle;
 import net.runelite.client.plugins.microbot.playerassist.enums.PrayerStyle;
+import net.runelite.client.plugins.microbot.playerassist.enums.State;
+import net.runelite.client.plugins.microbot.util.magic.Rs2CombatSpells;
 
 @ConfigGroup(net.runelite.client.plugins.microbot.playerassist.PlayerAssistConfig.GROUP)
 @ConfigInformation("1. Make sure to place the cannon first before starting the plugin. <br />" +
@@ -41,6 +44,15 @@ public interface PlayerAssistConfig extends Config {
             closedByDefault = true
     )
     String gearSection = "Gear";
+    // Safety section
+    @ConfigSection(
+            name = "Safety",
+            description = "Safety",
+            position = 54,
+            closedByDefault = true
+    )
+    String safetySection = "Safety";
+
     @ConfigSection(
             name = "Food & Potions",
             description = "Food & Potions",
@@ -175,7 +187,7 @@ public interface PlayerAssistConfig extends Config {
 
     @ConfigItem(
             keyName = "Auto Prayer Potion",
-            name = "Auto drink prayer potion",
+            name = "Auto prayer potion",
             description = "Automatically drinks prayer potions",
             position = 1,
             section = foodAndPotionsSection
@@ -186,7 +198,7 @@ public interface PlayerAssistConfig extends Config {
 
     @ConfigItem(
             keyName = "Combat potion",
-            name = "Auto drink super combat potion",
+            name = "Auto combat potion",
             description = "Automatically drinks combat potions",
             position = 2,
             section = foodAndPotionsSection
@@ -197,7 +209,7 @@ public interface PlayerAssistConfig extends Config {
 
     @ConfigItem(
             keyName = "Ranging/Bastion potion",
-            name = "Auto drink Ranging/Bastion potion",
+            name = "Auto Ranging/Bastion potion",
             description = "Automatically drinks Ranging/Bastion potions",
             position = 3,
             section = foodAndPotionsSection
@@ -207,15 +219,47 @@ public interface PlayerAssistConfig extends Config {
     }
 
     @ConfigItem(
-            keyName = "Use AntiPoison",
-            name = "Use AntiPoison",
-            description = "Use AntiPoison",
+            keyName = "Magic/Battlemage potion",
+            name = "Auto Magic/Battlemage potion",
+            description = "Automatically drinks Magic/Battlemage potions",
             position = 4,
             section = foodAndPotionsSection
     )
+    default boolean toggleMagicPotion() {
+        return false;
+    }
 
-
+    @ConfigItem(
+            keyName = "Use AntiPoison",
+            name = "Auto AntiPoison",
+            description = "Use AntiPoison",
+            position = 8,
+            section = foodAndPotionsSection
+    )
     default boolean useAntiPoison() {
+        return false;
+    }
+
+    // use antifire potion
+    @ConfigItem(
+            keyName = "useAntifirePotion",
+            name = "Auto Antifire Potion",
+            description = "Use Antifire Potion",
+            position = 9,
+            section = foodAndPotionsSection
+    )
+    default boolean useAntifirePotion() {
+        return false;
+    }
+    // Use goading potion
+    @ConfigItem(
+            keyName = "useGoadingPotion",
+            name = "Auto Goading Potion",
+            description = "Use Goading Potion",
+            position = 10,
+            section = foodAndPotionsSection
+    )
+    default boolean useGoadingPotion() {
         return false;
     }
 
@@ -231,10 +275,32 @@ public interface PlayerAssistConfig extends Config {
     }
 
     @ConfigItem(
+            name = "Loot Style",
+            keyName = "lootStyle",
+            position = 1,
+            description = "Choose Looting Style",
+            section = lootSection
+    )
+    default DefaultLooterStyle looterStyle() {
+        return DefaultLooterStyle.MIXED;
+    }
+
+    @ConfigItem(
+            name = "List of Items",
+            keyName = "listOfItemsToLoot",
+            position = 2,
+            description = "List of items to loot",
+            section = lootSection
+    )
+    default String listOfItemsToLoot() {
+        return "bones,ashes";
+    }
+
+    @ConfigItem(
             keyName = "Min Price of items to loot",
             name = "Min. Price of items to loot",
             description = "Min. Price of items to loot",
-            position = 1,
+            position = 10,
             section = lootSection
     )
     default int minPriceOfItemsToLoot() {
@@ -245,7 +311,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "Max Price of items to loot",
             name = "Max. Price of items to loot",
             description = "Max. Price of items to loot default is set to 10M",
-            position = 1,
+            position = 11,
             section = lootSection
     )
     default int maxPriceOfItemsToLoot() {
@@ -257,7 +323,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "Loot arrows",
             name = "Auto loot arrows",
             description = "Enable/disable loot arrows",
-            position = 2,
+            position = 20,
             section = lootSection
     )
     default boolean toggleLootArrows() {
@@ -269,7 +335,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "Loot runes",
             name = "Loot runes",
             description = "Enable/disable loot runes",
-            position = 3,
+            position = 30,
             section = lootSection
     )
     default boolean toggleLootRunes() {
@@ -281,7 +347,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "Loot coins",
             name = "Loot coins",
             description = "Enable/disable loot coins",
-            position = 4,
+            position = 40,
             section = lootSection
     )
     default boolean toggleLootCoins() {
@@ -293,7 +359,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "Loot untradables",
             name = "Loot untradables",
             description = "Enable/disable loot untradables",
-            position = 5,
+            position = 50,
             section = lootSection
     )
     default boolean toggleLootUntradables() {
@@ -355,6 +421,18 @@ public interface PlayerAssistConfig extends Config {
             section = lootSection
     )
     default boolean toggleForceLoot() {
+        return false;
+    }
+
+    //toggle High Alch profitable items
+    @ConfigItem(
+            keyName = "highAlchProfitable",
+            name = "High Alch Profitable",
+            description = "High Alch Profitable items",
+            position = 101,
+            section = lootSection
+    )
+    default boolean toggleHighAlchProfitable() {
         return false;
     }
 
@@ -432,12 +510,36 @@ public interface PlayerAssistConfig extends Config {
     default boolean toggleEnableSkilling() {
         return false;
     }
+
+    // Use Magic
+    @ConfigItem(
+            keyName = "useMagic",
+            name = "Use Magic",
+            description = "Use Magic",
+            position = 1,
+            section = skillingSection
+    )
+    default boolean useMagic() {
+        return false;
+    }
+    // Magic spell
+    @ConfigItem(
+            keyName = "magicSpell",
+            name = "Auto Cast Spell",
+            description = "Magic Auto Cast Spell",
+            position = 2,
+            section = skillingSection
+    )
+    default Rs2CombatSpells magicSpell() {
+        return Rs2CombatSpells.WIND_STRIKE;
+    }
+
     //Balance combat skills
     @ConfigItem(
             keyName = "balanceCombatSkills",
             name = "Balance combat skills",
             description = "Balance combat skills",
-            position = 0,
+            position = 10,
             section = skillingSection
     )
     default boolean toggleBalanceCombatSkills() {
@@ -449,7 +551,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "avoidControlled",
             name = "No Controlled Attack",
             description = "Avoid Controlled attack style so you won't accidentally train unwanted combat skills",
-            position = 1,
+            position = 11,
             section = skillingSection
     )
     default boolean toggleAvoidControlled() {
@@ -462,7 +564,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "attackStyleChangeDelay",
             name = "Change Delay",
             description = "Attack Style Change Delay In Seconds",
-            position = 2,
+            position = 20,
             section = skillingSection
     )
     default int attackStyleChangeDelay() {
@@ -473,7 +575,7 @@ public interface PlayerAssistConfig extends Config {
             keyName = "disableOnMaxCombat",
             name = "Disable on Max Combat",
             description = "Disable on Max Combat",
-            position = 3,
+            position = 30,
             section = skillingSection
     )
     default boolean toggleDisableOnMaxCombat() {
@@ -738,6 +840,86 @@ public interface PlayerAssistConfig extends Config {
         return true;
     }
 
+    // Safety section
+    @ConfigItem(
+            keyName = "useSafety",
+            name = "Use Safety",
+            description = "Use Safety",
+            position = 0,
+            section = safetySection
+    )
+    default boolean useSafety() {
+        return false;
+    }
+
+    // Missing runes
+    @ConfigItem(
+            keyName = "missingRunes",
+            name = "Missing Runes",
+            description = "Go to bank and logout if missing runes",
+            position = 1,
+            section = safetySection
+    )
+    default boolean missingRunes() {
+        return true;
+    }
+    // Missing arrows
+    @ConfigItem(
+            keyName = "missingArrows",
+            name = "Missing Arrows",
+            description = "Go to bank and logout if missing arrows",
+            position = 2,
+            section = safetySection
+    )
+    default boolean missingArrows() {
+        return true;
+    }
+    // Missing food
+    @ConfigItem(
+            keyName = "missingFood",
+            name = "Missing Food",
+            description = "Go to bank and logout if missing food and banking isn't enabled",
+            position = 3,
+            section = safetySection
+    )
+    default boolean missingFood() {
+        return true;
+    }
+
+    // Low health
+    @ConfigItem(
+            keyName = "lowHealth",
+            name = "Low Health",
+            description = "Go to bank and logout if low health",
+            position = 4,
+            section = safetySection
+    )
+    default boolean lowHealth() {
+        return true;
+    }
+    // Health safety value
+    @ConfigItem(
+            keyName = "healthSafetyValue",
+            name = "Health Safety %",
+            description = "Health Safety %",
+            position = 5,
+            section = safetySection
+    )
+    default int healthSafetyValue() {
+        return 25;
+    }
+
+
+    //hidden config item for state
+    @ConfigItem(
+            keyName = "state",
+            name = "State",
+            description = "State",
+            hidden = true
+    )
+    default State state() {
+        return State.IDLE;
+    }
 
     // Hidden config item for inventory setup
     @ConfigItem(

@@ -795,7 +795,7 @@
 3122 3488 0	3122 3487 0	Open;Door;102						
 3122 3487 0	3122 3488 0	Open;Door;102						
 3115 3449 0	3115 3450 0	Open;Door;1804		1 Brass key			2	
-3115 3450 0	3115 3449 0	Open;Door;1804					2	
+3115 3450 0	3115 3449 0	Open;Door;1804		1 Brass key			2	
 3115 3452 0	3115 9852 0	Climb-down;Ladder;17384					2	
 3115 9852 0	3115 3452 0	Climb-up;Ladder;17385					2	
 								
@@ -927,8 +927,8 @@
 3267 3379 0	3269 3379 1	Climb-up;Ladder;11794						
 3267 3379 1	3267 3379 0	Climb-down;Ladder;11795						
 3237 9858 0	3236 3458 0	Climb-up;Ladder;11806						
-3236 3458 0	3237 9858 0	Open;Manhole;881						
-3236 3458 0	3237 9858 0	Climb-down;Manhole;882						
+3236 3458 0	3237 9858 0	Open;Manhole;881					2	
+3236 3458 0	3237 9858 0	Climb-down;Manhole;882					2	
 3210 9899 0	3210 9898 0	Slash;Web;733					8	
 3210 9898 0	3210 9899 0	Slash;Web;733					8	
 3143 3443 0	3143 3444 0	Open;Door;24958	32 Cooking	1949;20205;9801;9802;9803;13106;13107;13342			2	
@@ -1003,14 +1003,14 @@
 3304 3117 0	3304 3115 0	Go-through;Shantay pass;4031		1 Shantay pass			2	
 3304 3115 0	3304 3117 0	Go-through;Shantay pass;4031					2	
 3303 3115 0	3304 3117 0	Go-through;Shantay pass;4031					2	
-3193 2843 0	3196 2843 0	Go-through;Shantay pass;41863		1 Shantay pass			3	
-3193 2842 0	3196 2842 0	Go-through;Shantay pass;41863		1 Shantay pass			3	
-3196 2843 0	3193 2843 0	Go-through;Shantay pass;41863					3	
-3196 2842 0	3193 2842 0	Go-through;Shantay pass;41863					3	
-3167 2819 0	3167 2816 0	Go-through;Shantay pass;41863		1 Shantay pass			3	
-3168 2819 0	3168 2816 0	Go-through;Shantay pass;41863		1 Shantay pass			3	
-3167 2816 0	3167 2819 0	Go-through;Shantay pass;41863					3	
-3168 2816 0	3168 2819 0	Go-through;Shantay pass;41863					3	
+3193 2843 0	3196 2843 0	Go-through;Shantay pass;41326		1 Shantay pass			3	
+3193 2842 0	3196 2842 0	Go-through;Shantay pass;41326		1 Shantay pass			3	
+3196 2843 0	3193 2843 0	Go-through;Shantay pass;41326					3	
+3196 2842 0	3193 2842 0	Go-through;Shantay pass;41326					3	
+3167 2819 0	3167 2816 0	Go-through;Shantay pass;41326		1 Shantay pass			3	
+3168 2819 0	3168 2816 0	Go-through;Shantay pass;41326		1 Shantay pass			3	
+3167 2816 0	3167 2819 0	Go-through;Shantay pass;41326					3	
+3168 2816 0	3168 2819 0	Go-through;Shantay pass;41326					3	
 3322 3138 0	3322 3138 1	Climb-up;Ladder;21781						
 3322 3138 1	3322 3138 0	Climb-down;Ladder;21782						
 3312 3184 0	3314 3185 1	Climb-up;Staircase;16671						
@@ -1084,8 +1084,9 @@
 3032 3223 1	3032 3225 2	Climb-up;Ship's ladder;245						
 3041 3202 0	3041 3199 1	Cross;Gangplank;14304					3	
 3041 3199 1	3041 3202 0	Cross;Gangplank;14305					3	
-3038 3192 0	3038 3189 1	Cross;Gangplank;17404					3	
-3038 3189 1	3038 3192 0	Cross;Gangplank;17405					3	
+3038 3192 0	3038 3189 1	Cross;Gangplank;17404						
+3038 3189 1	3038 3192 0	Cross;Gangplank;17405						
+
 #pest control								
 2662 2677 1	2659 2676 0	Cross;Gangplank;14307					3	
 3013 3204 0	3013 3204 1	Climb-up;Ladder;16683						
@@ -1639,14 +1640,14 @@
 2420 3418 0	2418 3416 1	Climb-up;Staircase;16675						
 2443 3415 0	2445 3416 1	Climb-up;Staircase;16675						
 2445 3416 1	2446 3415 0	Climb-down;Staircase;16677						
-2446 3415 0	2445 3416 1	Climb-up;Staircase;16675						
-2446 3414 0	2445 3416 1	Climb-up;Staircase;16675						
-2445 3413 0	2445 3416 1	Climb-up;Staircase;16675						
-2444 3413 0	2445 3416 1	Climb-up;Staircase;16675						
-2443 3414 0	2445 3416 1	Climb-up;Staircase;16675						
-2445 3416 0	2445 3416 1	Climb-up;Staircase;16675						
-2444 3416 0	2445 3416 1	Climb-up;Staircase;16675						
-2445 3433 1	2444 3434 0	Climb-down;Staircase;16677						
+2446 3415 0	2445 3416 1	Climb-up;Staircase;16675					10
+2446 3414 0	2445 3416 1	Climb-up;Staircase;16675					10
+2445 3413 0	2445 3416 1	Climb-up;Staircase;16675					10
+2444 3413 0	2445 3416 1	Climb-up;Staircase;16675					10
+2443 3414 0	2445 3416 1	Climb-up;Staircase;16675					10
+2445 3416 0	2445 3416 1	Climb-up;Staircase;16675					10
+2444 3416 0	2445 3416 1	Climb-up;Staircase;16675					10
+2445 3433 1	2444 3434 0	Climb-down;Staircase;16677					10
 2444 3434 0	2445 3433 1	Climb-up;Staircase;16675					10	
 2444 3435 0	2445 3433 1	Climb-up;Staircase;16675					10	
 2445 3436 0	2445 3433 1	Climb-up;Staircase;16675					10	
@@ -1869,6 +1870,8 @@
 1504 3399 0	1504 3396 1	Cross;Gangplank;29723					3	
 1512 3416 0	1512 3416 1	Climb-up;Ladder;18324						
 1512 3416 1	1512 3416 0	Climb-down;Ladder;18325						
+1493 3403 1	1496 3403 0	Cross;Gangplank;50066						
+1496 3403 0	1493 3403 1	Cross;Gangplank;50065						
 								
 # Shayzien								
 1483 3549 0	1483 9951 3	Enter;Crypt Entrance;32403						
@@ -4368,16 +4371,16 @@
 # Karamja								
 2910 3049 0	2906 3049 0	Cross;A wooden log;23644					5	
 2906 3049 0	2910 3049 0	Cross;A wooden log;23644					5	
-2879 2954 0	2876 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2880 2953 0	2876 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2880 2952 0	2876 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2880 2951 0	2876 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2879 2950 0	2876 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2877 2954 0	2880 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2876 2953 0	2880 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2876 2952 0	2880 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2876 2951 0	2880 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
-2877 2950 0	2880 2952 0	Climb-over;Broken cart;2216			Shilo Village		2	
+2879 2954 0	2876 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2880 2953 0	2876 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2880 2952 0	2876 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2880 2951 0	2876 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2879 2950 0	2876 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2877 2954 0	2880 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2876 2953 0	2880 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2876 2952 0	2880 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2876 2951 0	2880 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
+2877 2950 0	2880 2952 0	Climb over;Broken cart;2216			Shilo Village		2	
 2777 3214 0	2834 2951 0	Board;Travel cart;2230		10 coins	Shilo Village		5	
 2778 3214 0	2834 2951 0	Board;Travel cart;2230		10 coins	Shilo Village		5	
 2776 3213 0	2834 2951 0	Board;Travel cart;2230		10 coins	Shilo Village		5	
@@ -4416,12 +4419,15 @@
 2836 3255 0	2833 9658 0	Enter;Hole;25154					1	
 2836 3256 0	2833 9658 0	Enter;Hole;25154					1	
 2836 3257 0	2833 9658 0	Enter;Hole;25154					1	
+2998 3032 1	3001 3032 0	Cross;Gangplank;17397						
+3001 3032 0	2998 3032 1	Cross;Gangplank;17396						
 								
 # Lunar Isle								
 2128 3893 2	2126 3893 1	Climb;Ladder;16961					2	
 2126 3893 1	2128 3893 2	Climb;Ladder;16959					2	
 2118 3893 1	2118 3895 0	Climb;Ladder;16962					2	
 2118 3895 0	2118 3893 1	Climb;Ladder;16960					2	
+2451 4645 0	2090 3930 0	Open;Door;16774					2	
 								
 # Zanaris								
 2452 4473 0	3201 3169 0	Use;Fairy ring;12094					6	
@@ -4506,6 +4512,8 @@
 2578 2837 1	2578 2840 0	Cross;Gangplank;31756					1	
 2523 2860 0	2012 9004 1	Enter;Hole;31791					2	
 2012 9004 1	2523 2860 0	Climb;Vine ladder;31790					2	
+2483 2889 0	1971 9035 1	Enter;Cave;31766					2	
+1971 9035 1	2483 2889 0	Enter;Cave;31806					2	
 #mining guild								
 3021 9739 0	3021 3339 0	Climb-up;Ladder;17385						
 3021 3339 0	3021 9739 0	Climb-down;Ladder;30367						
@@ -4543,9 +4551,151 @@
 2399 5177 0	2399 5175 0	Pass;Hot vent door;30266					2	
 								
 # Sunset Coast								
-1491 2985 1	1495 2985 0	Cross;Gangplank;55335					2	
-1495 2985 0	1491 2985 1	Cross;Gangplank;55334					2	
+1491 2985 1	1495 2985 0	Cross;Gangplank;55335						
+1495 2985 0	1491 2985 1	Cross;Gangplank;55334						
+1514 2968 1	1514 2971 0	Cross;Gangplank;50737						
+1514 2971 0	1514 2968 1	Cross;Gangplank;50736						
 								
 # Aldarin								
-1446 2976 1	1443 2976 0	Cross;Gangplank;55337					2	
-1443 2976 0	1446 2976 1	Cross;Gangplank;55336					2	
+1446 2976 1	1443 2976 0	Cross;Gangplank;55337						
+1443 2976 0	1446 2976 1	Cross;Gangplank;55336						
+1458 2968 1	1455 2968 0	Cross;Gangplank;55333						
+1455 2968 0	1458 2968 1	Cross;Gangplank;55332						
+								
+# Tyras								
+2142 3125 1	2142 3122 0	Cross;Gangplank;17409						
+2142 3122 0	2142 3125 1	Cross;Gangplank;17408						
+								
+# Isafdar Forest								
+2188 3162 0	2188 3165 0	Enter;Dense forest;3999						
+2188 3165 0	2188 3168 0	Enter;Dense forest;3939						
+2188 3168 0	2188 3171 0	Enter;Dense forest;3998						
+2188 3165 0	2188 3162 0	Enter;Dense forest;3999						
+2188 3168 0	2188 3165 0	Enter;Dense forest;3939						
+2188 3171 0	2188 3168 0	Enter;Dense forest;3998						
+2199 3169 0	2202 3169 0	Pass;Sticks;3922						
+2202 3169 0	2199 3169 0	Pass;Sticks;3922						
+2217 3169 0	2217 3166 0	Enter;Dense forest;3939						
+2217 3166 0	2217 3163 0	Enter;Dense forest;3938						
+2217 3163 0	2217 3160 0	Enter;Dense forest;3939						
+2217 3166 0	2217 3169 0	Enter;Dense forest;3939						
+2217 3163 0	2217 3166 0	Enter;Dense forest;3938						
+2217 3160 0	2217 3163 0	Enter;Dense forest;3939						
+2215 3156 0	2215 3153 0	Step-over;Tripwire;3921						
+2220 3155 0	2220 3152 0	Step-over;Tripwire;3921						
+2215 3153 0	2215 3156 0	Step-over;Tripwire;3921						
+2220 3152 0	2220 3155 0	Step-over;Tripwire;3921						
+2231 3149 0	2234 3149 0	Enter;Dense forest;3937						
+2234 3149 0	2237 3149 0	Enter;Dense forest;3938						
+2237 3149 0	2240 3149 0	Enter;Dense forest;3939						
+2234 3149 0	2231 3149 0	Enter;Dense forest;3937						
+2237 3149 0	2234 3149 0	Enter;Dense forest;3938						
+2240 3149 0	2237 3149 0	Enter;Dense forest;3939						
+2274 3172 0	2274 3176 0	Jump;Leaves;3925						
+2274 3176 0	2274 3172 0	Jump;Leaves;3925						
+2234 3181 0	2238 3181 0	Pass;Sticks;3922						
+2238 3181 0	2234 3181 0	Pass;Sticks;3922						
+2238 3219 0	2235 3219 0	Enter;Dense forest;3939						
+2235 3219 0	2232 3219 0	Enter;Dense forest;3937						
+2232 3219 0	2229 3219 0	Enter;Dense forest;3939						
+2229 3219 0	2226 3219 0	Enter;Dense forest;3938						
+2235 3219 0	2238 3219 0	Enter;Dense forest;3939						
+2232 3219 0	2235 3219 0	Enter;Dense forest;3937						
+2229 3219 0	2232 3219 0	Enter;Dense forest;3939						
+2226 3219 0	2229 3219 0	Enter;Dense forest;3938						
+2274 3192 0	2271 3192 0	Enter;Dense forest;3937						
+2271 3192 0	2268 3192 0	Enter;Dense forest;3939						
+2268 3192 0	2265 3192 0	Enter;Dense forest;3938						
+2271 3192 0	2274 3192 0	Enter;Dense forest;3937						
+2268 3192 0	2271 3192 0	Enter;Dense forest;3939						
+2265 3192 0	2268 3192 0	Enter;Dense forest;3938						
+2267 3201 0	2267 3205 0	Jump;Leaves;3925						
+2267 3205 0	2267 3201 0	Jump;Leaves;3925						
+2284 3188 0	2287 3188 0	Step-over;Tripwire;3921						
+2287 3188 0	2284 3188 0	Step-over;Tripwire;3921						
+2306 3194 0	2304 3194 0	Pass;Tree;8742						
+2306 3195 0	2304 3195 0	Pass;Tree;8742						
+2304 3194 0	2306 3195 0	Pass;Tree;8742						
+2304 3195 0	2306 3195 0	Pass;Tree;8742						
+2202 3237 0	2196 3237 0	Cross;Log balance;3931						
+2196 3237 0	2202 3237 0	Cross;Log balance;3931						
+2303 3213 0	2303 3216 0	Enter;Dense forest;3937						
+2303 3216 0	2303 3219 0	Enter;Dense forest;3938						
+2303 3219 0	2303 3222 0	Enter;Dense forest;3939						
+2303 3222 0	2303 3225 0	Enter;Dense forest;3938						
+2303 3216 0	2303 3213 0	Enter;Dense forest;3937						
+2303 3219 0	2303 3216 0	Enter;Dense forest;3938						
+2303 3222 0	2303 3219 0	Enter;Dense forest;3939						
+2303 3225 0	2303 3222 0	Enter;Dense forest;3938						
+2290 3232 0	2290 3239 0	Cross;Log balance;3933						
+2290 3239 0	2290 3232 0	Cross;Log balance;3933						
+2294 3242 0	2294 3245 0	Step-over;Tripwire;3921						
+2294 3245 0	2294 3242 0	Step-over;Tripwire;3921						
+2295 3215 0	2295 3217 0	Pass;Sticks;3922						
+2295 3217 0	2295 3215 0	Pass;Sticks;3922						
+2279 3221 0	2279 3225 0	Enter;Dense forest;3938						
+2279 3225 0	2279 3228 0	Enter;Dense forest;3937						
+2279 3228 0	2279 3231 0	Enter;Dense forest;3939						
+2279 3225 0	2279 3221 0	Enter;Dense forest;3938						
+2279 3228 0	2279 3225 0	Enter;Dense forest;3937						
+2279 3231 0	2279 3228 0	Enter;Dense forest;3939						
+2264 3250 0	2258 3250 0	Cross;Log balance;3932						
+2258 3250 0	2264 3250 0	Cross;Log balance;3932						
+2312 3216 0	2314 9624 0	Enter;Cave entrance;4006						
+2314 9624 0	2312 3216 0	Leave;Cave exit;4007						
+2385 3335 0	2385 3333 0	Enter;Huge Gate;3945						
+2386 3335 0	2386 3333 0	Enter;Huge Gate;3944						
+2385 3333 0	2385 3335 0	Enter;Huge Gate;3945						
+2386 3333 0	2386 3335 0	Enter;Huge Gate;3944						
+
+# Wilderness Slayer Cave
+3259 3663 0	3385 10052 0	Walk-down;Stairs;40388						
+3260 3663 0	3385 10052 0	Walk-down;Stairs;40388						
+3385 10052 0	3259 3663 0	Exit;Opening;40389						
+3294 3749 0	3406 10145 0	Walk-down;Stairs;40390						
+3293 3749 0	3406 10145 0	Walk-down;Stairs;40390						
+3406 10145 0	3293 3749 0	Exit;Opening;40391						
+3434 10090 0	3434 10095 0	Squeeze-through;Crevice;53259						
+3434 10090 0	3434 10095 0	Squeeze-through;Crevice;53259						
+
+# Ourania Altar
+2453 3231 0	3015 5629 0	Climb;Ladder;29635						
+3015 5629 0	2453 3231 0	Climb;Ladder;29636						
+
+# Port Phasmatys
+3705 3503 1	3702 3503 0	Cross;Gangplank;17393						
+3702 3503 0	3705 3503 1	Cross;Gangplank;17392						
+
+# Port Khazard
+2674 3141 1	2674 3144 0	Cross;Gangplank;17403						
+2674 3144 0	2674 3141 1	Cross;Gangplank;17402						
+
+# Civitas illa Fortis
+1747 3136 1	1743 3136 0	Cross;Gangplank;50735						
+1743 3136 0	1747 3136 1	Cross;Gangplank;50734						
+
+# Prifddinas
+2157 3330 0	2157 3333 1	Cross;Gangplank;34948						
+2157 3333 1	2157 3330 0	Cross;Gangplank;34949						
+2181 3327 0	3208 6079 0	Enter;City Gate;36519	 					
+3208 6079 0	2181 3327 0	Exit;City Gate;36523	 					
+2181 3328 0	3208 6080 0	Enter;City Gate;36518	 					
+3208 6080 0	2181 3328 0	Exit;City Gate;36522	 					
+2239 3386 0	3263 6135 0	Enter;City Gate;36519	 					
+3263 6135 0	2239 3386 0	Exit;City Gate;36523	 					
+2240 3386 0	3264 6135 0	Enter;City Gate;36518	 					
+3264 6135 0	2240 3386 0	Exit;City Gate;36522	 					
+2298 3328 0	3319 6080 0	Enter;City Gate;36519	 					
+3319 6080 0	2298 3328 0	Exit;City Gate;36523	 					
+2298 3327 0	3319 6079 0	Enter;City Gate;36518	 					
+3319 6079 0	2298 3327 0	Exit;City Gate;36522	 					
+2240 3269 0	3264 6024 0	Enter;City Gate;36519	 					
+3264 6024 0	2240 3269 0	Exit;City Gate;36523	 					
+2239 3269 0	3263 6024 0	Enter;City Gate;36518	 					
+3263 6024 0	2239 3269 0	Exit;City Gate;36522
+# f2p altars (earth, air, fire, body, water)
+2793 4828 0	2980 3511 0	Use;Portal;34749
+2726 4832 0	3182 3162 0	Use;Portal;34750
+2521 4834 0	3052 3440 0	Use;Portal;34753
+2575 4850 0	3310 3252 0	Use;Portal;34752
+2655 4830 0	3302 3477 0	Use;Portal;34751
