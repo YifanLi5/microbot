@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -425,8 +426,8 @@ public class Rs2Walker {
 
                 // Each loop looks ahead a random number of tiles in the path... (aka 'next-walk chunk')
                 int pathIdx = getClosestTileIndex(path);
-                int nextWalkIdx = Math.min(path.size() - 1, pathIdx + Random.random(10, 15));
-                int nextWalkingDistance = Random.random(3, 8);
+                int nextWalkIdx = Math.min(path.size() - 1, pathIdx + ThreadLocalRandom.current().nextInt(10, 15));
+                int nextWalkingDistance = ThreadLocalRandom.current().nextInt(3, 8);
 
                 // and checks if each of those tiles has a door that needs to be handled
                 // if handleNextDoorHelper fails, retry
