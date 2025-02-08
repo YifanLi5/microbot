@@ -72,18 +72,21 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.swing.*;
 import java.applet.Applet;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -92,13 +95,15 @@ import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 
 @Singleton
 @Slf4j
-public class RuneLite {
-    public static final File RUNELITE_DIR = new File(System.getProperty("user.home"), ".runelite");
-    public static final File CACHE_DIR = new File(RUNELITE_DIR, "cache");
-    public static final File PLUGINS_DIR = new File(RUNELITE_DIR, "plugins");
-    public static final File SCREENSHOT_DIR = new File(RUNELITE_DIR, "screenshots");
-    public static final File LOGS_DIR = new File(RUNELITE_DIR, "logs");
-    public static final File DEFAULT_SESSION_FILE = new File(RUNELITE_DIR, "session");
+public class RuneLite
+{
+	public static final File RUNELITE_DIR = new File(System.getProperty("user.home"), ".runelite");
+	public static final File CACHE_DIR = new File(RUNELITE_DIR, "cache");
+	public static final File PLUGINS_DIR = new File(RUNELITE_DIR, "plugins");
+	public static final File SCREENSHOT_DIR = new File(RUNELITE_DIR, "screenshots");
+	public static final File LOGS_DIR = new File(RUNELITE_DIR, "logs");
+	public static final File DEFAULT_SESSION_FILE = new File(RUNELITE_DIR, "session");
+	public static final File NOTIFICATIONS_DIR = new File(RuneLite.RUNELITE_DIR, "notifications");
 
     private static final int MAX_OKHTTP_CACHE_SIZE = 20 * 1024 * 1024; // 20mb
     public static String USER_AGENT = "RuneLite/" + RuneLiteProperties.getVersion() + "-" + RuneLiteProperties.getCommit() + (RuneLiteProperties.isDirty() ? "+" : "");
@@ -159,6 +164,7 @@ public class RuneLite {
     private MicrobotPluginManager microbotPluginManager;
 
     public static void main(String[] args) throws Exception {
+        validateJavaVersion();
         Locale.setDefault(Locale.ENGLISH);
 
         final OptionParser parser = new OptionParser(false);
@@ -348,6 +354,59 @@ public class RuneLite {
                             .open());
         } finally {
             SplashScreen.stop();
+        }
+    }
+
+    private static void validateJavaVersion() {
+        // Get the Java version
+        String javaVersion = System.getProperty("java.version");
+
+        // Parse the major version
+        int majorVersion = getMajorJavaVersion(javaVersion);
+
+        // Check if the version is less than 11
+        if (majorVersion < 11) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Your Java version is " + javaVersion + ".\n"
+                            + "This application requires Java 11 or higher." +
+                            "The application might not work correctly!\n\n"
+                            + "A webpage will now open where you can download the latest Java version.",
+                    "Unsupported Java Version",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            if (Desktop.isDesktopSupported()) {
+                String osName = System.getProperty("os.name").toLowerCase();
+                String downloadLink;
+                // Map OS to download links
+                Map<String, String> downloadLinks = new HashMap<>();
+                downloadLinks.put("windows", "https://www.oracle.com/java/technologies/downloads/#jdk23-windows");
+                downloadLinks.put("mac", "https://www.oracle.com/java/technologies/downloads/#jdk23-mac");
+                downloadLinks.put("linux", "https://www.oracle.com/java/technologies/downloads/#jdk23-linux");
+
+                if (osName.contains("win")) {
+                    downloadLink = downloadLinks.get("windows");
+                } else if (osName.contains("mac")) {
+                    downloadLink = downloadLinks.get("mac");
+                } else if (osName.contains("nux") || osName.contains("nix")) {
+                    downloadLink = downloadLinks.get("linux");
+                } else {
+                    downloadLink = "https://www.oracle.com/java/technologies/downloads/";
+                    System.out.println("OS not recognized, defaulting to general download page.");
+                }
+
+                try {
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().browse(new URI(downloadLink));
+                    } else {
+                        System.err.println("Desktop operations are not supported on this platform.");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.err.println("Desktop is not supported on this platform.");
+            }
         }
     }
 
@@ -691,4 +750,24 @@ public class RuneLite {
         okHttpClientBuilder.sslSocketFactory(sc.getSocketFactory(), trustManager);
     }
     // endregion
+
+    /**
+     * Extracts the major Java version from the full version string.
+     * @param version the full Java version string
+     * @return the major version as an integer
+     */
+    private static int getMajorJavaVersion(String version) {
+        try {
+            // Java 9 and above have version strings like "11.0.2"
+            if (version.startsWith("1.")) {
+                // Java 8 or earlier versions have strings like "1.8.0_202"
+                return Integer.parseInt(version.split("\\.")[1]);
+            } else {
+                // For Java 9 and above
+                return Integer.parseInt(version.split("\\.")[0]);
+            }
+        } catch (NumberFormatException e) {
+            return -1; // Invalid version
+        }
+    }
 }

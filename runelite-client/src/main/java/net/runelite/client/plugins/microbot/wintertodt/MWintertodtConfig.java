@@ -74,17 +74,6 @@ public interface MWintertodtConfig extends Config {
     }
 
     @ConfigItem(
-            keyName = "OpenCrates",
-            name = "Open Supply Crates",
-            description = "Open supply crates",
-            position = 4,
-            section = generalSection
-    )
-    default boolean openCrates() {
-        return true;
-    }
-
-    @ConfigItem(
             keyName = "AxeInventory",
             name = "Axe In Inventory?",
             description = "Axe in inventory?",
@@ -148,6 +137,18 @@ public interface MWintertodtConfig extends Config {
     )
     default int warmthTreshhold() {
         return 20;
+    }
+
+    // use rejuvenation potions instead of food
+    @ConfigItem(
+            keyName = "RejuvenationPotions",
+            name = "Rejuvenation Potions",
+            description = "Use rejuvenation potions instead of food",
+            position = 6,
+            section = foodSection
+    )
+    default boolean rejuvenationPotions() {
+        return false;
     }
 
     @ConfigItem(

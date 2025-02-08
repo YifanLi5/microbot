@@ -5,14 +5,11 @@ import lombok.RequiredArgsConstructor;
 import net.runelite.client.plugins.microbot.shortestpath.ShortestPathPlugin;
 import net.runelite.client.plugins.microbot.shortestpath.Util;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import static net.runelite.api.Constants.REGION_SIZE;
@@ -49,6 +46,25 @@ public class SplitFlagMap {
         if (index < 0 || index >= regionMaps.length || regionMaps[index] == null) {
             return false;
         }
+
+   /*     try {
+            if (Rs2Player.getWorldLocation().getRegionID() == 14162) { //toa puzzle room
+                WorldPoint globalWorldPoint = Rs2WorldPoint.convertInstancedWorldPoint(new WorldPoint(x, y, z));
+                if (globalWorldPoint == null) {
+                    Microbot.log("Something went wrong.");
+                } else {
+                    TileObject go = Rs2GameObject.findGroundObjectByLocation(globalWorldPoint);
+                    if (go != null && go.getId() == 45340) {
+                        //System.out.println("found a tile " + globalWorldPoint);
+                        return false;
+                    }
+                }
+            }
+        } catch(Exception ex) {
+            Microbot.log("oops something went wrong");
+        }*/
+
+
 
         return regionMaps[index].get(x, y, z, flag);
     }

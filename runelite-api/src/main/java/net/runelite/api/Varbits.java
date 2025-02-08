@@ -112,6 +112,17 @@ public final class Varbits
 	public static final int CHAT_SCROLLBAR_ON_LEFT = 6374;
 
 	/**
+	 * Essence pouches
+	 */
+	public static final int ESSENCE_POUCH_SMALL_AMOUNT = 603;
+	public static final int ESSENCE_POUCH_MEDIUM_AMOUNT = 604;
+	public static final int ESSENCE_POUCH_LARGE_AMOUNT = 605;
+	public static final int ESSENCE_POUCH_GIANT_AMOUNT = 606;
+	public static final int ESSENCE_POUCH_COLOSSAL_AMOUNT = 13682;
+
+	public static final int ESSENCE_POUCH_COLOSSAL_DEGRADE = 13683;
+
+	/**
 	 * Runepouch
 	 */
 	public static final int RUNE_POUCH_RUNE1 = 29;
@@ -389,8 +400,6 @@ public final class Varbits
 	 */
 	public static final int IN_RAID = 5432;
 	public static final int TOTAL_POINTS = 5431;
-	public static final int PERSONAL_POINTS = 5422;
-	public static final int RAID_PARTY_SIZE = 5424;
 
 	// 0 = raid not started, >0 = raid started
 	public static final int RAID_STATE = 5425;
@@ -494,6 +503,11 @@ public final class Varbits
 	 * The Hand in the Sand quest status
 	 */
 	public static final int QUEST_THE_HAND_IN_THE_SAND = 1527;
+
+	/**
+	 * Dragon slayer 2 quest status
+	 */
+	public static final int QUEST_DS2 = 6104;
 
 	/**
 	 * Daily Tasks =Collection availability)
@@ -809,6 +823,13 @@ public final class Varbits
 	public static final int GOD_WARS_ALTAR_COOLDOWN = 4099;
 
 	/**
+	 * Cooldown timer remaining before being able to eat from the piles of food in Scurrius's lair.
+	 * Number of game ticks remaining is in intervals of 100; for a value X there are 100 * X game ticks remaining.
+	 * A player can eat from the food piles once this reaches 0.
+	 */
+	public static final int SCURRIUS_FOOD_PILE_COOLDOWN = 9581;
+
+	/**
 	 * Farmer's Affinity effect timer
 	 * Number of game ticks remaining on Farmer's Affinity effect in intervals of 20; for a value X there are 20 * X game ticks remaining.
 	 * The Farmer's Affinity expires once this reaches 0.
@@ -936,4 +957,26 @@ public final class Varbits
 	 * </p>
 	 */
 	public static final int COLOSSAL_WYRM_COURSE_ADVANCED = 11293;
+
+	public static final int WINTERTODT_WARMTH = 11434;
+
+	public static final int COMBAT_TASK_EASY = 12885;
+	public static final int COMBAT_TASK_MEDIUM = 12886;
+	public static final int COMBAT_TASK_HARD = 12887;
+	public static final int COMBAT_TASK_ELITE = 12888;
+	public static final int COMBAT_TASK_MASTER = 12889;
+	public static final int COMBAT_TASK_GRANDMASTER = 12890;
+
+	public static final int LEAGUES_MELEE_COMBAT_MASTERY_LEVEL = 11580;
+	public static final int LEAGUES_RANGED_COMBAT_MASTERY_LEVEL = 11581;
+	public static final int LEAGUES_MAGIC_COMBAT_MASTERY_LEVEL = 11582;
+
+	/**
+	 * The slayer master which is present at Burthorpe.
+	 * <p>
+	 * 0 = Turael
+	 * 1, 2 = Aya
+	 * 3 = Null
+	 */
+	public static final int BURTHORPE_SLAYER_MASTER = 10782;
 }

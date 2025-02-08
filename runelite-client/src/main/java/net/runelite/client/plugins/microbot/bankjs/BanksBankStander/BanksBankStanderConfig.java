@@ -1,24 +1,61 @@
 package net.runelite.client.plugins.microbot.bankjs.BanksBankStander;
 
 import net.runelite.client.config.*;
+import net.runelite.client.plugins.microbot.util.inventory.InteractOrder;
 
-@ConfigGroup("example")
+@ConfigGroup("BankStander")
+@ConfigInformation("This Script will perform bank standing activities. <br /> "
+        + "<ul>" +
+        "<li>Crafting</li>" +
+        "<li>Herblore</li>" +
+        "<li>Fletching</li>" +
+        "<li>Cooking<li>" +
+        "</ul>")
 public interface BanksBankStanderConfig extends Config {
-
     @ConfigSection(
             name = "Item Settings",
             description = "Set Items to Combine",
-            position = 0,
+            position = 1,
             closedByDefault = false
     )
     String itemSection = "itemSection";
-
+    @ConfigSection(
+            name = "Toggles",
+            description = "Change plugin behaviour",
+            position = 2,
+            closedByDefault = false
+    )
+    String toggles = "toggles";
+    @ConfigSection(
+            name = "Interaction Menu",
+            description = "Change the interaction menu; e.g. clean grimy herbs",
+            position = 3,
+            closedByDefault = true
+    )
+    String interaction = "interaction";
+    @ConfigSection(
+            name = "Sleep Settings",
+            description = "Set Sleep Settings",
+            position = 4,
+            closedByDefault = false
+    )
+    String sleepSection = "sleepSection";
     // Items
+    @ConfigItem(
+            keyName = "interactOrder",
+            name = "Interact Order",
+            description = "The order in which to interact with items",
+            position = 0,
+            section = itemSection
+    )
+    default InteractOrder interactOrder() {
+        return InteractOrder.STANDARD;
+    }
     @ConfigItem(
             keyName = "First Item",
             name = "First Item",
             description = "Sets First Item, use either Item ID or Item Name",
-            position = 0,
+            position = 1,
             section = itemSection
     )
 
@@ -30,12 +67,12 @@ public interface BanksBankStanderConfig extends Config {
             keyName = "First Item Quantity",
             name = "First Item Quantity",
             description = "Sets First Item's Quantity.",
-            position = 0,
+            position = 2,
             section = itemSection
     )
     @Range(
             min = 1,
-            max = 27
+            max = 28
     )
 
     default int firstItemQuantity() {
@@ -46,7 +83,7 @@ public interface BanksBankStanderConfig extends Config {
             keyName = "Second Item",
             name = "Second Item",
             description = "Sets Second Item, use either Item ID or Item Name",
-            position = 0,
+            position = 3,
             section = itemSection
     )
 
@@ -58,26 +95,124 @@ public interface BanksBankStanderConfig extends Config {
             keyName = "Second Item Quantity",
             name = "Second Item Quantity",
             description = "Sets Second Item's Quantity.",
-            position = 0,
+            position = 4,
             section = itemSection
     )
     @Range(
-            min = 1,
+            min = 0,
             max = 27
     )
 
     default int secondItemQuantity() {
         return 27;
     }
-
-    @ConfigSection(
-            name = "Sleep Settings",
-            description = "Set Sleep Settings",
-            position = 1,
-            closedByDefault = false
+    @ConfigItem(
+            keyName = "Third Item",
+            name = "Third Item",
+            description = "Sets Third Item, use either Item ID or Item Name",
+            position = 5,
+            section = itemSection
     )
-    String sleepSection = "sleepSection";
 
+    default String thirdItemIdentifier() {
+        return "";
+    }
+
+    @ConfigItem(
+            keyName = "Third Item Quantity",
+            name = "Third Item Quantity",
+            description = "Sets Third Item's Quantity.",
+            position = 6,
+            section = itemSection
+    )
+    @Range(
+            min = 0,
+            max = 27
+    )
+
+    default int thirdItemQuantity() {
+        return 0;
+    }
+
+    @ConfigItem(
+            keyName = "Fourth Item",
+            name = "Fourth Item",
+            description = "Sets Fourth Item, use either Item ID or Item Name",
+            position = 7,
+            section = itemSection
+    )
+
+    default String fourthItemIdentifier() {
+        return "";
+    }
+
+    @ConfigItem(
+            keyName = "Fourth Item Quantity",
+            name = "Fourth Item Quantity",
+            description = "Sets Fourth Item's Quantity.",
+            position = 8,
+            section = itemSection
+    )
+    @Range(
+            min = 0,
+            max = 27
+    )
+
+    default int fourthItemQuantity() {
+        return 0;
+    }
+
+    @ConfigItem(
+            keyName = "pause",
+            name = "Pause",
+            description = "Pause the script? will pause between states",
+            position = 1,
+            section = toggles
+    )
+    default boolean pause() {
+        return false;
+    }
+
+    @ConfigItem(
+            keyName = "Prompt",
+            name = "Prompt?",
+            description = "Does this combination need to respond to a prompt?",
+            position = 2,
+            section = toggles
+    )
+    default boolean needPromptEntry() {
+        return true;
+    }
+    @ConfigItem(
+            keyName = "WaitForProcess",
+            name = "Wait for process?",
+            description = "Does this combination need to wait for animation? ie. wait for inventory to process.",
+            position = 5,
+            section = toggles
+    )
+    default boolean waitForAnimation() {
+        return true;
+    }
+    @ConfigItem(
+            keyName = "depositAll",
+            name = "deposit all",
+            description = "force the bank to deposit all items each time.",
+            position = 6,
+            section = toggles
+    )
+    default boolean depositAll() {
+        return false;
+    }
+    @ConfigItem(
+            keyName = "Interaction Option",
+            name = "Interaction Option",
+            description = "default is \"use\".",
+            position = 0,
+            section = interaction
+    )
+    default String menu() {
+        return "use";
+    }
     @ConfigItem(
             keyName = "Sleep Min",
             name = "Sleep Min",
@@ -86,7 +221,7 @@ public interface BanksBankStanderConfig extends Config {
             section = sleepSection
     )
     @Range(
-            min = 0,
+            min = 60,
             max = 20000
     )
 
@@ -102,7 +237,7 @@ public interface BanksBankStanderConfig extends Config {
             section = sleepSection
     )
     @Range(
-            min = 0,
+            min = 90,
             max = 20000
     )
 
@@ -118,30 +253,11 @@ public interface BanksBankStanderConfig extends Config {
             section = sleepSection
     )
     @Range(
-            min = 0,
+            min = 100,
             max = 20000
     )
 
     default int sleepTarget() {
         return 900;
     }
-
-    @ConfigItem(
-            keyName = "Instructions",
-            name = "Instructions",
-            description = "Instructions",
-            position = 1,
-            section = sleepSection
-    )
-    default String basicInstructions() {
-        return "This Script will combine items for you" +
-                "\n If using a Knife etc. make sure qty is set to 1. and use Item Slot 1." +
-                "\nChisel Item ID = 1755" +
-                "\nKnife Item ID = 946" +
-                "\nGlassblowing Pipe Item ID = 1785" +
-                "\nFor Bug reports & Future updates, my discord is Bank.js" +
-                "\nor find me in the Microbot discord.";
-    }
-
-
 }

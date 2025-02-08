@@ -6,6 +6,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.client.plugins.bank.BankPlugin;
 import net.runelite.client.plugins.loottracker.LootTrackerItem;
 import net.runelite.client.plugins.loottracker.LootTrackerRecord;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -16,6 +17,7 @@ import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grandexchange.Rs2GrandExchange;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.RunePouchType;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
@@ -114,19 +116,19 @@ public class Rs2Bank {
      * @return true if the bank interface was open and successfully closed, false otherwise.
      */
     public static boolean isOpen() {
-        if (Rs2Widget.hasWidget("Please enter your PIN")) {
+        if (isBankPinWidgetVisible()) {
             try {
-                if (Login.activeProfile.getBankPin().isEmpty()) {
-                    Microbot.showMessage("Your bankpin is empty. Please fill this field in your runelite profile.");
+                if ((Login.activeProfile.getBankPin() == null || Login.activeProfile.getBankPin().isEmpty()) || Login.activeProfile.getBankPin().equalsIgnoreCase("**bankpin**")) {
                     return false;
                 }
                 handleBankPin(Encryption.decrypt(Login.activeProfile.getBankPin()));
             } catch (Exception e) {
-                System.out.println("Something went wrong handling bankpin");
+                System.out.println("Something went wrong handling bankpin ");
+                e.printStackTrace();
             }
             return false;
         }
-        return Rs2Widget.findWidget("Rearrange mode", null) != null;
+        return Rs2Widget.hasWidgetText("Rearrange mode", 12, 18, false);
     }
 
     public static List<Rs2Item> bankItems() {
@@ -188,6 +190,117 @@ public class Rs2Bank {
     public static boolean hasItem(String name, boolean exact) {
         return findBankItem(name, exact) != null;
     }
+    
+    /**
+     * Checks if the bank contains any of the specified item names.
+     *
+     * @param names A list of item names to check for.
+     * @return True if any of the items are found, false otherwise.
+     */
+    public static boolean hasItem(List<String> names) {
+        return hasItem(names, false, 1);
+    }
+
+    /**
+     * Checks if the bank contains any of the specified item names.
+     *
+     * @param names A list of item names to check for.
+     * @param exact If true, requires an exact name match.
+     * @return True if any of the items are found, false otherwise.
+     */
+    public static boolean hasItem(List<String> names, boolean exact) {
+        return hasItem(names, exact, 1);
+    }
+
+    /**
+     * Checks if the bank contains any of the specified item names.
+     *
+     * @param names A list of item names to check for.
+     * @param amount The minimum quantity required for each item.
+     * @return True if any of the items are found, false otherwise.
+     */
+    public static boolean hasItem(List<String> names, int amount) {
+        return hasItem(names, false, amount);
+    }
+    
+    /**
+     * Checks if the bank contains all items from a list of names with a minimum quantity.
+     *
+     * @param names  A list of item names to check for.
+     * @param exact  If true, requires an exact name match.
+     * @param amount The minimum quantity required for each item.
+     * @return True if all items from the list exist in the bank with the required quantity, false otherwise.
+     */
+    public static boolean hasAllItems(List<String> names, boolean exact, int amount) {
+        return names.stream().allMatch(name -> {
+            Rs2Item item = findBankItem(name, exact, amount);
+            return item != null;
+        });
+    }
+    
+    /**
+     * Checks if the bank contains any items from a list of names with a minimum quantity.
+     *
+     * @param names  A list of item names to check for.
+     * @param exact  If true, requires an exact name match.
+     * @param amount The minimum quantity required for the items.
+     * @return True if the bank contains at least one of the items with the specified quantity, false otherwise.
+     */
+    public static boolean hasItem(List<String> names, boolean exact, int amount) {
+        return findBankItem(names, exact, amount) != null;
+    }
+
+    /**
+     * Checks if the bank contains any item from the given array of IDs.
+     *
+     * @param ids The array of item IDs to check.
+     * @return True if the bank contains at least one of the specified items, false otherwise.
+     */
+    public static boolean hasItem(int[] ids) {
+        return Arrays.stream(ids)
+                .anyMatch(id -> findBankItem(id) != null);
+    }
+
+    /**
+     * Checks if the bank contains all items from the given array of IDs.
+     *
+     * @param ids The array of item IDs to check.
+     * @return True if the bank contains all the specified items, false otherwise.
+     */
+    public static boolean hasAllItems(int[] ids) {
+        return Arrays.stream(ids)
+                .allMatch(id -> findBankItem(id) != null);
+    }
+
+    /**
+     * Checks if the bank contains any item from the given array of IDs with the specified quantity.
+     *
+     * @param ids The array of item IDs to check.
+     * @param amount The minimum quantity required for each item.
+     * @return True if the bank contains at least one of the specified items with the required quantity, false otherwise.
+     */
+    public static boolean hasItem(int[] ids, int amount) {
+        return Arrays.stream(ids)
+                .anyMatch(id -> {
+                    Rs2Item item = findBankItem(id);
+                    return item != null && item.quantity >= amount;
+                });
+    }
+
+    /**
+     * Checks if the bank contains all items from the given array of IDs with the specified quantity.
+     *
+     * @param ids The array of item IDs to check.
+     * @param amount The minimum quantity required for each item.
+     * @return True if the bank contains all the specified items with the required quantity, false otherwise.
+     */
+    public static boolean hasAllItems(int[] ids, int amount) {
+        return Arrays.stream(ids)
+                .allMatch(id -> {
+                    Rs2Item item = findBankItem(id);
+                    return item != null && item.quantity >= amount;
+                });
+    }
 
     /**
      * check if the player has a bank item identified by exact name.
@@ -240,6 +353,15 @@ public class Rs2Bank {
         if (rs2Item == null) return false;
         log.info("Item: " + rs2Item.name + " Amount: " + rs2Item.quantity);
         return findBankItem(Objects.requireNonNull(rs2Item).name, true, amount) != null;
+    }
+
+    /**
+     * Query count of item inside of bank
+     */
+    public static int count(int id) {
+        Rs2Item bankItem = findBankItem(id);
+        if (bankItem == null) return 0;
+        return bankItem.quantity;
     }
 
     /**
@@ -347,8 +469,8 @@ public class Rs2Bank {
      * @param rs2Item The item to handle.
      * @param amount  The desired amount to set.
      */
-    private static void handleAmount(Rs2Item rs2Item, int amount) {
-        handleAmount(rs2Item, amount, false);
+    private static boolean handleAmount(Rs2Item rs2Item, int amount) {
+        return handleAmount(rs2Item, amount, false);
     }
 
     /**
@@ -363,19 +485,23 @@ public class Rs2Bank {
      * @param amount  The desired amount to set.
      * @param safe    will wait for item to appear in inventory before continuing if set to true
      */
-    private static void handleAmount(Rs2Item rs2Item, int amount, boolean safe) {
+    private static boolean handleAmount(Rs2Item rs2Item, int amount, boolean safe) {
         int inventorySize = Rs2Inventory.size();
         if (Microbot.getVarbitValue(X_AMOUNT_VARBIT) == amount) {
             invokeMenu(HANDLE_X_SET, rs2Item);
+
             if (safe)
-                sleepUntil(() -> inventorySize != Rs2Inventory.size(), 2500);
+                return sleepUntilTrue(() -> inventorySize != Rs2Inventory.size(), 100, 2500);
+
+            return true;
         } else {
             invokeMenu(HANDLE_X_UNSET, rs2Item);
 
-            sleep(1200);
+            sleep(Rs2Random.randomGaussian(1100,200));
             Rs2Keyboard.typeString(String.valueOf(amount));
             Rs2Keyboard.enter();
             sleepUntil(() -> Rs2Inventory.hasItem(rs2Item.id), 2500);
+            return true;
         }
     }
 
@@ -451,7 +577,7 @@ public class Rs2Bank {
         for (Rs2Item item : items) {
             if (item == null) continue;
             depositAll(item);
-            sleep(300, 600);
+            sleep(Rs2Random.randomGaussian(400,200));
             result = true;
         }
         return result;
@@ -552,7 +678,7 @@ public class Rs2Bank {
      */
     public static boolean depositAllExcept(boolean exact, String... names) {
         if (!exact)
-            return depositAll(x -> Arrays.stream(names).noneMatch(name -> x.name.contains(name.toLowerCase())));
+            return depositAll(x -> Arrays.stream(names).noneMatch(name -> x.name.toLowerCase().contains(name.toLowerCase())));
         else
             return depositAll(x -> Arrays.stream(names).noneMatch(name -> name.equalsIgnoreCase(x.name)));
     }
@@ -628,18 +754,96 @@ public class Rs2Bank {
     }
 
     /**
+     * withdraw one item identified by its id.
+     *
+     * @param id the item id
+     */
+    public static void withdrawAllButOne(int id) {
+        withdrawAllButOne(findBankItem(id));
+    }
+
+    /**
+     * withdraw one item identified by its name
+     *
+     * @param name the item name
+     */
+    public static void withdrawAllButOne(String name) {
+        withdrawAllButOne(name, false);
+    }
+
+
+    /**
+     * withdraw one item identified by its name.
+     * set exact to true if you want to identify by the exact name.
+     *
+     * @param name  the item name
+     * @param exact boolean
+     */
+    public static void withdrawAllButOne(String name, boolean exact) {
+        withdrawAllButOne(findBankItem(name, exact));
+    }
+
+    /**
+     * withdraw all but one of an item identified by its ItemWidget.
+     *
+     * @param rs2Item item to withdraw
+     */
+    private static void withdrawAllButOne(Rs2Item rs2Item) {
+        if (!isOpen()) return;
+        if (rs2Item == null) return;
+        if (Rs2Inventory.isFull()) return;
+        container = BANK_ITEM_CONTAINER;
+        
+        invokeMenu(8, rs2Item);
+    }
+
+    /**
      * withdraw x amount of items identified by its ItemWidget.
      *
      * @param rs2Item Item to handle
      * @param amount  int
      */
-    private static void withdrawXItem(Rs2Item rs2Item, int amount) {
-        if (!isOpen()) return;
-        if (rs2Item == null) return;
-        if (Rs2Inventory.isFull() && !Rs2Inventory.hasItem(rs2Item.id) && !rs2Item.isStackable()) return;
+    private static boolean withdrawXItem(Rs2Item rs2Item, int amount) {
+        if (!isOpen()) return false;
+        if (rs2Item == null) return false;
+        if (Rs2Inventory.isFull() && !Rs2Inventory.hasItem(rs2Item.id) && !rs2Item.isStackable()) return false;
         container = BANK_ITEM_CONTAINER;
 
-        handleAmount(rs2Item, amount);
+        return handleAmount(rs2Item, amount);
+    }
+
+    /**
+     * Withdraws the deficit of an item from the bank to meet the required amount.
+     *
+     * @param id             The ID of the item to withdraw.
+     * @param requiredAmount The required total amount of the item.
+     * @return True if any items were withdrawn, false otherwise.
+     */
+    public static boolean withdrawDeficit(int id, int requiredAmount) {
+        int currentAmount = Rs2Inventory.itemQuantity(id);
+        int deficit = requiredAmount - currentAmount;
+
+        if (deficit <= 0) return true;
+        if (!hasBankItem(id, deficit)) return false;
+
+        return withdrawX(id, deficit);
+    }
+
+    /**
+     * Withdraws the deficit of an item from the bank to meet the required amount.
+     *
+     * @param name           The name of the item to withdraw.
+     * @param requiredAmount The required total amount of the item.
+     * @return True if any items were withdrawn, false otherwise.
+     */
+    public static boolean withdrawDeficit(String name, int requiredAmount) {
+        int currentAmount = Rs2Inventory.itemQuantity(name);
+        int deficit = requiredAmount - currentAmount;
+
+        if (deficit <= 0) return true;
+        if (!hasBankItem(name, deficit)) return false;
+
+        return withdrawX(name, deficit);
     }
 
     /**
@@ -673,9 +877,9 @@ public class Rs2Bank {
      * @param amount   amount to withdraw
      * @param exact    exact search based on equalsIgnoreCase
      */
-    public static void withdrawX(boolean checkInv, String name, int amount, boolean exact) {
-        if (checkInv && Rs2Inventory.hasItem(name)) return;
-        withdrawX(name, amount, exact);
+    public static boolean withdrawX(boolean checkInv, String name, int amount, boolean exact) {
+        if (checkInv && Rs2Inventory.hasItem(name)) return false;
+        return withdrawX(name, amount, exact);
     }
 
     /**
@@ -684,8 +888,8 @@ public class Rs2Bank {
      * @param id     item id to search
      * @param amount amount to withdraw
      */
-    public static void withdrawX(int id, int amount) {
-        withdrawXItem(findBankItem(id), amount);
+    public static boolean withdrawX(int id, int amount) {
+        return withdrawXItem(findBankItem(id), amount);
     }
 
     /**
@@ -696,8 +900,8 @@ public class Rs2Bank {
      * @param amount amount to withdraw
      * @param exact  exact search based on equalsIgnoreCase
      */
-    private static void withdrawX(String name, int amount, boolean exact) {
-        withdrawXItem(findBankItem(name, exact), amount);
+    private static boolean withdrawX(String name, int amount, boolean exact) {
+        return withdrawXItem(findBankItem(name, exact), amount);
     }
 
     /**
@@ -706,8 +910,8 @@ public class Rs2Bank {
      * @param name   item name to search
      * @param amount amount to withdraw
      */
-    public static void withdrawX(String name, int amount) {
-        withdrawXItem(findBankItem(name, false), amount);
+    public static boolean withdrawX(String name, int amount) {
+        return withdrawXItem(findBankItem(name, false), amount);
     }
 
     /**
@@ -899,28 +1103,32 @@ public class Rs2Bank {
                 Microbot.getMouse().click();
             if (isOpen()) return true;
             boolean action;
-            WallObject grandExchangeBooth = Rs2GameObject.getWallObjects().stream().filter(x -> x.getId() == 10060 || x.getId() == 30389).findFirst().orElse(null);
+            WallObject grandExchangeBooth = Rs2GameObject.getWallObjects()
+                    .stream()
+                    .filter(x -> x.getId() == 10060 || x.getId() == 30389)
+                    .findFirst()
+                    .orElse(null);
             GameObject bank = Rs2GameObject.findBank();
+            GameObject chest = Rs2GameObject.findChest();
 
-            if (bank != null && (grandExchangeBooth == null ||
+            // Determine if bank should be skipped in favor of chest
+            boolean useChest = bank != null && chest != null && bank.getWorldLocation().distanceTo2D(Rs2Player.getWorldLocation()) > chest.getWorldLocation().distanceTo2D(Rs2Player.getWorldLocation());
+
+            if (!useChest && bank != null && (grandExchangeBooth == null ||
                     bank.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= grandExchangeBooth.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()))) {
                 action = Rs2GameObject.interact(bank, "bank");
             } else if (grandExchangeBooth != null) {
                 action = Rs2GameObject.interact(grandExchangeBooth, "bank");
+            } else if (chest != null) {
+                action = Rs2GameObject.interact(chest, "use");
             } else {
-                GameObject chest = Rs2GameObject.findChest();
-                if (chest != null) {
-                    action = Rs2GameObject.interact(chest, "use");
-                } else {
-                    NPC npc = Rs2Npc.getNpc("banker");
-                    if (npc == null) return false;
-                    action = Rs2Npc.interact(npc, "bank");
-                }
+                NPC npc = Rs2Npc.getBankerNPC();
+                if (npc == null) return false;
+                action = Rs2Npc.interact(npc, "bank");
             }
 
             if (action) {
-                sleepUntil(() -> isOpen() || Rs2Widget.hasWidget("Please enter your PIN"), 2500);
-                sleep(600, 1000);
+                sleepUntil(Rs2Bank::isOpen, 5000);
             }
             return action;
         } catch (Exception ex) {
@@ -944,7 +1152,7 @@ public class Rs2Bank {
             }
 
             sleepUntil(Rs2Bank::isOpen);
-            sleep(600, 1000);
+            sleep(Rs2Random.randomGaussian(800,200));
             return true;
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -974,7 +1182,7 @@ public class Rs2Bank {
             }
 
             sleepUntil(Rs2Bank::isOpen);
-            sleep(600, 1000);
+            sleep(Rs2Random.randomGaussian(800,200));
             return true;
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -1061,58 +1269,93 @@ public class Rs2Bank {
     }
 
     /**
+     * Finds an item in the bank based on a list of names.
+     *
+     * @param names  A list of potential item names.
+     * @param exact  If true, requires an exact name match.
+     * @param amount The minimum amount needed to find in the bank.
+     * @return The first matching item widget, or null if no matching item is found.
+     */
+    private static Rs2Item findBankItem(List<String> names, boolean exact, int amount) {
+        if (bankItems == null || bankItems.isEmpty()) return null;
+
+        return bankItems.stream()
+                .filter(item -> names.stream().anyMatch(name -> exact
+                        ? item.name.equalsIgnoreCase(name)
+                        : item.name.toLowerCase().contains(name.toLowerCase())))
+                .filter(item -> item.quantity >= amount)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * Get the nearest bank
      *
      * @return BankLocation
      */
     public static BankLocation getNearestBank() {
-        BankLocation nearest = null;
-        double dist = Double.MAX_VALUE;
-        int y = Microbot.getClient().getLocalPlayer().getWorldLocation().getY();
-        boolean playerIsInCave = y > 9000;
-        WorldPoint playerLocation;
-        double currDist;
-        final int penalty = 10; // penalty if the bank is outside the cave and player is inside cave. This is to avoid being closer than banks in a cave
-        for (BankLocation bankLocation : BankLocation.values()) {
-            if (!bankLocation.hasRequirements() && !bankLocation.hasException()) continue;
+        return getNearestBank(Microbot.getClient().getLocalPlayer().getWorldLocation());
+    }
+    /**
+     * Get the nearest bank to world point
+     *
+     * @return BankLocation
+     */
 
-            boolean bankisInCave = bankLocation.getWorldPoint().getY() > 9000;
+    public static BankLocation getNearestBank(WorldPoint worldPoint) {
+        Microbot.log("Calculating nearest bank path...");
 
-            if (!bankisInCave && playerIsInCave) {
-                playerLocation = new WorldPoint(Microbot.getClient().getLocalPlayer().getWorldLocation().getX(),  Microbot.getClient().getLocalPlayer().getWorldLocation().getY() - 6400, Microbot.getClient().getPlane());
-                currDist = playerLocation.distanceTo2D(bankLocation.getWorldPoint()) + penalty;
-            } else {
-                playerLocation = new WorldPoint(Microbot.getClient().getLocalPlayer().getWorldLocation().getX(),  Microbot.getClient().getLocalPlayer().getWorldLocation().getY(), Microbot.getClient().getPlane());
-                currDist = playerLocation.distanceTo2D(bankLocation.getWorldPoint());
-            }
+        // Convert the enum values to a Stream, filter out those
+        // that don't meet requirements, then work in parallel.
+        BankLocation nearest = Arrays.stream(BankLocation.values())
+                .parallel()
+                .filter(BankLocation::hasRequirements)
+                .min(Comparator.comparingInt(bankLocation ->
+                        Rs2Walker.getTotalTiles(worldPoint,bankLocation.getWorldPoint())))
+                .orElse(null);
 
+        if (nearest != null) {
+            Microbot.log("Found nearest bank: " + nearest.name());
 
-            if (nearest == null || currDist < dist) {
-                dist = currDist;
-                nearest = bankLocation;
-            }
+        } else {
+            Microbot.log("Unable to find nearest bank");
+            return null;
         }
         return nearest;
     }
 
     /**
-     * Walk to the closest bank
+     * Walks to the closest bank using the nearest bank location.
+     * Toggles run energy if the player is not already running.
      *
-     * @return true if player location is less than 4 tiles away from the bank location
+     * @return true if the player's location is within 4 tiles of the bank location.
      */
     public static boolean walkToBank() {
         return walkToBank(getNearestBank());
     }
 
     /**
-     * Walk to bank location
-     * 
-     * @param bankLocation 
-     * @return true if player location is less than 4 tiles away from the bank location
+     * Walks to a specified bank location.
+     * Toggles run energy if the player is not already running.
+     *
+     * @param bankLocation the target bank location to walk to.
+     * @return true if the player's location is within 4 tiles of the specified bank location.
      */
     public static boolean walkToBank(BankLocation bankLocation) {
+        return walkToBank(bankLocation, true);
+    }
+
+    /**
+     * Walks to a specified bank location with an option to toggle run energy.
+     * If the bank is already open, the method exits immediately.
+     *
+     * @param bankLocation the target bank location to walk to.
+     * @param toggleRun    whether to toggle run energy during the walk.
+     * @return true if the player's location is within 4 tiles of the specified bank location.
+     */
+    public static boolean walkToBank(BankLocation bankLocation, boolean toggleRun) {
         if (Rs2Bank.isOpen()) return true;
-        Rs2Player.toggleRunEnergy(true);
+        Rs2Player.toggleRunEnergy(toggleRun);
         Microbot.status = "Walking to nearest bank " + bankLocation.toString();
         Rs2Walker.walkTo(bankLocation.getWorldPoint(), 4);
         return bankLocation.getWorldPoint().distanceTo2D(Microbot.getClient().getLocalPlayer().getWorldLocation()) <= 4;
@@ -1141,23 +1384,37 @@ public class Rs2Bank {
     }
 
     /**
-     * Walk to the closest bank
+     * Walks to the closest bank and attempts to use the bank interface.
+     * Toggles run energy if the player is not already running.
      *
-     * @return true if bank interface is open
+     * @return true if the bank interface is successfully opened.
      */
     public static boolean walkToBankAndUseBank() {
         return walkToBankAndUseBank(getNearestBank());
     }
 
     /**
-     * Walk to bank location & use bank
+     * Walks to a specified bank location and attempts to use the bank interface.
+     * Toggles run energy if the player is not already running.
      *
-     * @param bankLocation 
-     * @return true if bank interface is open
+     * @param bankLocation the target bank location to walk to and use.
+     * @return true if the bank interface is successfully opened.
      */
     public static boolean walkToBankAndUseBank(BankLocation bankLocation) {
+        return walkToBankAndUseBank(bankLocation, true);
+    }
+
+    /**
+     * Walks to a specified bank location with an option to toggle run energy and attempts to use the bank interface.
+     * If the bank is already open, the method exits immediately.
+     *
+     * @param bankLocation the target bank location to walk to and use.
+     * @param toggleRun    whether to toggle run energy during the walk.
+     * @return true if the bank interface is successfully opened.
+     */
+    public static boolean walkToBankAndUseBank(BankLocation bankLocation, boolean toggleRun) {
         if (Rs2Bank.isOpen()) return true;
-        Rs2Player.toggleRunEnergy(true);
+        Rs2Player.toggleRunEnergy(toggleRun);
         Microbot.status = "Walking to nearest bank " + bankLocation.toString();
         boolean result = bankLocation.getWorldPoint().distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation()) <= 8;
         if (result) {
@@ -1189,19 +1446,40 @@ public class Rs2Bank {
     }
 
     public static boolean handleBankPin(String pin) {
-        Widget bankPinWidget = Rs2Widget.getWidget(ComponentID.BANK_PIN_CONTAINER);
+        if (pin == null || !pin.matches("\\d+")) {
+            Microbot.log("Unable to enter bankpin with value " + pin);
+            return false;
+        }
+        
+        String[] digitInstructions = {
+                "FIRST digit", "SECOND digit", "THIRD digit", "FOURTH digit"
+        };
 
-        boolean isBankPinVisible = Microbot.getClientThread().runOnClientThread(() -> bankPinWidget != null && !bankPinWidget.isHidden());
-
-        if (isBankPinVisible) {
+        if (isBankPinWidgetVisible()) {
             for (int i = 0; i < pin.length(); i++){
                 char c = pin.charAt(i);
-                Rs2Widget.clickWidget(String.valueOf(c), Optional.of(213), 0, true);
-                sleepGaussian(350, 50);
+                String expectedInstruction = digitInstructions[i];
+                
+                boolean instructionVisible = sleepUntil(() -> Rs2Widget.hasWidgetText(expectedInstruction, 213, 10, false), 2000);
+
+                if (!instructionVisible) {
+                    Microbot.log("Failed to detect instruction within timeout period: " + expectedInstruction);
+                    return false;
+                }
+                
+                if (isBankPluginEnabled() && hasKeyboardBankPinEnabled()) {
+                    Rs2Keyboard.typeString(String.valueOf(c));
+                } else {
+                    Rs2Widget.clickWidget(String.valueOf(c), Optional.of(213), 0, true);
+                }
             }
             return true;
         }
         return false;
+    }
+    
+    public static boolean isBankPinWidgetVisible() {
+        return Rs2Widget.isWidgetVisible(ComponentID.BANK_PIN_CONTAINER);
     }
 
     /**
@@ -1286,16 +1564,104 @@ public class Rs2Bank {
     }
 
     /**
+     * Check if "item" button is toggled on
+     *
+     * @return
+     */
+    public static boolean hasWithdrawAsItem() {
+        return Microbot.getVarbitValue(WITHDRAW_AS_NOTE_VARBIT) != 1;
+    }
+
+    /**
      * enable withdraw noted in your bank
      *
      * @return
      */
     public static boolean setWithdrawAsNote() {
         if (hasWithdrawAsNote()) return true;
-        Rs2Widget.clickWidget(786456);
-        sleep(600);
+        Rs2Widget.clickWidget(786458);
+        sleep(Rs2Random.randomGaussian(550,100));
         return hasWithdrawAsNote();
     }
+
+    /**
+     * enable withdraw item in your bank
+     *
+     * @return
+     */
+    public static boolean setWithdrawAsItem() {
+        if (hasWithdrawAsItem()) return true;
+        Rs2Widget.clickWidget(786456);
+        sleep(Rs2Random.randomGaussian(550,100));
+        return hasWithdrawAsItem();
+    }
+
+    /**
+     * Withdraws the player's rune pouch if it's available in the bank.
+     *
+     * @return true if the rune pouch was withdrawn, false otherwise.
+     */
+    public static boolean withdrawRunePouch() {
+        return Arrays.stream(RunePouchType.values())
+                .filter(pouch -> Rs2Bank.hasItem(pouch.getItemId()))
+                .findFirst()
+                .map(pouch -> {
+                    withdrawOne(pouch.getItemId());
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    /**
+     * Deposits the player's rune pouch if it's in the inventory.
+     *
+     * @return true if the rune pouch was deposited, false otherwise.
+     */
+    public static boolean depositRunePouch() {
+        return Arrays.stream(RunePouchType.values())
+                .filter(pouch -> Rs2Inventory.hasItem(pouch.getItemId()))
+                .findFirst()
+                .map(pouch -> {
+                    depositOne(pouch.getItemId());
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    /**
+     * Checks if the player has any type of rune pouch in the bank.
+     *
+     * @return true if a rune pouch is found in the bank, false otherwise.
+     */
+    public static boolean hasRunePouch() {
+        return Arrays.stream(RunePouchType.values())
+                .anyMatch(pouch -> Rs2Bank.hasItem(pouch.getItemId()));
+    }
+
+    /**
+     * Empty gem bag
+     *
+     * @return true if gem bag was emptied
+     */
+
+    public static boolean emptyGemBag() {
+        Rs2Item gemBag = Rs2Inventory.get(ItemID.GEM_BAG_12020,ItemID.OPEN_GEM_BAG);
+        if (gemBag == null) return false;
+        return Rs2Inventory.interact(gemBag, "Empty");
+    }
+
+    /**
+     * Empty fish barrel
+     *
+     * @return true if fish barrel was emptied
+     */
+
+    public static boolean emptyFishBarrel() {
+        Rs2Item fishBarrel = Rs2Inventory.get(ItemID.FISH_BARREL,ItemID.OPEN_FISH_BARREL);
+        if (fishBarrel == null) return false;
+        return Rs2Inventory.interact(fishBarrel, "Empty");
+    }
+
 
     /**
      * Withdraw items from the lootTrackerPlugin
@@ -1364,6 +1730,45 @@ public class Rs2Bank {
         Widget bank = getBankSizeWidget();
         if (bank == null) return 0;
         return Integer.parseInt(bank.getText());
+    }
+
+    /**
+     * Retrieves an Rs2Item from the bank based on the specified item ID.
+     *
+     * @param itemId the ID of the item to search for.
+     * @return the Rs2Item matching the item ID, or null if not found.
+     */
+    public static Rs2Item getBankItem(int itemId) {
+        return bankItems().stream()
+                .filter(item -> item.getId() == itemId)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Retrieves an Rs2Item from the bank based on the specified item name.
+     *
+     * @param itemName the name of the item to search for.
+     * @param exact whether to search for an exact match (true) or a partial match (false).
+     * @return the Rs2Item matching the item name, or null if not found.
+     */
+    public static Rs2Item getBankItem(String itemName, boolean exact) {
+        return bankItems.stream()
+                .filter(item -> exact
+                        ? item.getName().equalsIgnoreCase(itemName)
+                        : item.getName().toLowerCase().contains(itemName.toLowerCase()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Retrieves an Rs2Item from the bank based on a partial match of the specified item name.
+     *
+     * @param itemName the name of the item to search for.
+     * @return the Rs2Item matching the item name (partial match), or null if not found.
+     */
+    public static Rs2Item getBankItem(String itemName) {
+        return getBankItem(itemName, false);
     }
 
     /**
@@ -1694,7 +2099,8 @@ public class Rs2Bank {
      */
     public static boolean preHover() {
         if (!Rs2AntibanSettings.naturalMouse) {
-            Microbot.log("Natural mouse is not enabled, can't hover");
+            if(Rs2AntibanSettings.devDebug)
+                Microbot.log("Natural mouse is not enabled, can't hover");
             return false;
         }
 
@@ -1726,5 +2132,13 @@ public class Rs2Bank {
         }
 
         return false;
+    }
+
+    private static boolean isBankPluginEnabled() {
+        return Microbot.isPluginEnabled(BankPlugin.class);
+    }
+    
+    private static boolean hasKeyboardBankPinEnabled() {
+        return Microbot.getConfigManager().getConfiguration("bank","bankPinKeyboard").equalsIgnoreCase("true");
     }
 }

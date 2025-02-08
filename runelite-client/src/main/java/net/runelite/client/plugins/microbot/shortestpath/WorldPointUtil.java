@@ -1,11 +1,13 @@
 package net.runelite.client.plugins.microbot.shortestpath;
 
-import net.runelite.api.World;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 
 public class WorldPointUtil {
     public static int packWorldPoint(WorldPoint point) {
+        if (point == null) {
+            return -1;
+        }
         return packWorldPoint(point.getX(), point.getY(), point.getPlane());
     }
 
@@ -45,14 +47,24 @@ public class WorldPointUtil {
         final int currentX = WorldPointUtil.unpackWorldX(currentPacked);
         final int currentY = WorldPointUtil.unpackWorldY(currentPacked);
         final int currentZ = WorldPointUtil.unpackWorldPlane(currentPacked);
+        return distanceBetween(previousX, previousY, previousZ,
+                currentX, currentY, currentZ, diagonal);
+    }
+
+    public static int distanceBetween(int previousX, int previousY, int previousZ,
+                                      int currentX, int currentY, int currentZ, int diagonal) {
         final int dx = Math.abs(previousX - currentX);
         final int dy = Math.abs(previousY - currentY);
-        final int dz = previousZ != currentZ ? 1000 : 0;
+        final int dz = Math.abs(previousZ - currentZ);
+
+        if (dz != 0) {
+            return Integer.MAX_VALUE;
+        }
 
         if (diagonal == 1) {
-            return Math.max(dx, dy) + dz;
+            return Math.max(dx, dy);
         } else if (diagonal == 2) {
-            return dx + dy + dz;
+            return dx + dy;
         }
 
         return Integer.MAX_VALUE;
@@ -62,17 +74,16 @@ public class WorldPointUtil {
         return distanceBetween(previous, current, 1);
     }
 
+    public static int distanceBetween(int packedPoint, WorldPoint current) {
+        final int y = unpackWorldY(packedPoint);
+        final int x = unpackWorldX(packedPoint);
+        final int plane = unpackWorldPlane(packedPoint);
+        return distanceBetween(new WorldPoint(x, y, plane), current, 1);
+    }
+
     public static int distanceBetween(WorldPoint previous, WorldPoint current, int diagonal) {
-        final int dx = Math.abs(previous.getX() - current.getX());
-        final int dy = Math.abs(previous.getY() - current.getY());
-
-        if (diagonal == 1) {
-            return Math.max(dx, dy);
-        } else if (diagonal == 2) {
-            return dx + dy;
-        }
-
-        return Integer.MAX_VALUE;
+        return distanceBetween(previous.getX(), previous.getY(), previous.getPlane(),
+                current.getX(), current.getY(), current.getPlane(), diagonal);
     }
 
     // Matches WorldArea.distanceTo
@@ -90,23 +101,5 @@ public class WorldPointUtil {
         final int dy = Math.max(Math.max(area.getY() - y, 0), y - areaMaxY);
 
         return Math.max(dx, dy);
-    }
-
-    public static boolean isPointInPolygon(WorldPoint point, WorldPoint[] polygon) {
-        int n = polygon.length;
-        int j = n - 1;
-        boolean inside = false;
-
-        for (int i = 0; i < n; i++) {
-            if (polygon[i].getY() < point.getY() && polygon[j].getY() >= point.getY() ||
-                    polygon[j].getY() < point.getY() && polygon[i].getY() >= point.getY()) {
-                if (polygon[i].getX() + (point.getY() - polygon[i].getY()) / (double)(polygon[j].getY() - polygon[i].getY()) * (polygon[j].getX() - polygon[i].getX()) < point.getX()) {
-                    inside = !inside;
-                }
-            }
-            j = i;
-        }
-
-        return inside;
     }
 }

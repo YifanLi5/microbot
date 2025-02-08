@@ -2,7 +2,10 @@ package net.runelite.client.plugins.microbot.runecrafting.gotr;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.*;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.GameObject;
+import net.runelite.api.GameState;
+import net.runelite.api.NPC;
 import net.runelite.api.events.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -15,7 +18,6 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
 import java.awt.*;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Matcher;
 
@@ -103,6 +105,8 @@ public class GotrPlugin extends Plugin {
 
         if (msg.contains("The rift becomes active!")) {
             GotrScript.nextGameStart = Optional.empty();
+            GotrScript.timeSincePortal = Optional.of(Instant.now());
+            GotrScript.isFirstPortal = true;
             GotrScript.state = GotrState.ENTER_GAME;
         } else if (msg.contains("The rift will become active in 30 seconds.")) {
             GotrScript.shouldMineGuardianRemains = true;
@@ -135,34 +139,11 @@ public class GotrPlugin extends Plugin {
         }
 
         if (gameObject.getId() == GotrScript.portalId) {
-            GotrScript.minePortal = gameObject;
-            Microbot.getClient().setHintArrow(GotrScript.minePortal.getWorldLocation());
-        }
-
-        if (gameObject.getId() == GotrScript.depositPoolId) {
-            GotrScript.depositPool = gameObject;
-        }
-
-        if (gameObject.getId() == GotrScript.elementalEssencePileId) {
-            GotrScript.elementalEssencePile = gameObject;
-        }
-
-        if (gameObject.getId() == GotrScript.catalyticEssencePileId) {
-            GotrScript.catalyticEssencePile = gameObject;
-        }
-
-        if (gameObject.getId() == GotrScript.unchargedCellsTableId) {
-            GotrScript.unchargedCellTable = gameObject;
-        }
-        ObjectComposition objectComposition = Microbot.getClient().getObjectDefinition(gameObject.getId());
-        String[] actions = objectComposition.getActions();
-        if (actions != null && actions.length > 0 && Arrays.stream(actions).anyMatch(x -> x != null && x.contains("Craft-rune"))) {
-            Microbot.log("Altar with id: " + gameObject.getId() + " deleted.");
-            GotrScript.rcAltar = gameObject;
-        }
-        if (objectComposition.getName().equalsIgnoreCase("portal") && !GotrScript.isInMainRegion()) {
-            Microbot.log("portal with id: " + gameObject.getId() + " deleted.");
-            GotrScript.rcPortal = gameObject;
+            Microbot.getClient().setHintArrow(gameObject.getWorldLocation());
+            if(GotrScript.isFirstPortal) {
+                GotrScript.isFirstPortal = false;
+            }
+            GotrScript.timeSincePortal = Optional.of(Instant.now());
         }
     }
 
@@ -175,33 +156,7 @@ public class GotrPlugin extends Plugin {
 
         if (gameObject.getId() == GotrScript.portalId) {
             Microbot.getClient().clearHintArrow();
-            GotrScript.minePortal = null;
-        }
-
-        if (gameObject.getId() == GotrScript.depositPoolId) {
-            GotrScript.depositPool = null;
-        }
-
-        if (gameObject.getId() == GotrScript.elementalEssencePileId) {
-            GotrScript.elementalEssencePile = null;
-        }
-
-        if (gameObject.getId() == GotrScript.catalyticEssencePileId) {
-            GotrScript.catalyticEssencePile = null;
-        }
-
-        if (gameObject.getId() == GotrScript.unchargedCellsTableId) {
-            GotrScript.unchargedCellTable = null;
-        }
-        ObjectComposition objectComposition = Microbot.getClient().getObjectDefinition(gameObject.getId());
-        String[] actions = objectComposition.getActions();
-        if (actions != null && actions.length > 0 && Arrays.stream(actions).anyMatch(x -> x != null && x.contains("Craft-rune"))) {
-            Microbot.log("Altar with id: " + gameObject.getId() + " deleted.");
-            GotrScript.rcAltar = null;
-        }
-        if (objectComposition.getName().equalsIgnoreCase("portal") && !GotrScript.isInMainRegion()) {
-            Microbot.log("portal with id: " + gameObject.getId() + " deleted.");
-            GotrScript.rcPortal = null;
+            GotrScript.timeSincePortal = Optional.of(Instant.now());
         }
     }
 

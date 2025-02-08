@@ -19,6 +19,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginInstantiationException;
 import net.runelite.client.plugins.PluginManager;
+import net.runelite.client.plugins.microbot.qualityoflife.scripts.pouch.PouchOverlay;
 import net.runelite.client.plugins.microbot.qualityoflife.scripts.pouch.PouchScript;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
@@ -87,6 +88,8 @@ public class MicrobotPlugin extends Plugin {
     private NaturalMouse naturalMouse;
     @Inject
     private PouchScript pouchScript;
+    @Inject
+    private PouchOverlay pouchOverlay;
 
     @Override
     protected void startUp() throws AWTException {
@@ -106,12 +109,15 @@ public class MicrobotPlugin extends Plugin {
         Microbot.setInfoBoxManager(infoBoxManager);
         Microbot.setWorldMapPointManager(worldMapPointManager);
         Microbot.setChatMessageManager(chatMessageManager);
+        Microbot.setConfigManager(configManager);
         if (overlayManager != null) {
             overlayManager.add(microbotOverlay);
         }
 
         Microbot.setPouchScript(pouchScript);
         pouchScript.startUp();
+        overlayManager.add(pouchOverlay);
+
 
         new InputSelector(clientToolbar);
     }
@@ -143,18 +149,17 @@ public class MicrobotPlugin extends Plugin {
     @Subscribe
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
         if (gameStateChanged.getGameState() == GameState.HOPPING || gameStateChanged.getGameState() == GameState.LOGIN_SCREEN || gameStateChanged.getGameState() == GameState.CONNECTION_LOST) {
-            if (Rs2Bank.bankItems != null)
+            if (Rs2Bank.bankItems != null) {
                 Rs2Bank.bankItems.clear();
+            }
+            Microbot.loggedIn = false;
         }
-    }
-
-    @Subscribe
-    public void onMenuOpened(MenuOpened event) {
     }
 
     @Subscribe
     public void onVarbitChanged(VarbitChanged event) {
         Rs2Player.handlePotionTimers(event);
+        Rs2Player.handleTeleblockTimer(event);
     }
     
     @Subscribe
@@ -199,6 +204,12 @@ public class MicrobotPlugin extends Plugin {
 
     @Subscribe
     private void onChatMessage(ChatMessage event) {
+        if (event.getType() == ChatMessageType.ENGINE && event.getMessage().equalsIgnoreCase("I can't reach that!")) {
+            Microbot.cantReachTarget = true;
+        }
+        if (event.getType() == ChatMessageType.GAMEMESSAGE && event.getMessage().toLowerCase().contains("you can't log into a non-members")) {
+            Microbot.cantHopWorld = true;
+        }
         Microbot.getPouchScript().onChatMessage(event);
     }
 
@@ -234,6 +245,30 @@ public class MicrobotPlugin extends Plugin {
                 Microbot.getPouchScript().startUp();
             } else {
                 Microbot.getPouchScript().shutdown();
+            }
+        }
+    }
+
+    @Subscribe
+    public void onHitsplatApplied(HitsplatApplied event) {
+        // Case 1: Hitsplat applied to the local player (indicates someone or something is attacking you)
+        if (event.getActor().equals(Rs2Player.getLocalPlayer())) {
+            if (!event.getHitsplat().isOthers()) {
+                Rs2Player.updateCombatTime();
+            }
+        }
+
+        // Case 2: Hitsplat is applied to another player (indicates you are attacking another player)
+        else if (event.getActor() instanceof Player) {
+            if (event.getHitsplat().isMine()) {
+                Rs2Player.updateCombatTime();
+            }
+        }
+
+        // Case 3: Hitsplat is applied to an NPC (indicates you are attacking an NPC)
+        else if (event.getActor() instanceof NPC) {
+            if (event.getHitsplat().isMine()) {
+                Rs2Player.updateCombatTime();
             }
         }
     }

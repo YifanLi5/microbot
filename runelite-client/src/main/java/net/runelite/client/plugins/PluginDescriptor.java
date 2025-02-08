@@ -24,12 +24,15 @@
  */
 package net.runelite.client.plugins;
 
+import java.awt.*;
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
 public @interface PluginDescriptor {
+    String DrDeath = "<html>[<font color=#FF0000>DD</font>]";
+    String Bee = "<html>[<font color=#FFD700>🐝</font>] ";
     String Nate = "<html>[<font color=orange>N</font>] ";
     String Mocrosoft = "<html>[<font color=#b8f704M>M</font>] ";
     String OG = "<html>[<font color=#FF69B4>O</font>] ";
@@ -49,6 +52,15 @@ public @interface PluginDescriptor {
     String GZ = "<html>[<font color=#0077B6>\u2728</font>] ";
     String yfoo = "<html>[<font color=#5F9596>Y</font>] ";
     String StickToTheScript = "<html>[<font color=#FF4F00>STTS</font>] ";
+    String Gabulhas = "<html>[<font color=#F44FB0>Gab</font>] ";
+    String zerozero ="<html>[<font color=#000000>00</font>] " ;
+    String LiftedMango = "<html>[<font color=#FF7F50>\uD83E\uDD6D</font>] ";
+    String eXioStorm = "<html>[<font color=#ff00dc>§</font>] "; Color stormColor = new Color(255, 0, 220);
+    String Girdy = "<html>[<font color=#3DED97>\u01E5</font>] ";
+    String Cicire = "<html>[<font color=#68ff00>Ci</font>] ";
+    String Budbomber = "<html>[<font color='#0077B6'>bb</font>]";
+    String ChillX = "<html>[<font color=#05e1f5>C</font>] ";
+    String Gage = "<html>[<font color=#00008B>Gage</font>]";
 
     String name();
 
