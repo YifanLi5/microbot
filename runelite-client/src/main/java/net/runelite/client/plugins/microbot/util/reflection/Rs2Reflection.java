@@ -5,6 +5,7 @@ import net.runelite.api.*;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.security.Login;
 
 import java.awt.event.KeyEvent;
@@ -24,10 +25,7 @@ public class Rs2Reflection {
      * sequence maps to an actor animation
      * actor can be an npc/player
      */
-    static int animationMultiplier = 692374621; //can be found in actor.java (int sequence)
-    static String npcDefinition = "ay"; //NPCComposition definition in NPC.class
-    static String headIconSpriteIndex = "bj"; //headIconSpriteIndex in NPCComposition.class
-
+    static int animationMultiplier = 527657827; //can be found in actor.java (int sequence)
     static final byte INDEX_GARBAGE = -28; // found in Varcs.java
     static final String INDEX_FIELD = "ab"; // Varcs.java
     static final String INDEX_CLASS = "es"; // login.java
@@ -38,19 +36,20 @@ public class Rs2Reflection {
     public static final String DISPLAY_FIELD = "cw"; //Login.java
     public static final String DISPLAY_CLASS = "dh"; //Login.java
 
+
     /**
      * Credits to EthanApi
      * @param npc
      * @return
      */
     @SneakyThrows
-    public static int getAnimation(NPC npc) {
+    public static int getAnimation(Rs2NpcModel npc) {
         if (npc == null) {
             return -1;
         }
         try {
             if (animationField == null) {
-                for (Field declaredField : npc.getClass().getSuperclass().getDeclaredFields()) {
+                for (Field declaredField : npc.getRuneliteNpc().getClass().getSuperclass().getDeclaredFields()) {
                     if (declaredField == null) {
                         continue;
                     }
@@ -64,24 +63,24 @@ public class Rs2Reflection {
                     if (Modifier.isStatic(declaredField.getModifiers())) {
                         continue;
                     }
-                    int value = declaredField.getInt(npc);
-                    declaredField.setInt(npc, 4795789);
-                    if (npc.getAnimation() == animationMultiplier * 4795789) {
+                    int value = declaredField.getInt(npc.getRuneliteNpc());
+                    declaredField.setInt(npc.getRuneliteNpc(), 4795789);
+                    if (npc.getRuneliteNpc().getAnimation() == animationMultiplier * 4795789) {
                         animationField = declaredField.getName();
-                        declaredField.setInt(npc, value);
+                        declaredField.setInt(npc.getRuneliteNpc(), value);
                         declaredField.setAccessible(false);
                         break;
                     }
-                    declaredField.setInt(npc, value);
+                    declaredField.setInt(npc.getRuneliteNpc(), value);
                     declaredField.setAccessible(false);
                 }
             }
             if (animationField == null) {
                 return -1;
             }
-            Field animation = npc.getClass().getSuperclass().getDeclaredField(animationField);
+            Field animation = npc.getRuneliteNpc().getClass().getSuperclass().getDeclaredField(animationField);
             animation.setAccessible(true);
-            int anim = animation.getInt(npc) * animationMultiplier;
+            int anim = animation.getInt(npc.getRuneliteNpc()) * animationMultiplier;
             animation.setAccessible(false);
             return anim;
         } catch(Exception ex) {
@@ -145,38 +144,82 @@ public class Rs2Reflection {
      * @param npc
      * @return
      */
-    @SneakyThrows
-    public static HeadIcon getHeadIcon(NPC npc) {
-        Field ab = npc.getClass().getDeclaredField(npcDefinition);
-        ab.setAccessible(true);
-        Object aqObj = ab.get(npc);
-        if (aqObj == null) {
-            ab.setAccessible(false);
-            return getOldHeadIcon(npc);
+    public static HeadIcon headIconThruLengthEightArrays(NPC npc) throws IllegalAccessException {
+        Class<?>[] trying = new Class<?>[]{npc.getClass(),npc.getComposition().getClass()};
+        for (Class<?> aClass : trying) {
+            for (Field declaredField : aClass.getDeclaredFields()) {
+                Field[] decFields = declaredField.getType().getDeclaredFields();
+                if(decFields.length==2){
+                    if(decFields[0].getType().isArray()&&decFields[1].getType().isArray()){
+                        for (Field decField : decFields) {
+                            decField.setAccessible(true);
+                        }
+                        Object[] array1 = (Object[]) decFields[0].get(npc);
+                        Object[] array2 = (Object[]) decFields[1].get(npc);
+                        for (Field decField : decFields) {
+                            decField.setAccessible(false);
+                        }
+                        if(array1.length==8&array2.length==8){
+                            if(decFields[0].getType()==short[].class){
+                                if((short)array1[0]==-1){
+                                    return null;
+                                }
+                                return HeadIcon.values()[(short)array1[0]];
+                            }
+                            if((short)array2[0]==-1){
+                                return null;
+                            }
+                            return HeadIcon.values()[(short)array2[0]];
+                        }
+                    }
+                }
+            }
         }
-        Field bdField = aqObj.getClass().getDeclaredField(headIconSpriteIndex);
-        bdField.setAccessible(true);
-        short[] bd = (short[]) bdField.get(aqObj);
-        bdField.setAccessible(false);
-        ab.setAccessible(false);
-        if (bd == null) {
-            return getOldHeadIcon(npc);
-        }
-        if (bd.length == 0) {
-            return getOldHeadIcon(npc);
-        }
-        short headIcon = bd[0];
-        if (headIcon == -1) {
-            return getOldHeadIcon(npc);
-        }
-        return HeadIcon.values()[headIcon];
+        return null;
     }
 
-    /**
-     * Credits to EthanApi
-     * @param npc
-     * @return
-     */
+    @SneakyThrows
+    public static HeadIcon getHeadIcon(Rs2NpcModel npc) {
+        if(npc==null) return null;
+        HeadIcon icon = getOldHeadIcon(npc.getRuneliteNpc());
+        if(icon!=null){
+            //System.out.println("Icon returned using oldHeadIcon");
+            return icon;
+        }
+        icon = getOlderHeadicon(npc.getRuneliteNpc());
+        if(icon!=null){
+            //System.out.println("Icon returned using OlderHeadicon");
+            return icon;
+        }
+        //System.out.println("Icon returned using headIconThruLengthEightArrays");
+        icon = headIconThruLengthEightArrays(npc.getRuneliteNpc());
+        return icon;
+    }
+
+    @SneakyThrows
+    public static HeadIcon getOlderHeadicon(NPC npc){
+        Method getHeadIconMethod = null;
+        for (Method declaredMethod : npc.getComposition().getClass().getDeclaredMethods()) {
+            if (declaredMethod.getName().length() == 2 && declaredMethod.getReturnType() == short.class && declaredMethod.getParameterCount() == 1) {
+                getHeadIconMethod = declaredMethod;
+                getHeadIconMethod.setAccessible(true);
+                short headIcon = -1;
+                try {
+                    headIcon = (short) getHeadIconMethod.invoke(npc.getComposition(), 0);
+                }catch (Exception e){
+                    //nothing
+                }
+                getHeadIconMethod.setAccessible(false);
+
+                if (headIcon == -1) {
+                    continue;
+                }
+                return HeadIcon.values()[headIcon];
+            }
+        }
+        return null;
+    }
+
     @SneakyThrows
     public static HeadIcon getOldHeadIcon(NPC npc) {
         Method getHeadIconMethod;
@@ -195,13 +238,12 @@ public class Rs2Reflection {
                 if (headIcon == null) {
                     continue;
                 }
-                System.out.println("old := " + getHeadIconMethod.getName());
-
                 return HeadIcon.values()[headIcon[0]];
             }
         }
         return null;
     }
+
 
 
     /**

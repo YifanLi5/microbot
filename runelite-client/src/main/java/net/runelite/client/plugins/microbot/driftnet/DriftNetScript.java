@@ -10,6 +10,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import org.slf4j.Logger;
@@ -168,25 +169,31 @@ public class DriftNetScript extends Script {
      * Iterates over nearby fish (sorted by distance to player) and chases the first
      * fish that hasn’t been tagged yet.
      */
-
-    private void chaseNearbyFish(Set<NPC> fishSet) {
-        List<NPC> sortedFish = fishSet.stream()
-                .sorted(Comparator.comparingInt(
-                        fish -> fish.getLocalLocation()
-                                .distanceTo(
-                                        Microbot.getClient().getLocalPlayer().getLocalLocation()
-                                )
+    private void chaseNearbyFish(Set<Integer> fishSet)
+    {
+        // Sort the NPC indexes by distance to the player
+        List<Integer> sortedFish = fishSet.stream()
+                .sorted(Comparator.comparingInt(fishIndex -> {
+                            Rs2NpcModel npc = Rs2Npc.getNpcByIndex(fishIndex);
+                            if (npc == null) {
+                                return Integer.MAX_VALUE;
+                            }
+                            // Return distance from local player
+                            return npc.getLocalLocation().distanceTo(Microbot.getClient().getLocalPlayer().getLocalLocation());
+                        }
                 ))
                 .collect(Collectors.toList());
+        
+        for (int fishIndex : sortedFish) {
+            if (DriftNetPlugin.getTaggedFish().containsKey(fishIndex)) continue;
 
-        for (NPC fish : sortedFish) {
-            if (!DriftNetPlugin.getTaggedFish().containsKey(fish)
-                    && Rs2Npc.getNpcByIndex(fish.getIndex()) != null) {
+            Rs2NpcModel npc = Rs2Npc.getNpcByIndex(fishIndex);
+            if (npc == null) continue;
 
-                Rs2Npc.interact(fish, "Chase");
-                sleepGaussian(1500, 300);
-                break;
-            }
+            // Interact with the fish to "Chase" it
+            Rs2Npc.interact(npc, "Chase");
+            sleepGaussian(1500, 300);
+            break;
         }
     }
 }

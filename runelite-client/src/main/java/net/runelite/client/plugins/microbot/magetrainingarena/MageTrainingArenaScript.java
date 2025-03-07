@@ -17,11 +17,12 @@ import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
@@ -182,7 +183,7 @@ public class MageTrainingArenaScript extends Script {
             previousRewards.add(reward.getItemId());
         }
 
-        Predicate<Rs2Item> additionalItemPredicate = x -> !x.name.toLowerCase().contains("rune")
+        Predicate<Rs2ItemModel> additionalItemPredicate = x -> !x.name.toLowerCase().contains("rune")
                 && !x.name.toLowerCase().contains("staff")
                 && !x.name.toLowerCase().contains("tome")
                 && !previousRewards.contains(x.id);
@@ -312,14 +313,13 @@ public class MageTrainingArenaScript extends Script {
             return;
         }
 
-        if (Rs2GroundItem.exists(ItemID.DRAGONSTONE_6903, 50)) {
-            boolean successFullLoot = Rs2Inventory.waitForInventoryChanges(() -> {
-                Rs2GroundItem.loot(ItemID.DRAGONSTONE_6903);
-            });
+        boolean successFullLoot = Rs2Inventory.waitForInventoryChanges(() -> {
+            Rs2GroundItem.loot(ItemID.DRAGONSTONE_6903, 12);
+            sleepUntil(() -> !Rs2Player.isMoving());
+        });
 
-            if (successFullLoot && Rs2Inventory.getEmptySlots() > 0)
-                return;
-        }
+        if (successFullLoot && Rs2Inventory.getEmptySlots() > 0)
+            return;
 
         var bonusShape = getBonusShape();
         if (bonusShape == null) return;
@@ -414,7 +414,7 @@ public class MageTrainingArenaScript extends Script {
         if (room.getGuardian().getWorldLocation().equals(room.getFinishLocation())){
             sleepUntil(() -> room.getGuardian().getId() == NpcID.MAZE_GUARDIAN_6779);
             sleep(200, 400);
-            Rs2Npc.interact(room.getGuardian(), "New-maze");
+            Rs2Npc.interact(new Rs2NpcModel(room.getGuardian()), "New-maze");
             sleepUntil(() -> Rs2Player.getWorldLocation().distanceTo(teleRoom.getArea()) != 0);
         } else {
             if (!Rs2Player.getWorldLocation().equals(targetConverted)
@@ -436,7 +436,10 @@ public class MageTrainingArenaScript extends Script {
                     && !room.getGuardian().getLocalLocation().equals(room.getDestination())){
                 Rs2Magic.cast(MagicAction.TELEKINETIC_GRAB);
                 sleepGaussian(600, 150);
-                Rs2Npc.interact(room.getGuardian());
+                if (!Rs2Camera.isTileOnScreen(room.getGuardian().getLocalLocation())) {
+                    Rs2Camera.turnTo(room.getGuardian());
+                }
+                Rs2Npc.interact(new Rs2NpcModel(room.getGuardian()));
             }
         }
     }
@@ -531,8 +534,8 @@ public class MageTrainingArenaScript extends Script {
         if (room.getSuggestion() == null) {
             Rs2GameObject.interact("Cupboard", "Search");
 
-            if (sleepUntilTrue(Rs2Player::isWalking, 100, 1000))
-                sleepUntil(() -> !Rs2Player.isWalking());
+            if (sleepUntilTrue(Rs2Player::isMoving, 100, 1000))
+                sleepUntil(() -> !Rs2Player.isMoving());
         }
         else {
             Rs2Inventory.waitForInventoryChanges(() -> Rs2GameObject.interact(room.getSuggestion().getGameObject(), "Take-5"));

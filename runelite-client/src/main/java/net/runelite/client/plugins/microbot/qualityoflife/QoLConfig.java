@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.qualityoflife;
 import net.runelite.client.config.*;
 import net.runelite.client.plugins.microbot.fletching.enums.FletchingItem;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
+import net.runelite.client.plugins.microbot.qualityoflife.enums.CraftingItem;
 import net.runelite.client.plugins.microbot.qualityoflife.enums.WintertodtActions;
 import net.runelite.client.plugins.microbot.util.misc.SpecialAttackWeaponEnum;
 
@@ -107,6 +108,22 @@ public interface QoLConfig extends Config {
             position = 82
     )
     String runecraftingSection = "runecraftingSection";
+
+    // Magic section
+    @ConfigSection(
+            name = "Magic",
+            description = "Magic settings",
+            position = 83
+    )
+    String magicSection = "magicSection";
+
+    // Crafting section
+    @ConfigSection(
+            name = "Crafting",
+            description = "Crafting settings",
+            position = 83
+    )
+    String craftingSection = "craftingSection";
 
     // boolean to render Max Hit Overlay
     @ConfigItem(
@@ -221,12 +238,12 @@ public interface QoLConfig extends Config {
     @ConfigItem(
             keyName = "useBankPin",
             name = "Use bankpin",
-            description = "Automatically uses bankpin",
+            description = "Automatically uses bankpin stored in runelite profile",
             position = 1,
             section = bankSection
     )
-    default String bankPin() {
-        return "";
+    default boolean useBankPin() {
+        return false;
     }
 
     // boolean to automate quest dialogue options
@@ -651,6 +668,63 @@ public interface QoLConfig extends Config {
         return true;
     }
 
+    @ConfigItem(
+            keyName = "showProgressOverlay",
+            name = "Shows Progress Overlay",
+            description = "Shows Progress Overlay",
+            position = 6,
+            section = wintertodtSection
+    )
+    default boolean showWintertodtProgressOverlay() {
+        return true;
+    }
+
+    // boolean to quick cut gems
+    @ConfigItem(
+            keyName = "quickCutGems",
+            name = "Quick Cut Gems",
+            description = "Option to quick cut gems",
+            position = 0,
+            section = craftingSection
+    )
+    default boolean quickCutGems() {
+        return false;
+    }
+
+    // boolean to quick craft items
+    @ConfigItem(
+            keyName = "quickCraftItems",
+            name = "Quick Craft Items",
+            description = "Option to quick craft items",
+            position = 1,
+            section = craftingSection
+    )
+    default boolean quickCraftItems() {
+        return false;
+    }
+    // enum for crafting item
+    @ConfigItem(
+            keyName = "craftingItem",
+            name = "Crafting Item",
+            description = "Crafting Item",
+            position = 2,
+            section = craftingSection
+    )
+    default CraftingItem craftingItem() {
+        return CraftingItem.BODY;
+    }
+
+    // boolean to quick high alch
+    @ConfigItem(
+            keyName = "quickHighAlch",
+            name = "Quick High Alch",
+            description = "Option to quick high alch profitable items",
+            position = 0,
+            section = magicSection
+    )
+    default boolean quickHighAlch() {
+        return false;
+    }
 
     // Hidden enum for Wintertodt actions
     @ConfigItem(
@@ -770,5 +844,15 @@ public interface QoLConfig extends Config {
         return true;
     }
 
-
+    // boolean to add quick teleport to house menu entry
+    @ConfigItem(
+            keyName = "useQuickTeleportToHouse",
+            name = "Quick Teleport to House",
+            description = "Adds a custom menu entry to rune-pouches to quickly cast teleport to house",
+            position = 0,
+            section = magicSection
+    )
+    default boolean useQuickTeleportToHouse() {
+        return true;
+    }
 }

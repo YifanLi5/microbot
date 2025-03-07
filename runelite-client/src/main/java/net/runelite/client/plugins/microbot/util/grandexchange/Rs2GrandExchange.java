@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.util.grandexchange;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.runelite.api.GrandExchangeOfferState;
+import net.runelite.api.MenuAction;
 import net.runelite.api.NPC;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
@@ -11,14 +12,18 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
+import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
+import net.runelite.client.plugins.microbot.util.misc.NumberExtractor;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.awt.*;
 import java.io.StringReader;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -28,6 +33,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static net.runelite.client.plugins.microbot.util.Global.*;
 
@@ -82,7 +88,7 @@ public class Rs2GrandExchange {
             if (Rs2Inventory.isItemSelected())
                 Microbot.getMouse().click();
             if (isOpen()) return true;
-            NPC npc = Rs2Npc.getNpc("Grand Exchange Clerk");
+            Rs2NpcModel npc = Rs2Npc.getNpc("Grand Exchange Clerk");
             if (npc == null) return false;
             Rs2Npc.interact(npc, "exchange");
             sleepUntil(Rs2GrandExchange::isOpen, 5000);
@@ -181,14 +187,19 @@ public class Rs2GrandExchange {
         }
     }
 
+    public static boolean buyItemAbove5Percent(String itemName, int quantity) {
+        return buyItemAbove5Percent(itemName, quantity, 1);
+    }
+
     /**
-     * TODO: test this method
-     * Buys item from the grandexchange 5% above the average priec
+     * Buys item from the grand exchange and increases the price by custom percent
+     *
      * @param itemName
      * @param quantity
+     * @param percent the percentage to increase
      * @return
      */
-    public static boolean buyItemAbove5Percent(String itemName, int quantity) {
+    public static boolean buyItemAboveXPercent(String itemName, int quantity, int percent) {
         try {
             if (!isOpen()) {
                 openExchange();
@@ -212,7 +223,74 @@ public class Rs2GrandExchange {
                 sleep(600, 1600);
             }
             setQuantity(quantity);
-            if (buyItemAbove5Percent()) {
+
+            Widget pricePerItemButtonXPercent = getPricePerItemButton_PlusXPercent();
+            if (pricePerItemButtonXPercent != null) {
+                int basePrice = getItemPrice();
+                int currentPercent = NumberExtractor.extractNumber(pricePerItemButtonXPercent.getText());
+
+                // Update Price per item custom percentage if it doesn't match
+                if (currentPercent != percent) {
+                    // If current percentage is empty (indicated by +X%)
+                    if (currentPercent == -1) {
+                        Microbot.getMouse().click(pricePerItemButtonXPercent.getBounds());
+                    } else {
+                        Microbot.doInvoke(new NewMenuEntry("Customise", 15, pricePerItemButtonXPercent.getId(), MenuAction.CC_OP.getId(), 2, -1, ""), new Rectangle(pricePerItemButtonXPercent.getBounds()));
+                    }
+                    sleep(300, 1200);
+                    sleepUntil(() -> Rs2Widget.hasWidget("Set a percentage to decrease/increase"), 2000);
+                    Rs2Keyboard.typeString(Integer.toString(percent));
+                    Rs2Keyboard.enter();
+                    sleepUntil(() -> currentPercent == NumberExtractor.extractNumber(pricePerItemButtonXPercent.getText()), 2000);
+                    sleep(300, 1200);
+                }
+
+                Microbot.getMouse().click(pricePerItemButtonXPercent.getBounds());
+                sleepUntil(() -> hasOfferPriceChanged(basePrice), 2000);
+
+                confirm();
+                return true;
+            }
+
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Buys item from the grand exchange 5% above the average price
+     *
+     * @param itemName
+     * @param quantity
+     * @param timesToIncreasePrice the amount to click +5% price increase
+     * @return
+     */
+    public static boolean buyItemAbove5Percent(String itemName, int quantity, int timesToIncreasePrice) {
+        try {
+            if (!isOpen()) {
+                openExchange();
+            }
+            Pair<GrandExchangeSlots, Integer> slot = getAvailableSlot();
+            Widget buyOffer = getOfferBuyButton(slot.getLeft());
+
+            if (buyOffer == null) return false;
+
+            Microbot.getMouse().click(buyOffer.getBounds());
+            sleepUntil(Rs2GrandExchange::isOfferTextVisible);
+            sleepUntil(() -> Rs2Widget.hasWidget("What would you like to buy?"));
+            if (Rs2Widget.hasWidget("What would you like to buy?"))
+                Rs2Keyboard.typeString(itemName);
+            sleepUntil(() -> Rs2Widget.hasWidget(itemName)); //GE Search Results
+            sleep(1200, 1600);
+            Pair<Widget, Integer> itemResult = getSearchResultWidget(itemName);
+            if (itemResult != null) {
+                Rs2Widget.clickWidgetFast(itemResult.getLeft(), itemResult.getRight(), 1);
+                sleepUntil(() -> !Rs2Widget.hasWidget("Choose an item..."));
+                sleep(600, 1600);
+            }
+            setQuantity(quantity);
+            if (buyItemAbove5Percent(timesToIncreasePrice)) {
                 return true;
             }
 
@@ -223,13 +301,16 @@ public class Rs2GrandExchange {
         return false;
     }
 
-    private static boolean buyItemAbove5Percent() {
+    private static boolean buyItemAbove5Percent(int timesToIncreasePrice) {
         Widget pricePerItemButton5Percent = getPricePerItemButton_Plus5Percent();
-
         if (pricePerItemButton5Percent != null) {
             int basePrice = getItemPrice();
-            Microbot.getMouse().click(pricePerItemButton5Percent.getBounds());
-            sleepUntil(() -> hasOfferPriceChanged(basePrice), 1600);
+            // Call click() as many times as the value of count
+            IntStream.range(0, timesToIncreasePrice).forEach(i -> {
+                Microbot.getMouse().click(pricePerItemButton5Percent.getBounds());
+                sleepUntil(() -> hasOfferPriceChanged(basePrice), 1600);
+            });
+
             confirm();
             return true;
         } else {
@@ -349,7 +430,7 @@ public class Rs2GrandExchange {
             openExchange();
         }
         sleepUntil(Rs2GrandExchange::isOpen);
-        Widget[] collectButton = Rs2Widget.getWidget(465,6).getDynamicChildren();
+        Widget[] collectButton = Rs2Widget.getWidget(465, 6).getDynamicChildren();
         if (!collectButton[1].isSelfHidden()) {
             Rs2Widget.clickWidgetFast(
                     COLLECT_BUTTON, collectToBank ? 2 : 1);
@@ -364,6 +445,7 @@ public class Rs2GrandExchange {
 
     /**
      * Collect all the grand exchange items to your bank
+     *
      * @return
      */
     public static boolean collectToBank() {
@@ -372,6 +454,7 @@ public class Rs2GrandExchange {
 
     /**
      * sells all the tradeable loot items from a specific npc name
+     *
      * @param npcName
      * @return true if there is no more loot to sell
      */
@@ -391,10 +474,11 @@ public class Rs2GrandExchange {
 
     /**
      * Sells all the tradeable items in your inventory
+     *
      * @return
      */
     public static boolean sellInventory() {
-        for (Rs2Item item : Rs2Inventory.items()) {
+        for (Rs2ItemModel item : Rs2Inventory.items()) {
 
             if (!item.isTradeable()) continue;
 
@@ -406,6 +490,61 @@ public class Rs2GrandExchange {
             Rs2GrandExchange.sellItemUnder5Percent(item.name);
         }
         return Rs2Inventory.isEmpty();
+    }
+
+    /**
+     * Aborts the offer
+     *
+     * @param name          name of the item to abort offer on
+     * @param collectToBank collect the item to the bank
+     * @return true if the offer has been aborted
+     */
+    public static boolean abortOffer(String name, boolean collectToBank) {
+        if (useGrandExchange()) return false;
+        try {
+            for (GrandExchangeSlots slot : GrandExchangeSlots.values()) {
+                Widget parent = getSlot(slot);
+                if (parent == null) continue;
+                if (isSlotAvailable(slot)) continue; // skip if slot is empty
+                Widget child = parent.getChild(19);
+                if (child == null) continue;
+                if (child.getText().equalsIgnoreCase(name)) {
+                    Microbot.doInvoke(new NewMenuEntry("Abort offer", 2, parent.getId(), MenuAction.CC_OP.getId(), 2, -1, ""), new Rectangle(1, 1, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight()));
+                    sleep(1000);
+                    collect(collectToBank);
+                    return true;
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Aborts all offers
+     *
+     * @param collectToBank collect the items to the bank
+     * @return true if all the offers have been aborted
+     */
+    public static boolean abortAllOffers(boolean collectToBank) {
+        if (useGrandExchange()) return false;
+        try {
+            for (GrandExchangeSlots slot : GrandExchangeSlots.values()) {
+                Widget parent = getSlot(slot);
+                if (parent == null) continue;
+                if (isSlotAvailable(slot)) continue; // skip if slot is empty
+                Widget child = parent.getChild(19);
+                if (child == null) continue;
+                Microbot.doInvoke(new NewMenuEntry("Abort offer", 2, parent.getId(), MenuAction.CC_OP.getId(), 2, -1, ""), new Rectangle(1, 1, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight()));
+            }
+            sleep(1000);
+            collect(collectToBank);
+            return isAllSlotsEmpty();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            return false;
+        }
     }
 
     public static Pair<Widget, Integer> getSearchResultWidget(String search) {
@@ -526,6 +665,12 @@ public class Rs2GrandExchange {
         return Optional.ofNullable(parent).map(p -> p.getChild(13)).orElse(null);
     }
 
+    public static Widget getPricePerItemButton_PlusXPercent() {
+        var parent = getOfferContainer();
+
+        return Optional.ofNullable(parent).map(p -> p.getChild(15)).orElse(null);
+    }
+
     public static Widget getChooseItem() {
         var parent = getOfferContainer();
 
@@ -551,7 +696,7 @@ public class Rs2GrandExchange {
     }
 
     public static int getItemPrice() {
-        return Integer.parseInt(Rs2Widget.getWidget(465, 27).getText());
+        return Integer.parseInt(Rs2Widget.getWidget(465, 27).getText().replace(",", ""));
     }
 
     public static Widget getSlot(GrandExchangeSlots slot) {
@@ -639,11 +784,11 @@ public class Rs2GrandExchange {
             String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
-            
+
             JsonParser parser = new JsonParser();
             JsonObject jsonElement = parser.parse(new StringReader(jsonResponse)).getAsJsonObject();
             JsonObject data = jsonElement.getAsJsonObject("data");
-            
+
             return data.get("buying").getAsInt();
         } catch (Exception e) {
             e.printStackTrace();
@@ -661,11 +806,11 @@ public class Rs2GrandExchange {
             String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
-            
+
             JsonParser parser = new JsonParser();
             JsonObject jsonElement = parser.parse(new StringReader(jsonResponse)).getAsJsonObject();
             JsonObject data = jsonElement.getAsJsonObject("data");
-            
+
             return data.get("selling").getAsInt();
         } catch (Exception e) {
             e.printStackTrace();

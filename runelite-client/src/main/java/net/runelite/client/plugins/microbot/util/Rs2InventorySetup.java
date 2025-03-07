@@ -8,7 +8,7 @@ import net.runelite.client.plugins.microbot.inventorysetups.MInventorySetupsPlug
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,7 +94,15 @@ public class Rs2InventorySetup {
             int withdrawQuantity = calculateWithdrawQuantity(entry.getValue(), inventorySetupsItem, key);
             if (withdrawQuantity == 0) continue;
 
-            if (!Rs2Bank.hasBankItem(inventorySetupsItem.getName(), withdrawQuantity)) {
+            String lowerCaseName = inventorySetupsItem.getName().toLowerCase();
+
+            boolean isBarrowsItem = isBarrowsItem(lowerCaseName);
+
+            if (isBarrowsItem) {
+                inventorySetupsItem.setName(lowerCaseName.replaceAll("\\s+[1-9]\\d*$", ""));
+            }
+
+            if (!Rs2Bank.hasBankItem(lowerCaseName, withdrawQuantity)) {
                 Microbot.pauseAllScripts = true;
                 Microbot.showMessage("Bank is missing the following item " + inventorySetupsItem.getName());
                 break;
@@ -108,6 +116,15 @@ public class Rs2InventorySetup {
         return doesInventoryMatch();
     }
 
+    private static boolean isBarrowsItem(String lowerCaseName) {
+        boolean isBarrowsItem = !lowerCaseName.endsWith(" 0") &&  (lowerCaseName.contains("dharok's")
+                || lowerCaseName.contains("ahrim's")
+                || lowerCaseName.contains("guthan's")
+                || lowerCaseName.contains("torag's")
+                || lowerCaseName.contains("verac's"));
+        return isBarrowsItem;
+    }
+
     /**
      * Calculates the quantity of an item to withdraw based on the current inventory state.
      *
@@ -119,7 +136,7 @@ public class Rs2InventorySetup {
     private int calculateWithdrawQuantity(List<InventorySetupsItem> items, InventorySetupsItem inventorySetupsItem, int key) {
         int withdrawQuantity;
         if (items.size() == 1) {
-            Rs2Item rs2Item = Rs2Inventory.get(key);
+            Rs2ItemModel rs2Item = Rs2Inventory.get(key);
             if (rs2Item != null && rs2Item.isStackable()) {
                 withdrawQuantity = inventorySetupsItem.getQuantity() - rs2Item.quantity;
                 if (Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), inventorySetupsItem.getQuantity())) {
@@ -181,6 +198,14 @@ public class Rs2InventorySetup {
         for (InventorySetupsItem inventorySetupsItem : inventorySetup.getEquipment()) {
             if (isMainSchedulerCancelled()) break;
             if (InventorySetupsItem.itemIsDummy(inventorySetupsItem)) continue;
+
+            String lowerCaseName = inventorySetupsItem.getName().toLowerCase();
+
+            boolean isBarrowsItem = isBarrowsItem(lowerCaseName);
+
+            if (isBarrowsItem) {
+                inventorySetupsItem.setName(lowerCaseName.replaceAll("\\s+[1-9]\\d*$", ""));
+            }
 
             if (inventorySetupsItem.isFuzzy()) {
 

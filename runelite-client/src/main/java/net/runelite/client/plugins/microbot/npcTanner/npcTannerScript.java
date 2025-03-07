@@ -73,14 +73,15 @@ public class npcTannerScript extends Script {
 
     public void WalkToandTan(){
         WorldPoint Tanman =(new WorldPoint(3273, 3192, 0));
-        if(Rs2Player.distanceTo(Tanman)>=6){
-            Rs2Walker.walkTo(Tanman);
-            sleep(1000,3000);
+        if(Rs2Player.getWorldLocation().distanceTo(Tanman)>=6){
+            if(Rs2Walker.walkTo(Tanman)){
+                sleep(1000,3000);
+            }
         } else {
-            if(Rs2Widget.getWidget(21233756)!=null || Rs2Widget.getWidget(21233753)!=null){
+            if(Rs2Widget.getWidget(21233789)!=null || Rs2Widget.getWidget(21233753)!=null){
                 Microbot.log("Tanning All");
                 if(whattotan.equals("Cowhide")){
-                    Widget tagetWidget = Rs2Widget.getWidget(21233756);
+                    Widget tagetWidget = Rs2Widget.getWidget(21233789);
                     Rs2Widget.clickWidget(tagetWidget);
                 }
                 if(whattotan.equals("Green dragonhide")){
@@ -101,15 +102,16 @@ public class npcTannerScript extends Script {
                 }
             } else {
                 Microbot.status="Tanning: "+npcTannerScript.whattotan;
-                Rs2Npc.interact(Rs2Npc.getNpc("Ellis"), "Trade");
-                sleep(1000, 3000);
+                if(Rs2Npc.interact(Rs2Npc.getNpc("Ellis"), "Trade")){
+                    sleep(1000, 3000);
+                }
             }
 
         }
     }
     public void TakeWhatWeNeed(){
         BankLocation Alkarid = BankLocation.AL_KHARID;
-        if(Rs2Player.distanceTo(Alkarid.getWorldPoint())>=7||!Rs2Bank.isOpen()){
+        if(Rs2Player.getWorldLocation().distanceTo(Alkarid.getWorldPoint())>=7||!Rs2Bank.isOpen()){
             // we need to walk to the bank
             Rs2Bank.walkToBankAndUseBank(Alkarid);
         }
@@ -154,7 +156,7 @@ public class npcTannerScript extends Script {
                     }
                     tries++;
                 }
-                if((!Rs2Inventory.contains("Coins"))||(Rs2Inventory.get("Coins").getQuantity()<=1000)||(Rs2Inventory.count(whattotan)==0)){
+                if((!Rs2Inventory.contains("Coins"))||(Rs2Inventory.get("Coins").getQuantity()<=80)||(Rs2Inventory.count(whattotan)==0)){
                     Microbot.log("Out of Coins or "+whattotan);
                     shutdown();
                 }
@@ -165,7 +167,7 @@ public class npcTannerScript extends Script {
         if(whattotan.equals("Unset")){
             if(Rs2Inventory.contains("Cowhide")){
                 whattotan = "Cowhide";
-                product = "Leather";
+                product = "Hard leather";
                 return;
             }
             if(Rs2Inventory.contains("Green dragonhide")){
@@ -190,21 +192,22 @@ public class npcTannerScript extends Script {
             }
             BankLocation nearBank = Rs2Bank.getNearestBank();
             while(whattotan.equals("Unset")) {
-                if (Rs2Player.distanceTo(nearBank.getWorldPoint()) > 10) {
+                if (Rs2Player.getWorldLocation().distanceTo(nearBank.getWorldPoint()) > 10) {
                     // we need to walk to a bank
-                    while (Rs2Player.distanceTo(nearBank.getWorldPoint()) > 10) {
-                        if (Rs2Player.distanceTo(nearBank.getWorldPoint()) <= 10) {
+                    while (Rs2Player.getWorldLocation().distanceTo(nearBank.getWorldPoint()) > 10) {
+                        if (Rs2Player.getWorldLocation().distanceTo(nearBank.getWorldPoint()) <= 10) {
                             break;
                         }
-                        Rs2Walker.walkTo(nearBank.getWorldPoint());
-                        sleep(1000, 5000);
+                        if(Rs2Walker.walkTo(nearBank.getWorldPoint())){
+                            sleep(1000, 5000);
+                        }
                     }
                 } else {
                     // We're at the bank
                     if(Rs2Bank.openBank()){
                         if(Rs2Bank.count("Cowhide") > 10){
                             whattotan = "Cowhide";
-                            product = "Leather";
+                            product = "Hard leather";
                         }
                         if(Rs2Bank.count("Green dragonhide") > 10){
                             whattotan = "Green dragonhide";

@@ -1,11 +1,10 @@
 package net.runelite.client.plugins.microbot.aiofighter.combat;
 
-import net.runelite.api.NPC;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.aiofighter.AIOFighterPlugin;
 import net.runelite.client.plugins.microbot.aiofighter.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.aiofighter.AIOFighterPlugin;
 import net.runelite.client.plugins.microbot.aiofighter.enums.State;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -26,7 +25,7 @@ public boolean run(AIOFighterConfig config) {
     AtomicReference<List<String>> npcsToAttack = new AtomicReference<>(Arrays.stream(Arrays.stream(config.attackableNpcs().split(",")).map(String::trim).toArray(String[]::new)).collect(Collectors.toList()));
     mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
         try {
-            if (AIOFighterPlugin.getState() == State.BANKING.name() || AIOFighterPlugin.getState() == State.WALKING.name()) return;
+            if (AIOFighterPlugin.getState().equals(State.BANKING) || AIOFighterPlugin.getState().equals(State.WALKING)) return;
             if (!Microbot.isLoggedIn() || !super.run() || !config.toggleSafeSpot() || Rs2Player.isMoving()) return;
 
             currentSafeSpot = config.safeSpot();
@@ -40,7 +39,7 @@ public boolean run(AIOFighterConfig config) {
             }
             if (isDefaultSafeSpot(currentSafeSpot) || isPlayerAtSafeSpot(currentSafeSpot)) {
                 //ckeck if there is an NPC targeting us
-                List<NPC> npcList = Rs2Npc.getNpcsAttackingPlayer(Microbot.getClient().getLocalPlayer());
+                var npcList = Rs2Npc.getNpcsForPlayer(npc -> true).collect(Collectors.toList());
 
                 //if there is an NPC interacting with us, and we are not Interacting with it, attack it again
                 if (!npcList.isEmpty() && !Rs2Player.isInMulti()) {
@@ -65,7 +64,7 @@ public boolean run(AIOFighterConfig config) {
                 sleepUntil(() -> isPlayerAtSafeSpot(currentSafeSpot));
                 Microbot.pauseAllScripts = false;
                 //ckeck if there is an NPC targeting us
-                List<NPC> npcList = Rs2Npc.getNpcsAttackingPlayer(Microbot.getClient().getLocalPlayer());
+                var npcList = Rs2Npc.getNpcsForPlayer(npc -> true).collect(Collectors.toList());
 
                 //if there is an NPC interacting with us, and we are not Interacting with it, attack it again
                 if (!npcList.isEmpty() && !Rs2Player.isInMulti()) {

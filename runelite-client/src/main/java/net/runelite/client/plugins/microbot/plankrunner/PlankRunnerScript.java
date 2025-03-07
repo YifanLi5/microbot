@@ -2,7 +2,6 @@ package net.runelite.client.plugins.microbot.plankrunner;
 
 import com.google.inject.Inject;
 import net.runelite.api.ItemID;
-import net.runelite.api.NPC;
 import net.runelite.api.NpcID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -12,13 +11,16 @@ import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Potion;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
+import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PlankRunnerScript extends Script {
 
@@ -77,10 +79,10 @@ public class PlankRunnerScript extends Script {
                             boolean hasEnergyRestorePotion = Rs2Bank.hasItem(Rs2Potion.getRestoreEnergyPotionsVariants());
                             
                             if ((Rs2Player.hasStaminaBuffActive() && hasEnergyRestorePotion) || (!hasStaminaPotion && hasEnergyRestorePotion)) {
-                                Rs2Item energyRestoreItem = Rs2Bank.bankItems().stream()
+                                Rs2ItemModel energyRestoreItem = Rs2Bank.bankItems().stream()
                                         .filter(rs2Item -> Rs2Potion.getRestoreEnergyPotionsVariants().stream()
                                                 .anyMatch(variant -> rs2Item.getName().toLowerCase().contains(variant.toLowerCase())))
-                                        .findFirst()
+                                        .min(Comparator.comparingInt(rs2Item -> getDoseFromName(rs2Item.getName())))
                                         .orElse(null);
                                 
                                 if (energyRestoreItem == null) {
@@ -91,9 +93,9 @@ public class PlankRunnerScript extends Script {
                                 
                                 withdrawAndDrink(energyRestoreItem.getName());
                             } else if (hasStaminaPotion) {
-                                Rs2Item staminaPotionItem = Rs2Bank.bankItems().stream()
+                                Rs2ItemModel staminaPotionItem = Rs2Bank.bankItems().stream()
                                         .filter(rs2Item -> rs2Item.getName().toLowerCase().contains(Rs2Potion.getStaminaPotion().toLowerCase()))
-                                        .findFirst()
+                                        .min(Comparator.comparingInt(rs2Item -> getDoseFromName(rs2Item.getName())))
                                         .orElse(null);
                                 
                                 if (staminaPotionItem == null) {
@@ -129,7 +131,7 @@ public class PlankRunnerScript extends Script {
                             return;
                         }
 
-                        NPC sawmillOperator = Rs2Npc.getNpc(NpcID.SAWMILL_OPERATOR);
+                        var sawmillOperator = Rs2Npc.getNpc(NpcID.SAWMILL_OPERATOR);
                         if (sawmillOperator == null) {
                             Microbot.showMessage("Unable to find Sawmill Operator!");
                             shutdown();
@@ -182,16 +184,29 @@ public class PlankRunnerScript extends Script {
         return Rs2Inventory.hasItem(plugin.getPlank().getLogItemId()) &&
                 Rs2Inventory.hasItemAmount(ItemID.COINS_995, logsInInventory * plugin.getPlank().getCostPerPlank());
     }
-    
+
     private void withdrawAndDrink(String potionItemName) {
         String simplifiedPotionName = potionItemName.replaceAll("\\s*\\(\\d+\\)", "").trim();
-        Rs2Bank.withdrawOne(simplifiedPotionName);
+        Rs2Bank.withdrawOne(potionItemName);
         Rs2Inventory.waitForInventoryChanges(1800);
-        Rs2Inventory.interact(simplifiedPotionName, "drink");
+        Rs2Inventory.interact(potionItemName, "drink");
         Rs2Inventory.waitForInventoryChanges(1800);
         if (Rs2Inventory.hasItem(simplifiedPotionName)) {
             Rs2Bank.depositOne(simplifiedPotionName);
             Rs2Inventory.waitForInventoryChanges(1800);
         }
+        if (Rs2Inventory.hasItem(ItemID.VIAL)) {
+            Rs2Bank.depositOne(ItemID.VIAL);
+            Rs2Inventory.waitForInventoryChanges(1800);
+        }
+    }
+
+    private int getDoseFromName(String potionItemName) {
+        Pattern pattern = Pattern.compile("\\((\\d+)\\)$");
+        Matcher matcher = pattern.matcher(potionItemName);
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
+        return 0;
     }
 }

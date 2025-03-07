@@ -28,13 +28,14 @@ import net.runelite.client.plugins.loottracker.LootTrackerRecord;
 import net.runelite.client.plugins.microbot.configs.SpecialAttackConfigs;
 import net.runelite.client.plugins.microbot.dashboard.PluginRequestModel;
 import net.runelite.client.plugins.microbot.qualityoflife.scripts.pouch.PouchScript;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.mouse.Mouse;
 import net.runelite.client.plugins.microbot.util.mouse.naturalmouse.NaturalMouse;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
+import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 import net.runelite.client.ui.overlay.worldmap.WorldMapOverlay;
 import net.runelite.client.ui.overlay.worldmap.WorldMapPointManager;
 import net.runelite.client.util.WorldUtil;
@@ -115,9 +116,6 @@ public class Microbot {
     private static WorldService worldService;
     @Getter
     @Setter
-    private static boolean disableWalkerUpdate;
-    @Getter
-    @Setter
     private static List<PluginRequestModel> botPlugins = new ArrayList<>();
     @Getter
     @Setter
@@ -131,6 +129,9 @@ public class Microbot {
     @Getter
     @Setter
     private static ChatMessageManager chatMessageManager;
+    @Getter
+    @Setter
+    private static TooltipManager tooltipManager;
     private static ScheduledFuture<?> xpSchedulorFuture;
     private static net.runelite.api.World quickHopTargetWorld;
     /**
@@ -268,9 +269,9 @@ public class Microbot {
     }
 
 
-    public static List<Rs2Item> updateItemContainer(int id, ItemContainerChanged e) {
+    public static List<Rs2ItemModel> updateItemContainer(int id, ItemContainerChanged e) {
         if (e.getContainerId() == id) {
-            List<Rs2Item> list = new ArrayList<>();
+            List<Rs2ItemModel> list = new ArrayList<>();
             int i = -1;
             for (Item item : e.getItemContainer().getItems()) {
                 if (item == null) {
@@ -282,7 +283,7 @@ public class Microbot {
                 boolean isPlaceholder = composition.getPlaceholderTemplateId() > 0;
                 if (isPlaceholder) continue;
 
-                list.add(new Rs2Item(item, composition, i));
+                list.add(new Rs2ItemModel(item, composition, i));
             }
             return list;
         }

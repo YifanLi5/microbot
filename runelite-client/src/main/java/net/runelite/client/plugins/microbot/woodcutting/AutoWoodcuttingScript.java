@@ -10,6 +10,7 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
@@ -32,7 +33,7 @@ enum State {
 
 public class AutoWoodcuttingScript extends Script {
 
-    public static String version = "1.6.3";
+    public static String version = "1.6.4";
     public boolean cannotLightFire = false;
 
     State state = State.WOODCUTTING;
@@ -75,8 +76,16 @@ public class AutoWoodcuttingScript extends Script {
                     shutdown();
                     return;
                 }
+                
+                if (!Rs2Inventory.hasItem("axe")) {
+                    if (!Rs2Equipment.hasEquippedContains("axe")) {
+                        Microbot.showMessage("Unable to find axe in inventory/equipped");
+                        shutdown();
+                        return;
+                    }
+                }
 
-                if (Rs2Player.isMoving() || Rs2Player.isAnimating() || Microbot.pauseAllScripts)
+                if (state != State.RESETTING && (Rs2Player.isMoving() || Rs2Player.isAnimating() || Microbot.pauseAllScripts))
                     return;
 
                 if (Rs2AntibanSettings.actionCooldownActive)
@@ -118,7 +127,7 @@ public class AutoWoodcuttingScript extends Script {
             } catch (Exception ex) {
                 Microbot.log(ex.getMessage());
             }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
         return true;
     }
 
@@ -138,7 +147,7 @@ public class AutoWoodcuttingScript extends Script {
                 break;
             case FIREMAKE:
                 burnLog(config);
-                
+
                 if (Rs2Inventory.contains(config.TREE().getLog())) return;
 
                 walkBack(config);
@@ -165,7 +174,7 @@ public class AutoWoodcuttingScript extends Script {
                 Rs2Inventory.use("tinderbox");
                 sleepUntil(Rs2Inventory::isItemSelected);
                 Rs2Inventory.useLast(config.TREE().getLogID());
-            });
+            }, 300, 100);
         }
         sleepUntil(() -> (!isFiremake() && Rs2Player.waitForXpDrop(Skill.FIREMAKING)) || cannotLightFire, 5000);
     }
