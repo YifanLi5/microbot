@@ -62,7 +62,7 @@ public class SmashDeposits extends Task {
             Microbot.log("SmashState: " + state);
             switch(state) {
                 case WALK_TO_ANVIL:
-                    boolean interactedWithCrusher = Rs2Walker.walkToAndInteract(crusherPosition, object -> object.getId() == 41551, 7);
+                    boolean interactedWithCrusher = false;
                     if(interactedWithCrusher) {
 
                         state = SmashState.WAIT_FOR_SMASH;

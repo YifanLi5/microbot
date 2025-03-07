@@ -74,7 +74,7 @@ public class BankAndReturn extends Task {
             Microbot.log("BankingState: " + state);
             switch (state) {
                 case WALK_TO_CHEST:
-                    boolean result = Rs2Walker.walkToAndInteract(chestPosition, object -> object.getId() == 41493, 7);
+                    boolean result =false;
                     if(result) {
                         Microbot.log("Success!");
                         state = BankingState.OPEN_BANK;

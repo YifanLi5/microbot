@@ -638,9 +638,10 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
                 Microbot.getClient().getTopLevelWorldView().getPlane());
 
         return worldPoint.distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation());
+
     }
 
-    private static boolean handleDoors(List<WorldPoint> path, int index) {
+    public static boolean handleDoors(List<WorldPoint> path, int index) {
 
         if (ShortestPathPlugin.getPathfinder() == null) return false;
 

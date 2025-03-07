@@ -1,9 +1,7 @@
 package net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses;
 
 import net.runelite.api.ItemID;
-import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.util.inventory.DropOrder;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
@@ -16,7 +14,7 @@ public class DropBarroniteDeposits extends Task {
 
     public static DropBarroniteDeposits getInstance() {
         if(instance == null) {
-            throw new NullPointerException("CatchAerialFish is null");
+            throw new NullPointerException("DropBarroniteDeposits is null");
         }
         return instance;
     }
@@ -45,6 +43,6 @@ public class DropBarroniteDeposits extends Task {
 
     @Override
     public boolean runTask() throws InterruptedException {
-        return Rs2Inventory.dropAll(item -> item.getId() == ItemID.BARRONITE_DEPOSIT, DropOrder.random());
+        return Rs2Inventory.dropAll(item -> item.getId() == ItemID.BARRONITE_DEPOSIT);
     }
 }
