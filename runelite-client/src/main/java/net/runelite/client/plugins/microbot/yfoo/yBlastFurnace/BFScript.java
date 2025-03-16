@@ -1,0 +1,53 @@
+package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace;
+
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
+import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManager;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.DropOffRocksState;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.RetrieveBarsState;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.BankState;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.StartingState;
+
+import java.util.concurrent.TimeUnit;
+
+public class BFScript extends Script {
+
+    public static final String version = "0.01";
+    public BFConfig config;
+
+    public BFScript(BFConfig config) {
+        this.config = config;
+    }
+
+    public boolean run() {
+        StateManager.init();
+        StateManager.addState(StartingState.initInstance(this));
+
+        StateManager.addState(BankState.initInstance(this));
+        StateManager.addState(DropOffRocksState.initInstance(this));
+        StateManager.addState(RetrieveBarsState.initInstance(this));
+
+        StateManager.queueState(StartingState.getInstance());
+        Rs2Antiban.setActivityIntensity(ActivityIntensity.LOW);
+        mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            if (!super.run() || !Microbot.isLoggedIn()) {
+                return;
+            }
+            if (StateManager.stopScript) {
+                this.shutdown();
+            }
+
+            try {
+                StateManager.runOnLoopCycle();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }, 0, 600, TimeUnit.MILLISECONDS);
+        return true;
+    }
+
+
+
+}

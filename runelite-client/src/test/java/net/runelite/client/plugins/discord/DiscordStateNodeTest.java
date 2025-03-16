@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DiscordStateTest
+public class DiscordStateNodeTest
 {
 	@Inject
 	DiscordState discordState;

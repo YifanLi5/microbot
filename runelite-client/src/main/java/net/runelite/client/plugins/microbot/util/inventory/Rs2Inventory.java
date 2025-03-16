@@ -206,31 +206,6 @@ public class Rs2Inventory {
         return combine(closestPrimaryItem, closestSecondaryItem);
     }
 
-    public static boolean combineClosest(Predicate<Rs2Item> primaryItemFilter, Predicate<Rs2Item> secondaryItemFilter) {
-        List<Rs2Item> primaryItems = items().stream().filter(primaryItemFilter).collect(Collectors.toList());
-        List<Rs2Item> secondaryItems = items().stream().filter(secondaryItemFilter).collect(Collectors.toList());
-
-        if (primaryItems.isEmpty() || secondaryItems.isEmpty()) return false;
-
-        Rs2Item closestPrimaryItem = null;
-        Rs2Item closestSecondaryItem = null;
-        int minSlotDifference = Integer.MAX_VALUE;
-
-        // Compare each primary item with each secondary item to find the closest slots
-        for (Rs2Item primaryItem : primaryItems) {
-            for (Rs2Item secondaryItem : secondaryItems) {
-                int slotDifference = calculateSlotDifference(primaryItem.slot, secondaryItem.slot);
-                if (slotDifference <= minSlotDifference) {
-                    minSlotDifference = slotDifference;
-                    closestPrimaryItem = primaryItem;
-                    closestSecondaryItem = secondaryItem;
-                }
-            }
-        }
-
-        return combine(closestPrimaryItem, closestSecondaryItem);
-    }
-
     /**
      * Combines the closest items in the inventory based on their IDs.
      * <p>

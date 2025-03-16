@@ -1,7 +1,6 @@
-package net.runelite.client.plugins.microbot.yfoo.FishNFight;
+package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.example.ExamplePlugin;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -10,9 +9,9 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 import javax.inject.Inject;
 import java.awt.*;
 
-public class FishNFightOverlay extends OverlayPanel {
+public class BFOverlay extends OverlayPanel {
     @Inject
-    FishNFightOverlay(ExamplePlugin plugin)
+    BFOverlay(BFPlugin plugin)
     {
         super(plugin);
         setPosition(OverlayPosition.TOP_LEFT);
@@ -23,7 +22,7 @@ public class FishNFightOverlay extends OverlayPanel {
         try {
             panelComponent.setPreferredSize(new Dimension(200, 300));
             panelComponent.getChildren().add(TitleComponent.builder()
-                    .text("Fish N' Fight V1.0.0")
+                    .text("yBlastFurnace V1.0.0")
                     .color(Color.GREEN)
                     .build());
 

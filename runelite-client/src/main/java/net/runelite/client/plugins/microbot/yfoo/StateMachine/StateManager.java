@@ -1,6 +1,8 @@
 package net.runelite.client.plugins.microbot.yfoo.StateMachine;
 
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.StartingState;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -11,36 +13,37 @@ public class StateManager {
     public static boolean stopScript = false;
     public final static boolean LOGOUT_ON_SCRIPT_STOP = false;
 
-    static List<State> initializedStates;
-    static List<State> nextStates;
-    static Iterator<State> stateIterator;
+    static List<StateNode> initializedStates;
+    static List<StateNode> nextStates;
+    static Iterator<StateNode> stateIterator;
 
     public static void init() {
         initializedStates = new ArrayList<>();
         stopScript = false;
     }
 
-    public static State findFirstRunnableState() throws InterruptedException {
-        for(State state: initializedStates) {
-            boolean canRun = state.checkRequirements();
-            if(canRun) {
-                Microbot.log("First runnable state: " + state.getClass().getSimpleName());
-                return state;
+    public static StateNode findFirstRunnableState() throws InterruptedException {
+        for(StateNode state: initializedStates) {
+            if(state instanceof StartingState) {
+                continue;
             }
+            boolean canRun = state.canRun();
+            Microbot.log(String.format("%s canRun: %s", state.getClass().getSimpleName(), canRun));
+            if(canRun) return state;
         }
         return null;
     }
 
-    public static void addState(State state) {
+    public static void addState(StateNode state) {
         initializedStates.add(state);
     }
 
-    public static void queueStates(List<State> states) {
+    public static void queueStates(List<StateNode> states) {
         nextStates = states;
         stateIterator = nextStates.listIterator();
     }
 
-    public static void queueState(State state) {
+    public static void queueState(StateNode state) {
         queueStates(Collections.singletonList(state));
     }
 
@@ -55,8 +58,8 @@ public class StateManager {
             stopScript = true;
             return;
         }
-        State nextState = stateIterator.next();
-        if(!nextState.checkRequirements()) {
+        StateNode nextState = stateIterator.next();
+        if(!nextState.canRun()) {
             StateManager.stopScript = true;
             Microbot.log("Cannot do state: " + nextState.getClass().getSimpleName());
             return;

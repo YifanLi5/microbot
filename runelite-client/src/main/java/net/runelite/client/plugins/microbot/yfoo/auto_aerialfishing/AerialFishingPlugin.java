@@ -8,7 +8,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 import net.runelite.client.ui.overlay.OverlayManager;
 
@@ -46,7 +46,7 @@ public class AerialFishingPlugin extends Plugin {
             Microbot.log("One of Fast/Slow fillet must be checked!. Reset then restart the script.");
             return;
         }
-        Rs2Item equippedWeapon = Rs2Equipment.get(EquipmentInventorySlot.WEAPON);
+        Rs2ItemModel equippedWeapon = Rs2Equipment.get(EquipmentInventorySlot.WEAPON);
         int weaponId = equippedWeapon != null ? equippedWeapon.getId() : -1;
         if(weaponId != 22817) {
             Microbot.log("Player is not wielding the bird. Get one from the Alry the Angler then restart the script.");

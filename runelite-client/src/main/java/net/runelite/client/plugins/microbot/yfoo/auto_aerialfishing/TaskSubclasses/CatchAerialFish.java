@@ -2,22 +2,16 @@ package net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.TaskSubclas
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
-import net.runelite.api.coords.LocalPoint;
-import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
-import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 import net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.AerialFishingOverlay;
 
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static net.runelite.client.plugins.microbot.yfoo.auto_aerialfishing.Util.Constants.AERIAL_FISH;
 
 
 @Slf4j
@@ -45,7 +39,7 @@ public class CatchAerialFish extends Task {
 
     @Override
     public boolean shouldRun() throws InterruptedException {
-        Rs2Item equippedWeapon = Rs2Equipment.get(EquipmentInventorySlot.WEAPON);
+        Rs2ItemModel equippedWeapon = Rs2Equipment.get(EquipmentInventorySlot.WEAPON);
         int weaponId = equippedWeapon != null ? equippedWeapon.getId() : -1;
         return !Rs2Inventory.isFull() && Rs2Inventory.contains(ItemID.FISH_CHUNKS, ItemID.KING_WORM) && weaponId == 22817;
     }
@@ -107,7 +101,7 @@ public class CatchAerialFish extends Task {
     // When the bird is sent out, the equipped weapon changes.
     // Glove's Id -> 22816. When it returns, Glove's Id -> 22817.
     private boolean isBirdOnGlove() {
-        Rs2Item equippedWeapon = Rs2Equipment.get(EquipmentInventorySlot.WEAPON);
+        Rs2ItemModel equippedWeapon = Rs2Equipment.get(EquipmentInventorySlot.WEAPON);
         int weaponId = equippedWeapon != null ? equippedWeapon.getId() : -1;
         if(weaponId == ItemID.CORMORANTS_GLOVE_22817) return true;
         else if (weaponId == ItemID.CORMORANTS_GLOVE) return false;

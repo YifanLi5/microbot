@@ -1,7 +1,6 @@
 package net.runelite.client.plugins.microbot.yfoo.camdozaal_scripts.mining.TaskSubclasses;
 
 import net.runelite.api.GameObject;
-import net.runelite.api.Item;
 import net.runelite.api.ItemID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -9,11 +8,10 @@ import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
-import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
-import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.InteractionUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.Task.Task;
 
@@ -51,7 +49,7 @@ public class BankAndReturn extends Task {
             new WorldPoint(2916,5815,0)
     );
 
-    private static final Predicate<Rs2Item> depositPredicate = item -> item.getName().startsWith("Ancient") || item.getName().startsWith("Uncut") || item.getId() == ItemID.BARRONITE_HEAD;
+    private static final Predicate<Rs2ItemModel> depositPredicate = item -> item.getName().startsWith("Ancient") || item.getName().startsWith("Uncut") || item.getId() == ItemID.BARRONITE_HEAD;
 
     public BankAndReturn(Script script) {
         super(script);

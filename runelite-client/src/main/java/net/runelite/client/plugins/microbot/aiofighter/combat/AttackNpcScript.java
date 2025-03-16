@@ -80,7 +80,7 @@ public class AttackNpcScript extends Script {
 
                 if (AIOFighterPlugin.getCooldown() > 0 || Rs2Combat.inCombat()) {
                     AIOFighterPlugin.setState(State.COMBAT);
-                    handleItemOnNpcToKill();
+                    // handleItemOnNpcToKill();
                     return;
                 }
 
