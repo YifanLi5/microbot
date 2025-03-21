@@ -3,9 +3,14 @@ package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States;
 import net.runelite.api.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
+import net.runelite.client.plugins.microbot.util.misc.Rs2Potion;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
@@ -13,8 +18,11 @@ import net.runelite.client.plugins.microbot.yfoo.MicroAction.MicroAction;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.WithdrawOre;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BankState extends StateNode {
 
@@ -52,7 +60,16 @@ public class BankState extends StateNode {
     @Override
     public void initStateSteps() {
         this.stateSteps = new LinkedHashMap<>();
-        this.stateSteps.put(RestockStates.OPEN_BANK, () ->  Rs2Bank.isOpen() || Rs2Bank.openBank());
+        this.stateSteps.put(RestockStates.OPEN_BANK, () ->  {
+            if(Rs2Bank.isOpen()) {
+                Microbot.log("Bank is already open");
+                return true;
+            }
+            boolean result = Rs2Bank.openBank();
+            HoverBoundsUtil.hoverRandom();
+            script.sleep(RngUtil.gaussian(400, 100, 100, 600));
+            return result;
+        });
         this.stateSteps.put(RestockStates.DEPOSIT_BARS, () -> {
             if(Rs2Inventory.onlyContains(ItemID.COAL_BAG_12019)) return true;
             return Rs2Bank.depositAllExcept(ItemID.COAL_BAG_12019);
@@ -79,6 +96,11 @@ public class BankState extends StateNode {
         return DropOffRocksState.getInstance();
     }
 
+    @Override
+    public int retries() {
+        return 3;
+    }
+
     private static boolean rollForRunRestore(int minEnergy) {
         if (Rs2Player.hasStaminaActive()) {
             return false;
@@ -95,16 +117,43 @@ public class BankState extends StateNode {
     }
 
     private boolean withdrawAndUseStamina() {
-        Rs2Bank.withdrawOne("Stamina potion");
-        boolean gotStamina = script.sleepUntil(() -> Rs2Inventory.contains(item -> item.getName().contains("Stamina")));
-        if(!gotStamina) {
-            Microbot.log("didn't get stamina");
+
+        Rs2ItemModel staminaPotionItem = Rs2Bank.bankItems().stream()
+                .filter(rs2Item -> rs2Item.getName().toLowerCase().contains(Rs2Potion.getStaminaPotion().toLowerCase()))
+                .min(Comparator.comparingInt(rs2Item -> getDoseFromName(rs2Item.getName())))
+                .orElse(null);
+
+        if (staminaPotionItem == null) {
+            Microbot.showMessage("Unable to find Stamina Potion but hasItem?");
             return false;
         }
-        Rs2Inventory.interact("Stamina potion", "Drink");
-        boolean drankStamina = script.sleepUntil(() -> Rs2Player.hasStaminaActive());
-        if(!drankStamina) Microbot.log("didn't drink stamina");
 
-        return Rs2Bank.depositAll(item -> item.getName().contains("Stamina") || item.getId() == ItemID.VIAL);
+        withdrawAndDrink(staminaPotionItem.getName());
+        return script.sleepUntil(Rs2Player::hasStaminaActive);
+    }
+
+    private void withdrawAndDrink(String potionItemName) {
+        String simplifiedPotionName = potionItemName.replaceAll("\\s*\\(\\d+\\)", "").trim();
+        Rs2Bank.withdrawOne(potionItemName);
+        Rs2Inventory.waitForInventoryChanges(1800);
+        Rs2Inventory.interact(potionItemName, "drink");
+        Rs2Inventory.waitForInventoryChanges(1800);
+        if (Rs2Inventory.hasItem(simplifiedPotionName)) {
+            Rs2Bank.depositOne(simplifiedPotionName);
+            Rs2Inventory.waitForInventoryChanges(1800);
+        }
+        if (Rs2Inventory.hasItem(ItemID.VIAL)) {
+            Rs2Bank.depositOne(ItemID.VIAL);
+            Rs2Inventory.waitForInventoryChanges(1800);
+        }
+    }
+
+    private int getDoseFromName(String potionItemName) {
+        Pattern pattern = Pattern.compile("\\((\\d+)\\)$");
+        Matcher matcher = pattern.matcher(potionItemName);
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
+        return 0;
     }
 }

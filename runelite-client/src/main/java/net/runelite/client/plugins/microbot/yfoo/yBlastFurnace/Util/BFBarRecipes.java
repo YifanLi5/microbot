@@ -34,4 +34,8 @@ public enum BFBarRecipes {
         return Microbot.getVarbitValue(this.oreVarbit) * Microbot.getVarbitValue(this.coalNeeded)
                 >= Microbot.getVarbitValue(Varbits.BLAST_FURNACE_COAL);
     }
+
+    public int coalRequired() {
+        return 27 * this.coalNeeded;
+    }
 }

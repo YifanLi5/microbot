@@ -10,6 +10,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util.BFUtils;
@@ -65,6 +66,7 @@ public class DropOffRocksState extends StateNode {
                 return name.equals("Coal") || name.endsWith("ore");
             })) {
                 Rs2GameObject.interact(ObjectID.CONVEYOR_BELT, "Put-ore-on");
+                HoverBoundsUtil.hover("Coal bag");
                 boolean droppedOffOre = ExtendableConditionalSleep.sleep(4000,
                         successCondition,
                         null,

@@ -71,6 +71,7 @@ public class StateManager {
                     i+1,
                     nextState.retries())
             );
+            nextState.script.sleep(1000);
         }
     }
 

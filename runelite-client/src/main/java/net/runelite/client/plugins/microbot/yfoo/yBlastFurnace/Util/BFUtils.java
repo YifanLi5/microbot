@@ -9,8 +9,12 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class BFUtils {
 
@@ -40,7 +44,9 @@ public class BFUtils {
             return true;
         }
         if(Rs2Inventory.contains(ItemID.COAL_BAG_12019)) {
-            Rs2Inventory.interact(ItemID.COAL_BAG_12019, "Fill");
+            Rs2ItemModel coalBag = Rs2Inventory.get(ItemID.COAL_BAG_12019);
+            HoverBoundsUtil.addInventoryItemHoverBounds(coalBag);
+            Rs2Inventory.interact(coalBag, "Fill");
             isCoalBagFilled = ExtendableConditionalSleep.sleep(4000,
                     () -> !BFUtils.coalBagHasEmptyInBank(),
                     null,
@@ -72,8 +78,18 @@ public class BFUtils {
         // 54 -> 27 inv slots + 27 coal bag
         int coalAfter = Microbot.getVarbitValue(Varbits.BLAST_FURNACE_COAL) + 54;
         if(coalAfter > 200) return false;
-        else if(canFurnaceProcessOre(barType)) return RngUtil.randomInclusive(0, 100) <= 30;
+        else if(canFurnaceProcessOre(barType)) return rollDoubleCoal(coalAfter, barType.coalRequired());
         else return true;
+    }
+
+    private static boolean rollDoubleCoal(int coalAfter, int minCoalNeeded) {
+        double normalizedVal = normalize(coalAfter, minCoalNeeded, 250, 0, 100);
+        System.out.println("Normalized coal Val: " + normalizedVal);
+        return ThreadLocalRandom.current().nextDouble() <= normalizedVal;
+    }
+
+    public static double normalize(double x, double oldMin, double oldMax, double newMin, double newMax) {
+        return ((x - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin;
     }
 
 
@@ -86,5 +102,9 @@ public class BFUtils {
     // ONLY WORKS WHILE IN BANK
     public static boolean coalBagHasEmptyInBank() {
         return Microbot.getVarbitPlayerValue(BFUtils.COAL_BAG_IS_FILLED_VARBIT) == 32;
+    }
+
+    public static void main(String[] args) {
+        rollDoubleCoal(200, 108);
     }
 }

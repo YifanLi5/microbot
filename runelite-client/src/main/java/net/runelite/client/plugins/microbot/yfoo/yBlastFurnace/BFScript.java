@@ -3,7 +3,9 @@ package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManager;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.DropOffRocksState;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.RetrieveBarsState;
@@ -22,6 +24,7 @@ public class BFScript extends Script {
     }
 
     public boolean run() {
+        HoverBoundsUtil.init();
         StateManager.init();
         StateManager.addState(StartingState.initInstance(this));
 
@@ -31,6 +34,7 @@ public class BFScript extends Script {
 
         StateManager.queueState(StartingState.getInstance());
         Rs2Antiban.setActivityIntensity(ActivityIntensity.LOW);
+        Rs2AntibanSettings.naturalMouse = true;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             if (!super.run() || !Microbot.isLoggedIn()) {
                 return;

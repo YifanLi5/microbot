@@ -46,7 +46,7 @@ public abstract class StateNode {
             Enum<?> stateEnum = entry.getKey();
             BooleanSupplier step = entry.getValue();
             String stepId = stateEnum.getClass().getSimpleName() + " :: " + stateEnum.name();
-            //Microbot.log("Processing state: " + stepId);
+            Microbot.log("Processing state: " + stepId);
 
             // Attempt execution up to 3 times
             boolean success = false;
