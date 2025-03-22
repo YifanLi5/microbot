@@ -5,25 +5,33 @@ import net.runelite.api.Varbits;
 import net.runelite.client.plugins.microbot.Microbot;
 
 public enum BFBarRecipes {
-    STEEL_BAR(ItemID.IRON_ORE, Varbits.BLAST_FURNACE_IRON_ORE, Varbits.BLAST_FURNACE_STEEL_BAR, 1),
-    MITHRIL_BAR(ItemID.MITHRIL_ORE, Varbits.BLAST_FURNACE_MITHRIL_ORE, Varbits.BLAST_FURNACE_MITHRIL_BAR, 2),
-    ADAMANTITE_BAR(ItemID.ADAMANTITE_ORE, Varbits.BLAST_FURNACE_ADAMANTITE_ORE, Varbits.BLAST_FURNACE_ADAMANTITE_BAR, 3),
-    RUNITE_BAR(ItemID.RUNITE_ORE, Varbits.BLAST_FURNACE_RUNITE_ORE, Varbits.BLAST_FURNACE_RUNITE_BAR, 4);
+    STEEL_BAR(ItemID.IRON_ORE, Varbits.BLAST_FURNACE_IRON_ORE, Varbits.BLAST_FURNACE_STEEL_BAR, 1, false),
+    MITHRIL_BAR(ItemID.MITHRIL_ORE, Varbits.BLAST_FURNACE_MITHRIL_ORE, Varbits.BLAST_FURNACE_MITHRIL_BAR, 2, false),
+    ADAMANTITE_BAR(ItemID.ADAMANTITE_ORE, Varbits.BLAST_FURNACE_ADAMANTITE_ORE, Varbits.BLAST_FURNACE_ADAMANTITE_BAR, 3, false),
+    RUNITE_BAR(ItemID.RUNITE_ORE, Varbits.BLAST_FURNACE_RUNITE_ORE, Varbits.BLAST_FURNACE_RUNITE_BAR, 4, false),
+
+    RUNITE_GOLD(ItemID.RUNITE_ORE, Varbits.BLAST_FURNACE_RUNITE_ORE, Varbits.BLAST_FURNACE_RUNITE_BAR, 4, true);
 
     public final int oreId;
     public final int oreVarbit;
     public final int barVarbit;
     public final int coalNeeded;
+    public final boolean isHybrid;
 
-    BFBarRecipes(int oreId, int oreVarbit, int barVarbit, int coalNeeded) {
+    BFBarRecipes(int oreId, int oreVarbit, int barVarbit, int coalNeeded, boolean isHybrid) {
         this.oreId = oreId;
         this.oreVarbit = oreVarbit;
         this.barVarbit = barVarbit;
         this.coalNeeded = coalNeeded;
+        this.isHybrid = isHybrid;
     }
 
     public int getNumOreInFurnace() {
         return Microbot.getVarbitValue(this.oreVarbit);
+    }
+
+    public int getNumGoldBarsInFurnace() {
+        return Microbot.getVarbitValue(Varbits.BLAST_FURNACE_GOLD_BAR);
     }
 
     public int getNumBarsInDispenser() {

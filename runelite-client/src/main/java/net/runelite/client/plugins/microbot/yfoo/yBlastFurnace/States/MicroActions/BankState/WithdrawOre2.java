@@ -1,6 +1,5 @@
 package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState;
 
-import lombok.Setter;
 import net.runelite.api.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
@@ -13,25 +12,23 @@ import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManager;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util.BFUtils;
 
-@Setter
-public class WithdrawOre extends MicroAction {
-
+public class WithdrawOre2 extends MicroAction {
     BFConfig config;
 
-    public WithdrawOre(BFConfig config) {
+    public WithdrawOre2(BFConfig config) {
         super(1, 2);
         this.config = config;
     }
 
     @Override
     public boolean doAction() {
-        boolean isNotFull = ExtendableConditionalSleep.sleep(1000, () -> !Rs2Inventory.isFull(), null, null);
-        if(!isNotFull) {
+        boolean assertNotFull = ExtendableConditionalSleep.sleep(1000, () -> !Rs2Inventory.isFull(), null, null);
+        if(!assertNotFull) {
             Microbot.log("Inv Is full?");
             return true;
         }
-        int oreId = BFUtils.shouldDoubleCoal(config.barType()) ? ItemID.COAL : config.barType().oreId;
-        if(Rs2Bank.count(oreId) < 27) {
+        int oreId = BFUtils.canFurnaceProcessOre(config.barType()) ? config.barType().oreId : ItemID.GOLD_ORE;
+        if(Rs2Bank.count(oreId) < 26) {
             Microbot.log("Outta ore for " + config.barType());
             StateManager.stopScript();
             return false;

@@ -1,8 +1,10 @@
-package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States;
+package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Hybrid;
 
+import net.runelite.api.ItemID;
 import net.runelite.api.Varbits;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -13,18 +15,16 @@ import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 
 import java.awt.event.KeyEvent;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
-public class RetrieveBarsState extends StateNode {
+public class RetrieveBarsState2 extends StateNode {
 
     enum States {
         MOVE_TO_DISPENSER, RETRIEVE_BARS, COMPLETE
     }
 
-    private static RetrieveBarsState instance;
+    private static RetrieveBarsState2 instance;
 
     final static Map<WorldPoint, Integer> worldPointWeightings = Map.of(
             new WorldPoint(1940, 4962, 0), RngUtil.randomInclusive(0, 10),
@@ -35,20 +35,20 @@ public class RetrieveBarsState extends StateNode {
     );
 
 
-    public static RetrieveBarsState getInstance() {
+    public static RetrieveBarsState2 getInstance() {
         if(instance == null) {
-            throw new NullPointerException(RetrieveBarsState.class.getSimpleName() + " is null");
+            throw new NullPointerException(RetrieveBarsState2.class.getSimpleName() + " is null");
         }
         return instance;
     }
 
-    public static RetrieveBarsState initInstance(BFScript script) {
+    public static RetrieveBarsState2 initInstance(BFScript script) {
         if (instance == null)
-            instance = new RetrieveBarsState(script);
+            instance = new RetrieveBarsState2(script);
         return instance;
     }
 
-    public RetrieveBarsState(BFScript script) {
+    public RetrieveBarsState2(BFScript script) {
         super(script);
     }
 
@@ -73,7 +73,7 @@ public class RetrieveBarsState extends StateNode {
             return true;
         });
         this.stateSteps.put(States.RETRIEVE_BARS, () -> {
-            boolean allOreProcessed = script.sleepUntil(() -> config.barType().getNumOreInFurnace() <= 0);
+            boolean allOreProcessed = script.sleepUntil(() -> config.barType().getNumOreInFurnace() <= 0 || config.barType().getNumGoldBarsInFurnace() > 0);
             if(!allOreProcessed && config.barType().furnaceRequiresMoreCoal()) {
                 if(config.barType().furnaceRequiresMoreCoal()) {
                     Microbot.log("Require more coal to finish all ore.");
@@ -82,6 +82,12 @@ public class RetrieveBarsState extends StateNode {
                 Microbot.log("debug1");
                 return false;
             }
+            if(!Rs2Equipment.hasEquipped(ItemID.ICE_GLOVES)) {
+                Rs2Inventory.equip(ItemID.ICE_GLOVES);
+                boolean equippedGloves = script.sleepUntil(() -> Rs2Equipment.hasEquipped(ItemID.ICE_GLOVES));
+                Microbot.log("equipped ice gloves? " + equippedGloves);
+            }
+
             boolean canCollect = script.sleepUntil(() -> Microbot.getVarbitValue(Varbits.BAR_DISPENSER) >= 2, 2000);
             if(!canCollect) {
                 Microbot.log("cannot collect");
@@ -104,6 +110,6 @@ public class RetrieveBarsState extends StateNode {
 
     @Override
     public StateNode nextState() {
-        return BankState.getInstance();
+        return BankState2.getInstance();
     }
 }

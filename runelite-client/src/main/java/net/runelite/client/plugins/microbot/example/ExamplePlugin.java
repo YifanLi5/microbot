@@ -17,6 +17,8 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
 import java.awt.*;
 
+import static net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFPlugin.parseCoalBagMessage;
+
 @PluginDescriptor(
         name = PluginDescriptor.Default + "Example",
         description = "Microbot example plugin",
@@ -74,11 +76,9 @@ public class ExamplePlugin extends Plugin {
         }
         String message = chatMessage.getMessage();
         if(message.contains("coal bag")) {
-            if(message.contains("empty")) {
-                Microbot.log("Empty!");
-            } else if(message.contains("contains")) {
-                Microbot.log("Has something");
-            }
+            int numCoal = parseCoalBagMessage(message);
+            Microbot.log("DEBUG Coal bag now contains: " + numCoal);
+            BFUtils.setNumCoalInBag(numCoal);
         }
     }
 

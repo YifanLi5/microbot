@@ -1,6 +1,7 @@
 package net.runelite.client.plugins.microbot.yfoo.StateMachine;
 
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.StartingState;
 
 import java.util.ArrayList;
@@ -51,6 +52,9 @@ public class StateManager {
     public static void runOnLoopCycle() throws InterruptedException {
         if (StateManager.stopScript) {
             stopScript = true;
+            if(LOGOUT_ON_SCRIPT_STOP) {
+                Rs2Player.logout();
+            }
             return;
         }
 
@@ -75,5 +79,7 @@ public class StateManager {
         }
     }
 
-
+    public static void stopScript() {
+        stopScript = true;
+    }
 }

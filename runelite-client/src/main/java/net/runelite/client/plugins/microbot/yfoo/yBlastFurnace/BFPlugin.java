@@ -8,11 +8,14 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManager;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util.BFUtils;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @PluginDescriptor(
         name = PluginDescriptor.yfoo + "Blast Furnace",
@@ -56,6 +59,9 @@ public class BFPlugin extends Plugin {
         overlayManager.remove(yBFOverlay);
     }
 
+
+
+
     @Subscribe
     public void onChatMessage(ChatMessage chatMessage) {
         if (chatMessage.getType() != ChatMessageType.GAMEMESSAGE) {
@@ -63,14 +69,35 @@ public class BFPlugin extends Plugin {
         }
         String message = chatMessage.getMessage();
         if(message.contains("coal bag")) {
-            if(message.contains("empty")) {
-                Microbot.log("Got Coal bag empty msg");
-                BFUtils.setCoalBagFilled(false);
-            } else if(message.contains("contains")) {
-                Microbot.log("Got Coal bag full msg");
-                BFUtils.setCoalBagFilled(true);
-            }
+            int numCoal = parseCoalBagMessage(message);
+            Microbot.log("DEBUG Coal bag now contains: " + numCoal);
+            BFUtils.setNumCoalInBag(numCoal);
         }
+    }
+
+    static final Pattern COAL_BAG_PATTERN = Pattern.compile(
+            "contains (?:(\\d+)|one)"
+    );
+
+    public static int parseCoalBagMessage(String message) {
+        if (message.contains("empty")) {
+            return 0;
+        }
+
+        Matcher matcher = COAL_BAG_PATTERN.matcher(message);
+        if (matcher.find()) {
+            if (matcher.group(1) != null) {
+                return Integer.parseInt(matcher.group(1));
+            }
+            return 1;
+        }
+
+        if(message.equals("The coal bag can be filled only with coal. You haven't got any.")) {
+            StateManager.stopScript();
+            return 0;
+        }
+
+        throw new IllegalArgumentException("Invalid coal bag message: " + message);
     }
 }
 

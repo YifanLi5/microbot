@@ -7,9 +7,8 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManager;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.DropOffRocksState;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.RetrieveBarsState;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.BankState;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Hybrid.*;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard.*;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.StartingState;
 
 import java.util.concurrent.TimeUnit;
@@ -27,10 +26,15 @@ public class BFScript extends Script {
         HoverBoundsUtil.init();
         StateManager.init();
         StateManager.addState(StartingState.initInstance(this));
-
-        StateManager.addState(BankState.initInstance(this));
-        StateManager.addState(DropOffRocksState.initInstance(this));
-        StateManager.addState(RetrieveBarsState.initInstance(this));
+        if(config.barType().isHybrid) {
+            StateManager.addState(BankState2.initInstance(this));
+            StateManager.addState(DropOffRocksState2.initInstance(this));
+            StateManager.addState(RetrieveBarsState2.initInstance(this));
+        } else {
+            StateManager.addState(BankState.initInstance(this));
+            StateManager.addState(DropOffRocksState.initInstance(this));
+            StateManager.addState(RetrieveBarsState.initInstance(this));
+        }
 
         StateManager.queueState(StartingState.getInstance());
         Rs2Antiban.setActivityIntensity(ActivityIntensity.LOW);

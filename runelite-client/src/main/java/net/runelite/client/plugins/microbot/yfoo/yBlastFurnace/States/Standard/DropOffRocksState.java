@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States;
+package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard;
 
 import net.runelite.api.ItemID;
 import net.runelite.api.ObjectID;

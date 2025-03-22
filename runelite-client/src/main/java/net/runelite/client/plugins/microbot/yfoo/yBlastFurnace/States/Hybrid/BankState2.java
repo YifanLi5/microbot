@@ -1,9 +1,7 @@
-package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States;
+package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Hybrid;
 
 import net.runelite.api.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
-import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
@@ -13,9 +11,11 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
+
 import net.runelite.client.plugins.microbot.yfoo.MicroAction.MicroAction;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.WithdrawOre;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.WithdrawOre2;
+
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -24,31 +24,31 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BankState extends StateNode {
+public class BankState2 extends StateNode {
 
     enum RestockStates {
         OPEN_BANK, DEPOSIT_BARS, CHECK_RUN_ENERGY, WITHDRAW_ORE, COMPLETE
     }
 
-    private static BankState instance;
+    private static BankState2 instance;
 
-    WithdrawOre withdrawOre = new WithdrawOre(config);
+    WithdrawOre2 withdrawOre = new WithdrawOre2(config);
     FillCoalBag fillCoalBag = new FillCoalBag();
 
-    public static BankState getInstance() {
+    public static BankState2 getInstance() {
         if(instance == null) {
-            throw new NullPointerException(BankState.class.getSimpleName() + " is null");
+            throw new NullPointerException(BankState2.class.getSimpleName() + " is null");
         }
         return instance;
     }
 
-    public static BankState initInstance(BFScript script) {
+    public static BankState2 initInstance(BFScript script) {
         if (instance == null)
-            instance = new BankState(script);
+            instance = new BankState2(script);
         return instance;
     }
 
-    public BankState(BFScript script) {
+    public BankState2(BFScript script) {
         super(script);
     }
 
@@ -72,7 +72,10 @@ public class BankState extends StateNode {
         });
         this.stateSteps.put(RestockStates.DEPOSIT_BARS, () -> {
             if(Rs2Inventory.onlyContains(ItemID.COAL_BAG_12019)) return true;
-            return Rs2Bank.depositAllExcept(ItemID.COAL_BAG_12019);
+            if(Rs2Inventory.contains(item -> item.getName().contains("bar"))) {
+                return Rs2Bank.depositAll(item -> item.getName().contains("bar"));
+            }
+            return true;
         });
         this.stateSteps.put(RestockStates.CHECK_RUN_ENERGY, () -> {
             if(!rollForRunRestore(20)) {
@@ -93,7 +96,7 @@ public class BankState extends StateNode {
 
     @Override
     public StateNode nextState() {
-        return DropOffRocksState.getInstance();
+        return DropOffRocksState2.getInstance();
     }
 
     @Override
