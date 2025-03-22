@@ -100,7 +100,7 @@ public class BFUtils {
         else return true;
     }
 
-    private static boolean rollDoubleCoal(int coalAfter, int minCoalNeeded) {
+    public static boolean rollDoubleCoal(int coalAfter, int minCoalNeeded) {
         double normalizedVal = normalize(coalAfter, minCoalNeeded, 250, 0, 100);
         System.out.println("Normalized coal Val: " + normalizedVal);
         return ThreadLocalRandom.current().nextDouble() <= normalizedVal;

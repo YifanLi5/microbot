@@ -97,7 +97,6 @@ public class DropOffRocksState2 extends StateNode {
             if(!empty1) return false;
 
             if(rollToCompletelyEmptyCoalBag()) {
-                Microbot.log("rolled double empty");
                 script.sleep(RngUtil.gaussian(500, 100, 200, 900));
                 return emptyCoalBagOntoConveyorBelt();
             }

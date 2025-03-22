@@ -60,8 +60,6 @@ public class BFPlugin extends Plugin {
     }
 
 
-
-
     @Subscribe
     public void onChatMessage(ChatMessage chatMessage) {
         if (chatMessage.getType() != ChatMessageType.GAMEMESSAGE) {
@@ -70,7 +68,6 @@ public class BFPlugin extends Plugin {
         String message = chatMessage.getMessage();
         if(message.contains("coal bag")) {
             int numCoal = parseCoalBagMessage(message);
-            Microbot.log("DEBUG Coal bag now contains: " + numCoal);
             BFUtils.setNumCoalInBag(numCoal);
         }
     }
@@ -81,13 +78,16 @@ public class BFPlugin extends Plugin {
 
     public static int parseCoalBagMessage(String message) {
         if (message.contains("empty")) {
+            Microbot.log("Coal bag -> 0");
             return 0;
         }
 
         Matcher matcher = COAL_BAG_PATTERN.matcher(message);
         if (matcher.find()) {
             if (matcher.group(1) != null) {
-                return Integer.parseInt(matcher.group(1));
+                int numCoal = Integer.parseInt(matcher.group(1));
+                Microbot.log("Coal bag -> " + numCoal);
+                return numCoal;
             }
             return 1;
         }

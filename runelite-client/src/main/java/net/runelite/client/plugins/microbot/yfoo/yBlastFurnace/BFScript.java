@@ -37,7 +37,7 @@ public class BFScript extends Script {
         }
 
         StateManager.queueState(StartingState.getInstance());
-        Rs2Antiban.setActivityIntensity(ActivityIntensity.LOW);
+        Rs2Antiban.setActivityIntensity(ActivityIntensity.VERY_LOW);
         Rs2AntibanSettings.naturalMouse = true;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             if (!super.run() || !Microbot.isLoggedIn()) {
