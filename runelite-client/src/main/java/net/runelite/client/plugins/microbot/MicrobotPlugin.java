@@ -9,6 +9,7 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.config.ProfileManager;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
@@ -76,6 +77,8 @@ public class MicrobotPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
     @Inject
+    private EventBus eventBus;
+    @Inject
     private ClientToolbar clientToolbar;
     @Inject
     private MicrobotOverlay microbotOverlay;
@@ -103,6 +106,7 @@ public class MicrobotPlugin extends Plugin {
         Microbot.pauseAllScripts = false;
         Microbot.setClient(client);
         Microbot.setClientThread(clientThread);
+        Microbot.setEventBus(eventBus);
         Microbot.setNotifier(notifier);
         Microbot.setWorldService(worldService);
         Microbot.setProfileManager(profileManager);
@@ -263,7 +267,7 @@ public class MicrobotPlugin extends Plugin {
     @Subscribe
     public void onHitsplatApplied(HitsplatApplied event) {
         // Case 1: Hitsplat applied to the local player (indicates someone or something is attacking you)
-        if (event.getActor().equals(Rs2Player.getLocalPlayer())) {
+        if (event.getActor().equals(Microbot.getClient().getLocalPlayer())) {
             if (!event.getHitsplat().isOthers()) {
                 Rs2Player.updateCombatTime();
             }
