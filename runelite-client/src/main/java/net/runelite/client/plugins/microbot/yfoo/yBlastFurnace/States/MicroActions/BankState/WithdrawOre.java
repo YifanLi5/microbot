@@ -30,7 +30,7 @@ public class WithdrawOre extends MicroAction {
             Microbot.log("Inv Is full?");
             return true;
         }
-        int oreId = BFUtils.shouldDoubleCoal(config.barType()) ? ItemID.COAL : config.barType().oreId;
+        int oreId = getOreIdToWithdraw();
         if(Rs2Bank.count(oreId) < 27) {
             Microbot.log("Outta ore for " + config.barType());
             StateManager.stopScript();
@@ -42,5 +42,9 @@ public class WithdrawOre extends MicroAction {
         boolean withdrew = Rs2Bank.withdrawAll(oreId);
         Microbot.log(String.format("withdrew %d? (%s)", oreId, withdrew));
         return withdrew;
+    }
+
+    private int getOreIdToWithdraw() {
+        return BFUtils.shouldDoubleCoal(config.barType()) ? ItemID.COAL : config.barType().oreId;
     }
 }

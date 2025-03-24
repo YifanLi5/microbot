@@ -18,7 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @PluginDescriptor(
-        name = PluginDescriptor.yfoo + "Blast Furnace",
+        name = PluginDescriptor.yfoo + "yBlastFurnace",
         description = "my blast furnace plugin",
         tags = {"smithing"},
         enabledByDefault = false

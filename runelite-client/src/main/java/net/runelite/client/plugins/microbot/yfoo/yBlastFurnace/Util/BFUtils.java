@@ -30,18 +30,13 @@ public class BFUtils {
 
 
     public static boolean fillCoalBag() {
-        if(!Rs2Inventory.contains(ItemID.COAL_BAG_12019)) {
-            Microbot.log("Coal bag not in inventory.");
-            return false;
-        }
-
         boolean waitForCoalBagVarbit = ExtendableConditionalSleep.sleep(1000,
                 () -> BFUtils.coalBagHasEmptyInBank(),
                 null,
                 null
         );
         if(!waitForCoalBagVarbit) {
-            Microbot.log("Coal bag already full, empty first then retry");
+            Microbot.log("Coal bag doesn't have fill option. Empty then retry.");
             Rs2Inventory.interact(ItemID.COAL_BAG_12019, "Empty");
 
             waitForCoalBagVarbit = ExtendableConditionalSleep.sleep(1000,
@@ -49,29 +44,42 @@ public class BFUtils {
                     null,
                     null
             );
-            Microbot.log("should be true: " + waitForCoalBagVarbit);
-
-            return fillCoalBag();
-
-        }
-        if(Rs2Inventory.contains(ItemID.COAL_BAG_12019)) {
-            if(Rs2Bank.count(ItemID.COAL) < 27) {
-                StateManager.stopScript();
-                Microbot.log("Outta coal");
+            if (!waitForCoalBagVarbit) {
+                Microbot.log("coal bag varbit did not change to empty state.");
                 return false;
             }
 
-            Rs2ItemModel coalBag = Rs2Inventory.get(ItemID.COAL_BAG_12019);
-            HoverBoundsUtil.addInventoryItemHoverBounds(coalBag);
-            Rs2Inventory.interact(coalBag, "Fill");
-            return ExtendableConditionalSleep.sleep(4000,
-                    () -> !BFUtils.coalBagHasEmptyInBank(),
-                    null,
-                    null
-            );
+            return fillHelper();
+
         }
-        Microbot.log("Inventory doesn't have coal bag");
-        return false;
+        return fillHelper();
+    }
+
+    private static boolean fillHelper() {
+        if(!Rs2Bank.isOpen()) {
+            Microbot.log("Bank is not open.");
+            return false;
+        }
+
+        if(!Rs2Inventory.contains(ItemID.COAL_BAG_12019)) {
+            Microbot.log("Coal bag not in inventory.");
+            return false;
+        }
+
+        if(Rs2Bank.count(ItemID.COAL) < 27) {
+            StateManager.stopScript();
+            Microbot.log("Outta coal");
+            return false;
+        }
+
+        Rs2ItemModel coalBag = Rs2Inventory.get(ItemID.COAL_BAG_12019);
+        HoverBoundsUtil.addInventoryItemHoverBounds(coalBag);
+        Rs2Inventory.interact(coalBag, "Fill");
+        return ExtendableConditionalSleep.sleep(4000,
+                () -> !BFUtils.coalBagHasEmptyInBank(),
+                null,
+                null
+        );
     }
 
     public static boolean emptyCoalBag() {
@@ -119,6 +127,10 @@ public class BFUtils {
 
     // ONLY WORKS WHILE IN BANK
     private static boolean coalBagHasEmptyInBank() {
+        if(!Rs2Bank.isOpen()) {
+            Microbot.log("Bank must be open for coalbag varbit to change.");
+            return false;
+        }
         return Microbot.getVarbitPlayerValue(BFUtils.COAL_BAG_IS_FILLED_VARBIT) == 32;
     }
 

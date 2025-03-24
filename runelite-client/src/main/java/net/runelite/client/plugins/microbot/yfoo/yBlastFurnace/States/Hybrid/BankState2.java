@@ -68,7 +68,7 @@ public class BankState2 extends StateNode {
             boolean result = Rs2Bank.openBank();
             HoverBoundsUtil.hoverRandom();
             script.sleep(RngUtil.gaussian(400, 100, 100, 600));
-            return result;
+            return Rs2Bank.isOpen();
         });
         this.stateSteps.put(RestockStates.DEPOSIT_BARS, () -> {
             if(Rs2Inventory.onlyContains(ItemID.COAL_BAG_12019)) return true;
