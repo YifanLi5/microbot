@@ -48,9 +48,8 @@ public abstract class StateNode {
             String stepId = stateEnum.getClass().getSimpleName() + " :: " + stateEnum.name();
             Microbot.log("Processing state: " + stepId);
 
-            // Attempt execution up to 3 times
             boolean success = false;
-            for (int attempt = 0; attempt < 3; attempt++) {
+            for (int attempt = 0; attempt < retries(); attempt++) {
                 if(BFPlugin.isShutdown.get()) {
                     Microbot.log("Got shutdown boolean");
                     return true;

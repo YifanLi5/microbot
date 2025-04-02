@@ -45,6 +45,7 @@ public class BFScript extends Script {
             }
             if (StateManager.stopScript) {
                 this.shutdown();
+                return;
             }
 
             try {

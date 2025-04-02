@@ -51,6 +51,11 @@ public class RetrieveBarsState extends StateNode {
     }
 
     @Override
+    public int retries() {
+        return 2;
+    }
+
+    @Override
     public boolean canRun() throws InterruptedException {
         return !Rs2Inventory.isFull();
     }
@@ -81,7 +86,7 @@ public class RetrieveBarsState extends StateNode {
                 return false;
             }
 
-            boolean canCollect = script.sleepUntil(() -> Microbot.getVarbitValue(Varbits.BAR_DISPENSER) >= 2, 2000);
+            boolean canCollect = script.sleepUntil(() -> Microbot.getVarbitValue(Varbits.BAR_DISPENSER) >= 2, 3000);
             if(!canCollect) {
                 Microbot.log("cannot collect");
                 return false;

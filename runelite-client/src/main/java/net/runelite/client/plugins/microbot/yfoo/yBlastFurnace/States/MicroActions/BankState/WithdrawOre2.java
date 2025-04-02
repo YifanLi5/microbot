@@ -29,7 +29,7 @@ public class WithdrawOre2 extends MicroAction {
             return true;
         }
         int oreId = BFUtils.canFurnaceProcessOre(config.barType())
-                && BFUtils.rollDoubleCoal(Microbot.getVarbitValue(Varbits.BLAST_FURNACE_COAL) + 26, config.barType().coalNeeded)
+                && BFUtils.rollForCoal(Microbot.getVarbitValue(Varbits.BLAST_FURNACE_COAL) + 26, config.barType().coalNeeded)
                 ? config.barType().oreId : ItemID.GOLD_ORE;
         if(Rs2Bank.count(oreId) < 26) {
             Microbot.log("Outta ore for " + config.barType());

@@ -50,13 +50,7 @@ public class StateManager {
 
 
     public static void runOnLoopCycle() throws InterruptedException {
-        if (StateManager.stopScript) {
-            stopScript = true;
-            if(LOGOUT_ON_SCRIPT_STOP) {
-                Rs2Player.logout();
-            }
-            return;
-        }
+
 
         if(!stateIterator.hasNext()) {
             stopScript = true;
@@ -69,6 +63,14 @@ public class StateManager {
             return;
         }
         for(int i = 0; i < nextState.retries(); i++) {
+            if (StateManager.stopScript) {
+                stopScript = true;
+                if(LOGOUT_ON_SCRIPT_STOP) {
+                    Rs2Player.logout();
+                }
+                return;
+            }
+
             if(nextState.handleState()) break;
             Microbot.log(String.format("Failed %s. Attempt (%d / %d)",
                     nextState.getClass().getSimpleName(),

@@ -30,20 +30,13 @@ public abstract class MicroAction implements Comparable<MicroAction> {
         //Microbot.log("Sort Order: " + actions.stream().map(Object::toString).collect(Collectors.joining(",")));
         boolean result = true;
         for(MicroAction a: actions) {
-            boolean actionSuccess = false;
-            for(int i = 0; i < 3; i++) {
-                actionSuccess = a.doAction();
-                if(actionSuccess) {
-                    Thread.sleep(RngUtil.gaussian(300, 200, 100, 800));
-                    break;
-                }
-                Thread.sleep(600);
-            }
+            boolean actionSuccess = a.doAction();
             if(!actionSuccess) {
                 result = false;
+                Thread.sleep(600);
                 break;
             }
-
+            Thread.sleep(RngUtil.gaussian(300, 200, 100, 800));
         }
         return result;
     }

@@ -2,12 +2,8 @@ package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.runelite.api.ChatMessageType;
 import net.runelite.api.ItemID;
 import net.runelite.api.Varbits;
-import net.runelite.api.events.ChatMessage;
-import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.plugins.itemstats.stats.Stat;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -16,8 +12,6 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableCondition
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManager;
-
-import java.util.concurrent.ThreadLocalRandom;
 
 public class BFUtils {
 
@@ -104,18 +98,19 @@ public class BFUtils {
         // 54 -> 27 inv slots + 27 coal bag
         int coalAfter = Microbot.getVarbitValue(Varbits.BLAST_FURNACE_COAL) + 54;
         if(coalAfter > 200) return false;
-        else if(canFurnaceProcessOre(barType)) return rollDoubleCoal(coalAfter, barType.coalRequired());
+        else if(canFurnaceProcessOre(barType)) return rollForCoal(coalAfter, barType.coalRequired());
         else return true;
     }
 
-    public static boolean rollDoubleCoal(int coalAfter, int minCoalNeeded) {
-        double normalizedVal = normalize(coalAfter, minCoalNeeded, 250, 0, 100);
-        System.out.println("Normalized coal Val: " + normalizedVal);
-        return ThreadLocalRandom.current().nextDouble() <= normalizedVal;
+    public static boolean rollForCoal(int coalAfter, int minCoalNeeded) {
+        int normalizedVal = normalize(coalAfter, minCoalNeeded, 250, 0, 100);
+        int roll = RngUtil.randomInclusive(1, 100);
+        Microbot.log(String.format("normalizedVal: %d || randomRoll: %d. DoubleCoal: %s", normalizedVal, roll, roll <= normalizedVal));
+        return roll <= normalizedVal;
     }
 
-    public static double normalize(double x, double oldMin, double oldMax, double newMin, double newMax) {
-        return ((x - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin;
+    public static int normalize(double x, double oldMin, double oldMax, double newMin, double newMax) {
+        return (int) (((x - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin);
     }
 
 
@@ -135,6 +130,6 @@ public class BFUtils {
     }
 
     public static void main(String[] args) {
-        rollDoubleCoal(200, 108);
+        rollForCoal(200, 108);
     }
 }
