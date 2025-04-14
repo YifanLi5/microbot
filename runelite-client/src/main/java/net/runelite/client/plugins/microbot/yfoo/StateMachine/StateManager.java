@@ -1,6 +1,7 @@
 package net.runelite.client.plugins.microbot.yfoo.StateMachine;
 
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.Global;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.StartingState;
 
@@ -50,10 +51,8 @@ public class StateManager {
 
 
     public static void runOnLoopCycle() throws InterruptedException {
-
-
         if(!stateIterator.hasNext()) {
-            stopScript = true;
+            stopScript();
             return;
         }
         StateNode nextState = stateIterator.next();
@@ -62,6 +61,7 @@ public class StateManager {
             Microbot.log("Cannot do state: " + nextState.getClass().getSimpleName());
             return;
         }
+        boolean succeededState = false;
         for(int i = 0; i < nextState.retries(); i++) {
             if (StateManager.stopScript) {
                 stopScript = true;
@@ -71,17 +71,22 @@ public class StateManager {
                 return;
             }
 
-            if(nextState.handleState()) break;
+            if(nextState.handleState()) {
+                succeededState = true;
+                break;
+            }
             Microbot.log(String.format("Failed %s. Attempt (%d / %d)",
                     nextState.getClass().getSimpleName(),
                     i+1,
                     nextState.retries())
             );
-            nextState.script.sleep(1000);
+            Global.sleep(1000);
         }
+        if(!succeededState) stopScript();
     }
 
     public static void stopScript() {
+        Microbot.log("stopScript -> true");
         stopScript = true;
     }
 }

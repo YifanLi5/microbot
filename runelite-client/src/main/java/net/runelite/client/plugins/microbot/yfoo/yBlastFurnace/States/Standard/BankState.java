@@ -1,12 +1,15 @@
 package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard;
 
+import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Potion;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
@@ -63,7 +66,8 @@ public class BankState extends StateNode {
                 Microbot.log("Bank is already open");
                 return true;
             }
-            boolean result = Rs2Bank.openBank();
+            GameObject chest = Rs2GameObject.findChest();
+            boolean result = Rs2GameObject.interact(chest, "use") && ExtendableConditionalSleep.sleep(5000, () -> Rs2Bank.isOpen(), null, () -> Rs2Player.isMoving());
             HoverBoundsUtil.hoverRandom();
             script.sleep(RngUtil.gaussian(400, 100, 100, 600));
             return result;
