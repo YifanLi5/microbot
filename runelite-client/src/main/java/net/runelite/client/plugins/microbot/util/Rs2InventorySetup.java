@@ -1,14 +1,14 @@
 package net.runelite.client.plugins.microbot.util;
 
 import net.runelite.api.Varbits;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetupsItem;
 import net.runelite.client.plugins.microbot.inventorysetups.MInventorySetupsPlugin;
-import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +40,23 @@ public class Rs2InventorySetup {
         inventorySetup = MInventorySetupsPlugin.getInventorySetups().stream().filter(Objects::nonNull).filter(x -> x.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
         _mainScheduler = mainScheduler;
         if (inventorySetup == null) {
-            Microbot.showMessage("Inventory load with name " + name + " not found!");
+            Microbot.showMessage("Inventory load with name " + name + " not found!", 10);
+            Microbot.pauseAllScripts = true;
+        }
+    }
+
+    /**
+     * Constructor to initialize the Rs2InventorySetup with a specific setup and scheduler.
+     * The setup can now directly be fetched from the new config selector.
+     *
+     * @param setup          The inventory setup to load.
+     * @param mainScheduler The scheduler to monitor for cancellation.
+     */
+    public Rs2InventorySetup(InventorySetup setup, ScheduledFuture<?> mainScheduler) {
+        inventorySetup = setup;
+        _mainScheduler = mainScheduler;
+        if (inventorySetup == null) {
+            Microbot.showMessage("Inventory load error!", 10);
             Microbot.pauseAllScripts = true;
         }
     }
@@ -78,9 +94,17 @@ public class Rs2InventorySetup {
             int withdrawQuantity = calculateWithdrawQuantity(entry.getValue(), inventorySetupsItem, key);
             if (withdrawQuantity == 0) continue;
 
-            if (!Rs2Bank.hasBankItem(inventorySetupsItem.getName(), withdrawQuantity)) {
+            String lowerCaseName = inventorySetupsItem.getName().toLowerCase();
+
+            boolean isBarrowsItem = isBarrowsItem(lowerCaseName);
+
+            if (isBarrowsItem) {
+                inventorySetupsItem.setName(lowerCaseName.replaceAll("\\s+[1-9]\\d*$", ""));
+            }
+
+            if (!Rs2Bank.hasBankItem(lowerCaseName, withdrawQuantity)) {
                 Microbot.pauseAllScripts = true;
-                Microbot.showMessage("Bank is missing the following item " + inventorySetupsItem.getName());
+                Microbot.showMessage("Bank is missing the following item " + inventorySetupsItem.getName(), 10);
                 break;
             }
 
@@ -90,6 +114,15 @@ public class Rs2InventorySetup {
         sleep(1000);
 
         return doesInventoryMatch();
+    }
+
+    private static boolean isBarrowsItem(String lowerCaseName) {
+        boolean isBarrowsItem = !lowerCaseName.endsWith(" 0") &&  (lowerCaseName.contains("dharok's")
+                || lowerCaseName.contains("ahrim's")
+                || lowerCaseName.contains("guthan's")
+                || lowerCaseName.contains("torag's")
+                || lowerCaseName.contains("verac's"));
+        return isBarrowsItem;
     }
 
     /**
@@ -103,7 +136,7 @@ public class Rs2InventorySetup {
     private int calculateWithdrawQuantity(List<InventorySetupsItem> items, InventorySetupsItem inventorySetupsItem, int key) {
         int withdrawQuantity;
         if (items.size() == 1) {
-            Rs2Item rs2Item = Rs2Inventory.get(key);
+            Rs2ItemModel rs2Item = Rs2Inventory.get(key);
             if (rs2Item != null && rs2Item.isStackable()) {
                 withdrawQuantity = inventorySetupsItem.getQuantity() - rs2Item.quantity;
                 if (Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), inventorySetupsItem.getQuantity())) {
@@ -166,12 +199,15 @@ public class Rs2InventorySetup {
             if (isMainSchedulerCancelled()) break;
             if (InventorySetupsItem.itemIsDummy(inventorySetupsItem)) continue;
 
+            String lowerCaseName = inventorySetupsItem.getName().toLowerCase();
+
+            boolean isBarrowsItem = isBarrowsItem(lowerCaseName);
+
+            if (isBarrowsItem) {
+                inventorySetupsItem.setName(lowerCaseName.replaceAll("\\s+[1-9]\\d*$", ""));
+            }
+
             if (inventorySetupsItem.isFuzzy()) {
-                if (!Rs2Bank.hasBankItem(inventorySetupsItem.getName())) {
-                    Microbot.pauseAllScripts = true;
-                    Microbot.showMessage("Bank is missing the following item " + inventorySetupsItem.getName());
-                    break;
-                }
 
                 if (Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), (int) inventorySetup.getInventory().stream().filter(x -> x.getId() == inventorySetupsItem.getId()).count()))
                     continue;
@@ -240,8 +276,10 @@ public class Rs2InventorySetup {
             } else {
                 withdrawQuantity = groupedByItems.get(key).size();
             }
-            if (!Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), withdrawQuantity, isStackable))
+            if (!Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), withdrawQuantity, isStackable)) {
+                Microbot.log("Looking for " + inventorySetupsItem.getName() + " with amount " + withdrawQuantity);
                 found = false;
+            }
         }
 
         return found;
@@ -257,9 +295,15 @@ public class Rs2InventorySetup {
         for (InventorySetupsItem inventorySetupsItem : inventorySetup.getEquipment()) {
             if (inventorySetupsItem.getId() == -1) continue;
             if (inventorySetupsItem.isFuzzy()) {
-                return Rs2Equipment.isWearing(inventorySetupsItem.getName(), false);
+                if (!Rs2Equipment.isWearing(inventorySetupsItem.getName(), false)) {
+                    Microbot.log("Missing item " + inventorySetupsItem.getName());
+                    return false;
+                }
             } else {
-                return Rs2Equipment.isWearing(inventorySetupsItem.getName(), true);
+                if (!Rs2Equipment.isWearing(inventorySetupsItem.getName(), true)) {
+                    Microbot.log("Missing item " + inventorySetupsItem.getName());
+                    return false;
+                }
             }
         }
         return true;

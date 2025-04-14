@@ -16,11 +16,12 @@ import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
+import net.runelite.client.plugins.microbot.util.woodcutting.Rs2Woodcutting;
 import net.runelite.client.plugins.microbot.wintertodt.enums.State;
 
 import java.util.ArrayList;
@@ -222,7 +223,7 @@ public class MWintertodtScript extends Script {
                         }
                         break;
                     case CHOP_ROOTS:
-                        if (Rs2Equipment.isWearing("dragon axe")) {
+                        if (Rs2Woodcutting.isWearingAxeWithSpecialAttack()) {
                             Rs2Combat.setSpecState(true, 1000);
                         }
                         if (!Rs2Player.isAnimating()) {
@@ -236,7 +237,7 @@ public class MWintertodtScript extends Script {
                         if (Rs2Player.getAnimation() != AnimationID.FLETCHING_BOW_CUTTING || resetActions) {
                             walkToBrazier();
 
-                            Rs2Item knife = Rs2Inventory.get("knife");
+                            Rs2ItemModel knife = Rs2Inventory.get("knife");
                             if (knife.slot != 27) {
                                 sleep(GAME_TICK_LENGTH * 2);
                                 if (Rs2Inventory.moveItemToSlot(knife, 27))
@@ -324,7 +325,7 @@ public class MWintertodtScript extends Script {
     private boolean shouldEat() {
         if (getWarmthLevel() <= config.eatAtWarmthLevel()) {
             if(config.rejuvenationPotions()) {
-                List<Rs2Item> rejuvenationPotions = Rs2Inventory.getPotions();
+                List<Rs2ItemModel> rejuvenationPotions = Rs2Inventory.getPotions();
                 Rs2Inventory.interact(rejuvenationPotions.get(0), "Drink");
                 sleepGaussian(600, 150);
                 plugin.setFoodConsumed(plugin.getFoodConsumed() + 1);

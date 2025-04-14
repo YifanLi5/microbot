@@ -1,0 +1,120 @@
+package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Hybrid;
+
+import net.runelite.api.ItemID;
+import net.runelite.api.Varbits;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
+import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
+import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
+
+import java.awt.event.KeyEvent;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class RetrieveBarsState2 extends StateNode {
+
+    enum States {
+        MOVE_TO_DISPENSER, RETRIEVE_BARS, COMPLETE
+    }
+
+    private static RetrieveBarsState2 instance;
+
+    final static Map<WorldPoint, Integer> worldPointWeightings = Map.of(
+            new WorldPoint(1940, 4962, 0), RngUtil.randomInclusive(0, 10),
+            new WorldPoint(1939, 4963, 0), RngUtil.randomInclusive(0, 10),
+            new WorldPoint(1939, 4962, 0), RngUtil.randomInclusive(0, 10),
+            new WorldPoint(1939, 4964, 0), RngUtil.randomInclusive(0, 10),
+            new WorldPoint(1940, 4964, 0), RngUtil.randomInclusive(0, 10)
+    );
+
+
+    public static RetrieveBarsState2 getInstance() {
+        if(instance == null) {
+            throw new NullPointerException(RetrieveBarsState2.class.getSimpleName() + " is null");
+        }
+        return instance;
+    }
+
+    public static RetrieveBarsState2 initInstance(BFScript script) {
+        if (instance == null)
+            instance = new RetrieveBarsState2(script);
+        return instance;
+    }
+
+    public RetrieveBarsState2(BFScript script) {
+        super(script);
+    }
+
+    @Override
+    public int retries() {
+        return 2;
+    }
+
+    @Override
+    public boolean canRun() throws InterruptedException {
+        return !Rs2Inventory.isFull();
+    }
+
+    @Override
+    public void initStateSteps() {
+        this.stateSteps = new LinkedHashMap<>();
+        this.stateSteps.put(States.MOVE_TO_DISPENSER, () -> {
+            if(config.barType().getNumBarsInDispenser() > 0) {
+                Microbot.log("bars already in dispenser");
+                return true;
+            }
+            script.sleep(RngUtil.gaussian(400, 200, 0, 1500));
+            if(Rs2Player.distanceTo(new WorldPoint(1940, 4962, 0)) > 3) {
+                WorldPoint randomWP = RngUtil.rollForWeightedAction(worldPointWeightings);
+                Rs2Walker.walkFastCanvas(randomWP);
+            }
+            return true;
+        });
+        this.stateSteps.put(States.RETRIEVE_BARS, () -> {
+            boolean allOreProcessed = script.sleepUntil(() -> config.barType().getNumOreInFurnace() <= 0 || config.barType().getNumGoldBarsInFurnace() > 0);
+            if(!allOreProcessed && config.barType().furnaceRequiresMoreCoal()) {
+                if(config.barType().furnaceRequiresMoreCoal()) {
+                    Microbot.log("Require more coal to finish all ore.");
+                    return true;
+                }
+                Microbot.log("debug1");
+                return false;
+            }
+            if(!Rs2Equipment.hasEquipped(ItemID.ICE_GLOVES)) {
+                Rs2Inventory.equip(ItemID.ICE_GLOVES);
+                boolean equippedGloves = script.sleepUntil(() -> Rs2Equipment.hasEquipped(ItemID.ICE_GLOVES));
+                Microbot.log("equipped ice gloves? " + equippedGloves);
+            }
+
+            boolean canCollect = script.sleepUntil(() -> Microbot.getVarbitValue(Varbits.BAR_DISPENSER) >= 2, 3000);
+            if(!canCollect) {
+                Microbot.log("cannot collect");
+                return false;
+            }
+            if(!Rs2GameObject.interact(9092, "Take")) {
+                Microbot.log("Failed interaction");
+                return false;
+            }
+
+            boolean gotBars = script.sleepUntil(() -> {
+                Rs2Keyboard.keyHold(KeyEvent.VK_SPACE);
+                return Rs2Inventory.contains(item -> item.getName().contains("bar"));
+            });
+            Rs2Keyboard.keyRelease(KeyEvent.VK_SPACE);
+            return gotBars;
+        });
+    }
+
+
+    @Override
+    public StateNode nextState() {
+        return BankState2.getInstance();
+    }
+}

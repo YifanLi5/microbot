@@ -1,11 +1,13 @@
 package net.runelite.client.plugins.microbot.tempoross;
 
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.components.ProgressBarComponent;
 import net.runelite.client.ui.overlay.components.TitleComponent;
+import net.runelite.client.util.Text;
 
 import javax.inject.Inject;
 import java.awt.*;
@@ -45,6 +47,52 @@ public class TemporossProgressionOverlay extends OverlayPanel {
                         .left("Current State:")
                         .right(currentState.name())
                         .build());
+
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Is completed:")
+                        .right(currentState.isComplete() ? "Yes" : "No")
+                        .build());
+
+                // Add fish count
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Fish count:")
+                        .right(String.valueOf(getAllFish()))
+                        .build());
+                // Add cooked fish count
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Cooked fish count:")
+                        .right(String.valueOf(State.getCookedFish()))
+                        .build());
+                // Add raw fish count
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Raw fish count:")
+                        .right(String.valueOf(State.getRawFish()))
+                        .build());
+                // Add total available fish slots
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Total available fish slots:")
+                        .right(String.valueOf(getTotalAvailableFishSlots()))
+                        .build());
+                // Is filling
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Is filling:")
+                        .right(TemporossScript.isFilling ? "Yes" : "No")
+                        .build());
+                // Is Fire fighting
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Is Fire fighting:")
+                        .right(TemporossScript.isFightingFire ? "Yes" : "No")
+                        .build());
+                // Get interacting
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("Interacting with:")
+                        .right(Rs2Player.getInteracting() != null ? Text.removeTags(Rs2Player.getInteracting().getName()) : "None")
+                        .build());
+
+                if(currentState.isComplete()){
+                    TemporossScript.isFilling = false;
+                    TemporossScript.state = currentState.next == null ? State.THIRD_CATCH : currentState.next;
+                }
 
                 // Add progression bar
                 double progression = calculateProgression(currentState);

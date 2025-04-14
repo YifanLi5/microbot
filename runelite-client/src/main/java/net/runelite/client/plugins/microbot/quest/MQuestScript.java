@@ -8,7 +8,13 @@ import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.quest.logic.QuestRegistry;
+import net.runelite.client.plugins.microbot.questhelper.QuestHelperPlugin;
+import net.runelite.client.plugins.microbot.questhelper.questinfo.QuestHelperQuest;
+import net.runelite.client.plugins.microbot.questhelper.requirements.Requirement;
+import net.runelite.client.plugins.microbot.questhelper.requirements.item.ItemRequirement;
 import net.runelite.client.plugins.microbot.questhelper.steps.*;
+import net.runelite.client.plugins.microbot.questhelper.steps.widget.WidgetHighlight;
 import net.runelite.client.plugins.microbot.shortestpath.ShortestPathPlugin;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
@@ -19,18 +25,14 @@ import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
-import net.runelite.client.plugins.microbot.util.math.Random;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
-import net.runelite.client.plugins.microbot.questhelper.QuestHelperPlugin;
-import net.runelite.client.plugins.microbot.questhelper.questinfo.QuestHelperQuest;
-import net.runelite.client.plugins.microbot.questhelper.requirements.Requirement;
-import net.runelite.client.plugins.microbot.questhelper.requirements.item.ItemRequirement;
-import net.runelite.client.plugins.microbot.questhelper.steps.widget.WidgetHighlight;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -119,12 +121,25 @@ public class MQuestScript extends Script {
                     }
                 }
 
-                if (getQuestHelperPlugin().getSelectedQuest() != null && !Microbot.getClientThread().runOnClientThread(() -> getQuestHelperPlugin().getSelectedQuest().isCompleted())) {
-                    Widget widget = Rs2Widget.findWidget("Start ");
-                    if (Rs2Widget.isWidgetVisible(ComponentID.DIALOG_OPTION_OPTIONS) && getQuestHelperPlugin().getSelectedQuest().getQuest().getId() != Quest.COOKS_ASSISTANT.getId() || (widget != null &&
-                            Microbot.getClientThread().runOnClientThread(() -> widget.getParent().getId()) != 10616888) && !Rs2Bank.isOpen()) {
-                        Rs2Keyboard.keyPress('1');
-                        Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+                /**
+                 * Execute custom logic for the quest
+                 */
+                var questLogic = QuestRegistry.getQuest(getQuestHelperPlugin().getSelectedQuest().getQuest().getId());
+                if (questLogic != null) {
+                    if (!questLogic.executeCustomLogic()) {
+                        return;
+                    }
+                }
+
+                if (getQuestHelperPlugin().getSelectedQuest() != null && !Microbot.getClientThread().runOnClientThreadOptional(() ->
+                        getQuestHelperPlugin().getSelectedQuest().isCompleted()).orElse(null)) {
+                    if (Rs2Widget.isWidgetVisible(ComponentID.DIALOG_OPTION_OPTIONS) && getQuestHelperPlugin().getSelectedQuest().getQuest().getId() != Quest.COOKS_ASSISTANT.getId() && !Rs2Bank.isOpen()) {
+                        boolean hasOption = Rs2Dialogue.handleQuestOptionDialogueSelection();
+                        //if there is no quest option in the dialogue, just click player location to remove
+                        // the dialogue to avoid getting stuck in an infinite loop of dialogues
+                        if (!hasOption) {
+                            Rs2Walker.walkFastCanvas(Rs2Player.getWorldLocation());
+                        }
                         return;
                     }
 
@@ -182,7 +197,7 @@ public class MQuestScript extends Script {
                 System.out.println(ex.getMessage());
                 ex.printStackTrace(System.out);
             }
-        }, 0, Random.random(400, 1000), TimeUnit.MILLISECONDS);
+        }, 0, Rs2Random.between(400, 1000), TimeUnit.MILLISECONDS);
         return true;
     }
 
@@ -236,7 +251,7 @@ public class MQuestScript extends Script {
     }
 
     public boolean applyNpcStep(NpcStep step) {
-        var npcs = step.getNpcs();
+        List<Rs2NpcModel> npcs = step.getNpcs().stream().map(Rs2NpcModel::new).collect(Collectors.toList());
         var npc = npcs.stream().findFirst().orElse(null);
 
         if (step.isAllowMultipleHighlights()) {
@@ -411,7 +426,8 @@ public class MQuestScript extends Script {
     }
 
     private String chooseCorrectObjectOption(QuestStep step, TileObject object) {
-        ObjectComposition objComp = Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getObjectDefinition(object.getId()));
+        ObjectComposition objComp = Microbot.getClientThread().runOnClientThreadOptional(() ->
+                Microbot.getClient().getObjectDefinition(object.getId())).orElse(null);
 
         if (objComp == null)
             return "";
@@ -432,7 +448,8 @@ public class MQuestScript extends Script {
     }
 
     private String chooseCorrectNPCOption(QuestStep step, NPC npc) {
-        var npcComp = Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getNpcDefinition(npc.getId()));
+        var npcComp = Microbot.getClientThread().runOnClientThreadOptional(() -> Microbot.getClient().getNpcDefinition(npc.getId()))
+                .orElse(null);
 
         if (npcComp == null)
             return "Talk-to";

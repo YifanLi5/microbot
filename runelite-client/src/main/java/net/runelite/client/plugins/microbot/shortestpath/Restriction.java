@@ -14,6 +14,13 @@ import java.util.*;
 @Getter
 public class Restriction {
     /**
+     * The ids of items required to lift this restriction.
+     * If the player has **any** of the matching list of items,
+     * this restriction is lifted
+     */
+    @Getter
+    private Set<Set<Integer>> itemIdRequirements = new HashSet<>();
+    /**
      * The skill levels required for restriction to be lifted.
      */
     @Getter
@@ -23,6 +30,19 @@ public class Restriction {
      */
     @Getter
     private final Set<TransportVarbit> varbits = new HashSet<>();
+
+    /**
+     * Any varplayers to check for the restriction to be lifted.
+     */
+    @Getter
+    private final Set<TransportVarPlayer> varplayers = new HashSet<>();
+
+    /**
+     * Transport requires player to be in a members world
+     */
+    @Getter
+    private boolean isMembers = false;
+    
     /**
      * The restricted point (packed)
      */
@@ -78,6 +98,23 @@ public class Restriction {
             }
         }
 
+        if ((value = fieldMap.get("Item IDs")) != null && !value.trim().isEmpty()) {
+            String[] itemIdsList = value.split(DELIM_MULTI);
+            for (String listIds : itemIdsList) {
+                Set<Integer> multiitemList = new HashSet<>();
+                String[] itemIds = listIds.split(DELIM);
+                for (String item : itemIds) {
+                    int itemId = Integer.parseInt(item);
+                    multiitemList.add(itemId);
+                }
+                itemIdRequirements.add(multiitemList);
+            }
+        }
+
+        if ((value = fieldMap.get("isMembers")) != null && !value.trim().isEmpty()) {
+            this.isMembers = "Y".equals(value.trim()) || "yes".equals(value.trim().toLowerCase());
+        }
+
         if ((value = fieldMap.get("Varbits")) != null) {
             for (String varbitCheck : value.split(DELIM_MULTI)) {
                 String[] parts;
@@ -92,6 +129,12 @@ public class Restriction {
                 } else if (varbitCheck.contains("=")) {
                     parts = varbitCheck.split("=");
                     operator = TransportVarbit.Operator.EQUAL;
+                } else if (varbitCheck.contains("&")) {
+                    parts = varbitCheck.split("&");
+                    operator = TransportVarbit.Operator.BIT_SET;
+                } else if (varbitCheck.contains("@")) {
+                    parts = varbitCheck.split("@");
+                    operator = TransportVarbit.Operator.COOLDOWN_MINUTES;
                 } else {
                     throw new IllegalArgumentException("Invalid varbit format: " + varbitCheck);
                 }
@@ -99,6 +142,36 @@ public class Restriction {
                 int varbitId = Integer.parseInt(parts[0]);
                 int varbitValue = Integer.parseInt(parts[1]);
                 varbits.add(new TransportVarbit(varbitId, varbitValue, operator));
+            }
+        }
+
+        if ((value = fieldMap.get("Varplayers")) != null && !value.trim().isEmpty()) {
+            for (String  varplayerCheck : value.split(DELIM_MULTI)) {
+                String[] parts;
+                TransportVarPlayer.Operator operator;
+
+                if (varplayerCheck.contains(">")) {
+                    parts = varplayerCheck.split(">");
+                    operator = TransportVarPlayer.Operator.GREATER_THAN;
+                } else if (varplayerCheck.contains("<")) {
+                    parts = varplayerCheck.split("<");
+                    operator = TransportVarPlayer.Operator.LESS_THAN;
+                } else if (varplayerCheck.contains("=")) {
+                    parts =  varplayerCheck.split("=");
+                    operator = TransportVarPlayer.Operator.EQUAL;
+                } else if (varplayerCheck.contains("&")) {
+                    parts = varplayerCheck.split("&");
+                    operator = TransportVarPlayer.Operator.BIT_SET;
+                } else if (varplayerCheck.contains("@")) {
+                    parts = varplayerCheck.split("@");
+                    operator = TransportVarPlayer.Operator.COOLDOWN_MINUTES;
+                } else {
+                    throw new IllegalArgumentException("Invalid varplayer format: " + varplayerCheck);
+                }
+
+                int varplayerId = Integer.parseInt(parts[0]);
+                int varplayerValue = Integer.parseInt(parts[1]);
+                varplayers.add(new TransportVarPlayer(varplayerId, varplayerValue, operator));
             }
         }
     }

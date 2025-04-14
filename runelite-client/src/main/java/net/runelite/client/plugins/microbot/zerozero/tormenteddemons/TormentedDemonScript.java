@@ -2,7 +2,6 @@ package net.runelite.client.plugins.microbot.zerozero.tormenteddemons;
 
 import net.runelite.api.HeadIcon;
 import net.runelite.api.ItemID;
-import net.runelite.api.NPC;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -16,12 +15,15 @@ import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.plugins.microbot.util.reflection.Rs2Reflection;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.zerozero.tormenteddemons.TormentedDemonConfig.CombatPotionType;
 import net.runelite.client.plugins.microbot.zerozero.tormenteddemons.TormentedDemonConfig.MODE;
+import net.runelite.client.plugins.microbot.zerozero.tormenteddemons.TormentedDemonConfig.RangingPotionType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,13 +32,13 @@ import java.util.concurrent.TimeUnit;
 
 public class TormentedDemonScript extends Script {
 
-    public static final double VERSION = 1.0;
+    public static final double VERSION = 1.2;
     private boolean isRunning = false;
     public static int killCount = 0;
     private Rs2PrayerEnum currentDefensivePrayer = null;
     private Rs2PrayerEnum currentOffensivePrayer = null;
     private HeadIcon currentOverheadIcon = null;
-    private NPC currentTarget;
+    private Rs2NpcModel currentTarget;
     private boolean lootAttempted = false;
     private String lastChatMessage = "";
     private boolean isRestocking = false;
@@ -229,6 +231,8 @@ public class TormentedDemonScript extends Script {
             }
         }
 
+        evaluateAndConsumePotions(config);
+
         if (config.mode() == MODE.FULL_AUTO && shouldRetreat(config)) {
             currentTarget = null;
             currentOverheadIcon = null;
@@ -244,12 +248,16 @@ public class TormentedDemonScript extends Script {
             Rs2Player.eatAt(config.minEatPercent());
             Rs2Player.drinkPrayerPotionAt(config.minPrayerPercent());
 
-            if (Microbot.getClient().getLocalPlayer().getInteracting() != currentTarget) {
+            var interactingTarget = (Rs2NpcModel) Rs2Player.getInteracting();
+
+            if (currentTarget == null) return;
+
+            if (interactingTarget == null || interactingTarget.getIndex() != currentTarget.getIndex()) {
                 boolean attackSuccessful = Rs2Npc.interact(currentTarget, "attack");
 
                 if (attackSuccessful) {
                     Rs2Player.waitForAnimation();
-                    sleepUntil(() -> Microbot.getClient().getLocalPlayer().getInteracting() == currentTarget, 3000);
+                    sleepUntil(() ->  Rs2Player.getInteracting() != null && ((Rs2NpcModel) Rs2Player.getInteracting()).getIndex() == currentTarget.getIndex(), 3000);
                 } else {
                     logOnceToChat("Attack failed for target: " + (currentTarget != null ? currentTarget.getName() : "null"));
                     currentTarget = null;
@@ -269,8 +277,11 @@ public class TormentedDemonScript extends Script {
             sleep(100);
         }
 
+        if (currentTarget == null) return;
+
         int npcAnimation = currentTarget.getAnimation();
         if (config.enableDefensivePrayer()) {
+            System.out.println(npcAnimation);
             Rs2PrayerEnum newDefensivePrayer = null;
             if (npcAnimation == MAGIC_ATTACK_ANIMATION) {
                 newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC;
@@ -324,7 +335,7 @@ public class TormentedDemonScript extends Script {
         currentOffensivePrayer = newOffensivePrayer;
     }
 
-    private NPC findNewTarget(TormentedDemonConfig config) {
+    private Rs2NpcModel findNewTarget(TormentedDemonConfig config) {
         return Rs2Npc.getAttackableNpcs("Tormented Demon")
                 .filter(npc -> npc.getInteracting() == null || npc.getInteracting() == Microbot.getClient().getLocalPlayer())
                 .filter(npc -> {
@@ -473,6 +484,84 @@ public class TormentedDemonScript extends Script {
         logOnceToChat("No Ring of Dueling found in inventory for teleporting to Ferox Enclave.");
     }
 
+    private void evaluateAndConsumePotions(TormentedDemonConfig config) {
+        int threshold = config.boostedStatsThreshold();
+
+        if (!isCombatPotionActive(config.combatPotionType(), threshold)) {
+            consumeCombatPotion(config.combatPotionType());
+        }
+
+        if (!isRangingPotionActive(config.rangingPotionType(), threshold)) {
+            consumeRangingPotion(config.rangingPotionType());
+        }
+    }
+
+    private boolean isCombatPotionActive(CombatPotionType combatPotionType, int threshold) {
+        switch (combatPotionType) {
+            case SUPER_COMBAT:
+                return Rs2Player.hasAttackActive(threshold) && Rs2Player.hasStrengthActive(threshold);
+            case DIVINE_SUPER_COMBAT:
+                return Rs2Player.hasDivineCombatActive();
+            default:
+                return true;
+        }
+    }
+
+    private boolean isRangingPotionActive(RangingPotionType rangingPotionType, int threshold) {
+        switch (rangingPotionType) {
+            case RANGING:
+                return Rs2Player.hasRangingPotionActive(threshold);
+            case DIVINE_RANGING:
+                return Rs2Player.hasDivineRangedActive();
+            case BASTION:
+                return Rs2Player.hasDivineBastionActive();
+            default:
+                return true;
+        }
+    }
+
+    private void consumeCombatPotion(CombatPotionType combatPotionType) {
+        String potion = null;
+        switch (combatPotionType) {
+            case SUPER_COMBAT:
+                potion = "super combat";
+                break;
+            case DIVINE_SUPER_COMBAT:
+                potion = "divine super combat";
+                break;
+            default:
+                return;
+        }
+        consumePotion(potion);
+    }
+
+    private void consumeRangingPotion(RangingPotionType rangingPotionType) {
+        String potion = null;
+        switch (rangingPotionType) {
+            case RANGING:
+                potion = "ranging potion";
+                break;
+            case DIVINE_RANGING:
+                potion = "divine ranging potion";
+                break;
+            case BASTION:
+                potion = "bastion potion";
+                break;
+            default:
+                return;
+        }
+        consumePotion(potion);
+    }
+
+    private void consumePotion(String keyword) {
+        Rs2Inventory.getPotions().stream()
+                .filter(potion -> potion.getName().toLowerCase().contains(keyword))
+                .findFirst()
+                .ifPresent(potion -> {
+                    Rs2Inventory.interact(potion, "Drink");
+                    logOnceToChat("Drinking potion: " + potion.getName());
+                });
+    }
 
     void logOnceToChat(String message) {
         if (!message.equals(lastChatMessage)) {

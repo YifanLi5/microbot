@@ -8,8 +8,8 @@ import java.util.function.BooleanSupplier;
 public enum State {
     ATTACK_TEMPOROSS(() -> TemporossScript.ENERGY >= 94, null),
     SECOND_FILL(() -> getCookedFish() == 0, ATTACK_TEMPOROSS),
-    THIRD_COOK(() -> getCookedFish() == (TemporossScript.temporossConfig.solo() ? 19 : getAllFish()) || TemporossScript.INTENSITY >= 92 || (TemporossScript.ENERGY < 50 && getAllFish() > 16 && !TemporossScript.temporossConfig.solo()), SECOND_FILL),
-    THIRD_CATCH(() -> getAllFish() >= (TemporossScript.temporossConfig.solo() ? 19 : getTotalAvailableFishSlots()), THIRD_COOK),
+    THIRD_COOK(() -> getCookedFish() == ((TemporossScript.temporossConfig.solo() && TemporossScript.ESSENCE > 20) ? 19 : getAllFish()) || TemporossScript.INTENSITY >= 92 || (TemporossScript.ENERGY < 50 && getAllFish() > 16 && !TemporossScript.temporossConfig.solo()), SECOND_FILL),
+    THIRD_CATCH(() -> getAllFish() >= ((TemporossScript.temporossConfig.solo() && TemporossScript.ESSENCE > 20) ? 19 : getTotalAvailableFishSlots()), THIRD_COOK),
     EMERGENCY_FILL(() -> getAllFish() == 0, THIRD_CATCH),
     INITIAL_FILL(() -> getCookedFish() == 0, THIRD_CATCH),
     SECOND_COOK(() -> getCookedFish() == (TemporossScript.temporossConfig.solo() ? 17 : getAllFish()), INITIAL_FILL),

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
-import net.runelite.api.NPC;
+import net.runelite.api.Client;
 import net.runelite.api.NpcID;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
@@ -14,8 +14,10 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.tempoross.enums.HarpoonType;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import java.util.regex.Pattern;
@@ -45,6 +47,9 @@ public class TemporossPlugin extends Plugin {
 
     @Inject
     private OverlayManager overlayManager;
+
+    @Inject
+    private Client client;
 
 
     public static int waves = 0;
@@ -90,6 +95,7 @@ public class TemporossPlugin extends Plugin {
         TemporossScript.updateFireData();
         TemporossScript.updateFishSpotData();
         TemporossScript.updateCloudData();
+        TemporossScript.updateAmmoCrateData();
     }
 
     @Subscribe
@@ -103,8 +109,9 @@ public class TemporossPlugin extends Plugin {
         TemporossScript.updateFireData();
         TemporossScript.updateFishSpotData();
         TemporossScript.updateCloudData();
+        TemporossScript.updateAmmoCrateData();
 
-        NPC doubleFishingSpot = Rs2Npc.getNpc(NpcID.FISHING_SPOT_10569);
+        Rs2NpcModel doubleFishingSpot = Rs2Npc.getNpc(NpcID.FISHING_SPOT_10569);
 
         if (TemporossScript.state == State.INITIAL_COOK && doubleFishingSpot != null) {
             TemporossScript.state = TemporossScript.state.next;
@@ -164,11 +171,11 @@ public class TemporossPlugin extends Plugin {
 
     // Set harpoon type config
     public static void setHarpoonType(HarpoonType harpoonType) {
-        configManager.setConfiguration("microbot-tempoross", "harpoonType", harpoonType);
+        Microbot.getConfigManager().setConfiguration("microbot-tempoross", "harpoonType", harpoonType);
     }
 
     // Set rope config
     public static void setRope(boolean rope) {
-        configManager.setConfiguration("microbot-tempoross", "rope", rope);
+        Microbot.getConfigManager().setConfiguration("microbot-tempoross", "rope", rope);
     }
 }

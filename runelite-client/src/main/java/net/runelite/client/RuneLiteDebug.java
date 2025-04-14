@@ -32,7 +32,6 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import joptsimple.*;
-import joptsimple.util.EnumConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -43,10 +42,8 @@ import net.runelite.client.discord.DiscordService;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 import net.runelite.client.plugins.PluginManager;
-import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.MicrobotClientLoader;
 import net.runelite.client.plugins.microbot.sideloading.MicrobotPluginManager;
-import net.runelite.client.rs.ClientUpdateCheckMode;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.ui.FatalErrorDialog;
 import net.runelite.client.ui.SplashScreen;
@@ -141,10 +138,6 @@ public class RuneLiteDebug {
 
     @Inject
     @Nullable
-    private Applet applet;
-
-    @Inject
-    @Nullable
     private Client client;
 
     @Inject
@@ -184,20 +177,6 @@ public class RuneLiteDebug {
                 .withValuesConvertedBy(new ConfigFileConverter())
                 .defaultsTo(DEFAULT_SESSION_FILE);
 
-        final ArgumentAcceptingOptionSpec<ClientUpdateCheckMode> updateMode = parser
-                .accepts("rs", "Select client type")
-                .withRequiredArg()
-                .ofType(ClientUpdateCheckMode.class)
-                .defaultsTo(ClientUpdateCheckMode.AUTO)
-                .withValuesConvertedBy(new EnumConverter<>(ClientUpdateCheckMode.class)
-                {
-                    @Override
-                    public ClientUpdateCheckMode convert(String v)
-                    {
-                        return super.convert(v.toUpperCase());
-                    }
-                });
-
         final OptionSpec<Void> insecureWriteCredentials = parser.accepts("insecure-write-credentials", "Dump authentication tokens from the Jagex Launcher to a text file to be used for development");
 
         parser.accepts("help", "Show this text").forHelp();
@@ -224,10 +203,6 @@ public class RuneLiteDebug {
 
         if (options.has("debug")) {
             logger.setLevel(Level.DEBUG);
-        }
-
-        if (options.has("microbot-debug")) {
-            Microbot.debug = true;
         }
 
         //More information about java proxies can be found here
@@ -288,7 +263,7 @@ public class RuneLiteDebug {
 
         try {
             final RuntimeConfigLoader runtimeConfigLoader = new RuntimeConfigLoader(okHttpClient);
-            final MicrobotClientLoader microbotClientLoader = new MicrobotClientLoader(okHttpClient, options.valueOf(updateMode), runtimeConfigLoader, (String) options.valueOf("jav_config"));
+            final MicrobotClientLoader microbotClientLoader = new MicrobotClientLoader(okHttpClient, runtimeConfigLoader, (String) options.valueOf("jav_config"));
 
             new Thread(() ->
             {
@@ -344,7 +319,6 @@ public class RuneLiteDebug {
 
             //Load the latest version in the background once the client is up and running
             //This is done for a faster development cycle
-            microbotClientLoader.downloadVanilla();
 
         } catch (Exception e) {
             log.error("Failure during startup", e);
@@ -367,21 +341,18 @@ public class RuneLiteDebug {
         }
 
         setupSystemProps();
-
+        
         // Start the applet
-        if (applet != null) {
-            copyJagexCache();
+        copyJagexCache();
+        var applet = (Applet) client;
+        applet.setSize(Constants.GAME_FIXED_SIZE);
 
-            // Client size must be set prior to init
-            applet.setSize(Constants.GAME_FIXED_SIZE);
+        System.setProperty("jagex.disableBouncyCastle", "true");
+        System.setProperty("jagex.userhome", RUNELITE_DIR.getAbsolutePath());
 
-            System.setProperty("jagex.disableBouncyCastle", "true");
-            System.setProperty("jagex.userhome", RUNELITE_DIR.getAbsolutePath());
-
-            applet.init();
-            applet.start();
-        }
-
+        applet.init();
+        applet.start();
+        
         SplashScreen.stage(.57, null, "Loading configuration");
 
         // Load the session so that the session profiles can be loaded next
@@ -390,13 +361,11 @@ public class RuneLiteDebug {
         // Load user configuration
         configManager.load();
 
-        // Tell the plugin manager if client is outdated or not
-        pluginManager.setOutdated(isOutdated);
-
         // Update check requires ConfigManager to be ready before it runs
         Updater updater = injector.getInstance(Updater.class);
         updater.update(); // will exit if an update is in progress
 
+        microbotPluginManager.loadSideLoadPlugins();
         SplashScreen.stage(.70, null, "Finalizing configuration");
 
         // Plugins have provided their config, so set default config
@@ -433,7 +402,7 @@ public class RuneLiteDebug {
         clientUI.show();
 
         // This will initialize configuration
-        microbotPluginManager.loadCorePlugins(Arrays.asList("net.runelite.client.plugins.microbot", "net.runelite.client.plugins.config",
+        microbotPluginManager.loadCorePlugins(Arrays.asList("net.runelite.client.plugins.microbot", "net.runelite.client.plugins.banktags", "net.runelite.client.plugins.config", "net.runelite.client.plugins.cluescrolls",
                 "net.runelite.client.plugins.devtools", "net.runelite.client.plugins.stretchedmode", "net.runelite.client.plugins.gpu", "net.runelite.client.plugins.rsnhider"));
 
         // Start plugins later so we can already login

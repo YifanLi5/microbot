@@ -12,7 +12,7 @@ import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -44,8 +44,8 @@ public class GiantsFoundryScript extends Script {
                     sleep(2000);
                     return;
                 }
-                final Rs2Item weapon = get(EquipmentInventorySlot.WEAPON);
-                final Rs2Item shield = get(EquipmentInventorySlot.SHIELD);
+                final Rs2ItemModel weapon = get(EquipmentInventorySlot.WEAPON);
+                final Rs2ItemModel shield = get(EquipmentInventorySlot.SHIELD);
                 if ((weapon != null || shield != null) && !weapon.name.equalsIgnoreCase("preform")) {
                     Microbot.showMessage(("Please start the script without any weapon or shield in your equipment slot."));
                     sleep(5000);
@@ -117,6 +117,7 @@ public class GiantsFoundryScript extends Script {
             Microbot.getMouse().click(forte.getBounds());
             sleep(600, 1200);
             MouldHelper.selectBest();
+            sleep(600, 1200);
         }
 
         Widget blades = Rs2Widget.findWidget("Blades", null);
@@ -124,12 +125,14 @@ public class GiantsFoundryScript extends Script {
             Microbot.getMouse().click(blades.getBounds());
             sleep(600, 1200);
             MouldHelper.selectBest();
+            sleep(600, 1200);
         }
         Widget tips = Rs2Widget.findWidget("Tips", null);
         if (tips != null) {
             Microbot.getMouse().click(tips.getBounds());
             sleep(600, 1200);
             MouldHelper.selectBest();
+            sleep(600, 1200);
             Microbot.getMouse().click(forte.getBounds());
         }
         Widget setMould = Rs2Widget.getWidget(47054854);

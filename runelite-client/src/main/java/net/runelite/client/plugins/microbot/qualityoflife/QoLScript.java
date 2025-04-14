@@ -1,7 +1,6 @@
 package net.runelite.client.plugins.microbot.qualityoflife;
 
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.Rs2InventorySetup;
@@ -28,7 +27,7 @@ public class QoLScript extends Script {
         loadNpcData();
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                if (!Microbot.isLoggedIn() || !super.run()) {
+                if (!Microbot.isLoggedIn()) {
                     return;
                 }
 
@@ -56,7 +55,7 @@ public class QoLScript extends Script {
                     handleWorkbenchActions();
                 }
 
-                if (QoLPlugin.executeLoadoutActions && !QoLPlugin.loadoutToLoad.isEmpty()) {
+                if (QoLPlugin.executeLoadoutActions && QoLPlugin.loadoutToLoad != null) {
                     handleInventorySetup();
                 }
 
@@ -65,7 +64,7 @@ public class QoLScript extends Script {
                 }
 
                 if (config.useQuestDialogueOptions() && Rs2Dialogue.isInDialogue()) {
-                    handleQuestOptionDialogueSelection();
+                    Rs2Dialogue.handleQuestOptionDialogueSelection();
                 }
 
 
@@ -89,12 +88,12 @@ public class QoLScript extends Script {
         if (!openBank()) {
             Microbot.log("Bank did not open");
             QoLPlugin.executeLoadoutActions = false;
-            QoLPlugin.loadoutToLoad = "";
+            QoLPlugin.loadoutToLoad = null;
             return;
         }
 
         try {
-            Rs2InventorySetup inventorySetup = new Rs2InventorySetup(QoLPlugin.loadoutToLoad, mainScheduledFuture);
+            Rs2InventorySetup inventorySetup = new Rs2InventorySetup(QoLPlugin.loadoutToLoad.getName(), mainScheduledFuture);
 
             if (!inventorySetup.doesEquipmentMatch()) {
                 inventorySetup.loadEquipment();
@@ -103,10 +102,10 @@ public class QoLScript extends Script {
                 inventorySetup.loadInventory();
             }
             QoLPlugin.executeLoadoutActions = false;
-            QoLPlugin.loadoutToLoad = "";
+            QoLPlugin.loadoutToLoad = null;
         } catch (Exception ignored) {
             QoLPlugin.executeLoadoutActions = false;
-            QoLPlugin.loadoutToLoad = "";
+            QoLPlugin.loadoutToLoad = null;
             Microbot.pauseAllScripts = false;
             Microbot.log("Failed to load inventory setup");
         }
@@ -125,19 +124,6 @@ public class QoLScript extends Script {
     // handle dialogue continue
     private void handleDialogueContinue() {
         Rs2Dialogue.clickContinue();
-    }
-
-    // handle quest option dialogue selection
-    private void handleQuestOptionDialogueSelection() {
-            var options = Rs2Dialogue.getDialogueOptions();
-            // if there are options, and any option starts with [ , select it because it is a option highlighted from quest helper
-            for (Widget option : options) {
-                if (option.getText().startsWith("[")) {
-                    Rs2Dialogue.keyPressForDialogueOption(option.getIndex());
-                    return;
-                }
-            }
-
     }
 
     private void handleWorkbenchActions() {
@@ -258,7 +244,7 @@ public class QoLScript extends Script {
 
     // reset all stored menu entries
     //Decrepatated use resetMenuEntries method in main class
-    @Deprecated(since = "1.5.8 Use resetMenuEntries method in main class" , forRemoval = true)
+    @Deprecated(since = "1.5.8 Use resetMenuEntries method in main class", forRemoval = true)
     public void resetMenuEntries() {
         QoLPlugin.bankMenuEntries.clear();
         QoLPlugin.furnaceMenuEntries.clear();

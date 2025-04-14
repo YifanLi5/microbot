@@ -14,7 +14,6 @@ import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
-import net.runelite.client.plugins.microbot.util.reflection.Rs2Reflection;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
@@ -129,7 +128,8 @@ public class Rs2GameObject {
 
     @Deprecated(since = "Use findObjectById", forRemoval = true)
     public static ObjectComposition findObject(int id) {
-        return Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getObjectDefinition(id));
+        return Microbot.getClientThread().runOnClientThreadOptional(() ->
+                Microbot.getClient().getObjectDefinition(id)).orElse(null);
     }
 
     public static boolean exists(int id) {
@@ -277,6 +277,25 @@ public class Rs2GameObject {
         for (net.runelite.api.GameObject gameObject : gameObjects) {
             if (gameObject.getWorldLocation().equals(worldPoint))
                 return gameObject;
+        }
+
+        return null;
+    }
+
+    /**
+     * find ground object by location
+     * @param worldPoint
+     * @return groundobject
+     */
+    public static TileObject findGroundObjectByLocation(WorldPoint worldPoint) {
+
+        List<GroundObject> groundObjects = getGroundObjects();
+
+        if (groundObjects == null) return null;
+
+        for (net.runelite.api.GroundObject groundObject : groundObjects) {
+            if (groundObject.getWorldLocation().equals(worldPoint))
+                return groundObject;
         }
 
         return null;
@@ -638,7 +657,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
     public static GameObject findBank() {
         List<GameObject> gameObjects = getGameObjects();
 
-        ArrayList<Integer> possibleBankIds = Rs2Reflection.getObjectByName(new String[]{"bank_booth"}, false);
+        List<Integer> possibleBankIds = Arrays.stream(Rs2BankID.bankIds).collect(Collectors.toList());
 
         possibleBankIds.add(NULL_34810);
 
@@ -675,7 +694,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
     public static GameObject findChest() {
         List<GameObject> gameObjects = getGameObjects();
 
-        ArrayList<Integer> possibleBankIds = Rs2Reflection.getObjectByName(new String[]{"chest"}, false);
+        List<Integer> possibleBankIds = Arrays.stream(Rs2BankID.bankIds).collect(Collectors.toList());
 
         possibleBankIds.add(12308); // RFD chest lumbridge basement
         possibleBankIds.add(31427); // Fossil island chest
@@ -714,7 +733,7 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
     public static GameObject findDepositBox() {
         List<GameObject> gameObjects = getGameObjects();
 
-        ArrayList<Integer> possibleBankIds = Rs2Reflection.getObjectByName(new String[]{"bank"}, false);
+        List<Integer> possibleBankIds = Arrays.stream(Rs2BankID.bankIds).collect(Collectors.toList());
 //        possibleBankIds.add(ObjectID.BANK_DEPOSIT_BOX);
 //        possibleBankIds.add(ObjectID.BANK_DEPOSIT_CHEST);
 
@@ -756,6 +775,9 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
             if (object.getId() == ObjectID.MARKET_STALL_14936) {
                 if (object instanceof GameObject && !Rs2Walker.canReach(object.getWorldLocation(), ((GameObject) object).sizeX(), ((GameObject) object).sizeY(), 4, 4))
                     continue;
+            } else if (object.getId() == ObjectID.BEAM_42220) {
+                if (object.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) > 6)
+                    continue;
             } else {
                 if (object instanceof GameObject && !Rs2Walker.canReach(object.getWorldLocation(), ((GameObject) object).sizeX(), ((GameObject) object).sizeY()))
                     continue;
@@ -794,11 +816,14 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
     }
 
     public static ObjectComposition convertGameObjectToObjectComposition(TileObject tileObject) {
-        return Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getObjectDefinition(tileObject.getId()));
+        return Microbot.getClientThread().runOnClientThreadOptional(() ->
+                Microbot.getClient().getObjectDefinition(tileObject.getId()))
+                .orElse(null);
     }
 
     public static ObjectComposition convertGameObjectToObjectComposition(int objectId) {
-        return Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getObjectDefinition(objectId));
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> Microbot.getClient().getObjectDefinition(objectId))
+                .orElse(null);
     }
 
     public static WallObject findDoor(int id) {
@@ -1328,7 +1353,9 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
 
     @Nullable
     public static ObjectComposition getObjectComposition(int id) {
-        ObjectComposition objectComposition = Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getObjectDefinition(id));
+        ObjectComposition objectComposition = Microbot.getClientThread().runOnClientThreadOptional(() -> Microbot.getClient().getObjectDefinition(id))
+                .orElse(null);
+        if (objectComposition == null) return null;
         return objectComposition.getImpostorIds() == null ? objectComposition : objectComposition.getImpostor();
     }
 

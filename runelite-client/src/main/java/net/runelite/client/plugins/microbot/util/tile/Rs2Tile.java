@@ -7,9 +7,13 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.devtools.MovementFlag;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.shortestpath.pathfinder.CollisionMap;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
+import net.runelite.client.plugins.microbot.util.coords.Rs2LocalPoint;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -20,14 +24,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public abstract class Rs2Tile implements Tile{
+public abstract class Rs2Tile implements Tile {
 
     @Getter
     public static List<MutablePair<WorldPoint, Integer>> dangerousGraphicsObjectTiles = new ArrayList<>();
 
     private static ScheduledExecutorService tileExecutor;
 
-
+    /**
+     * Initializes the tile executor
+     * This will handle the removal of dangerous tiles after a certain amount of time
+     */
     public static void init() {
         if (tileExecutor == null) {
             tileExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -42,7 +49,11 @@ public abstract class Rs2Tile implements Tile{
         }
     }
 
-
+    /**
+     * Adds a dangerous tile to the list of dangerous tiles
+     * @param graphicsObject the graphics object
+     * @param time the time a tile is dangerous in milliseconds
+     */
     public static void addDangerousGraphicsObjectTile(GraphicsObject graphicsObject, int time) {
         WorldPoint worldPoint;
 
@@ -294,13 +305,14 @@ public abstract class Rs2Tile implements Tile{
     public static boolean isTileReachable(WorldPoint targetPoint) {
         if (targetPoint == null) return false;
         if (targetPoint.getPlane() != Rs2Player.getWorldLocation().getPlane()) return false;
+        if (CollisionMap.ignoreCollision.contains(targetPoint)) return true;
         boolean[][] visited = new boolean[104][104];
         int[][] flags = Microbot.getClient().getCollisionMaps()[Microbot.getClient().getPlane()].getFlags();
         WorldPoint playerLoc = Rs2Player.getWorldLocation();
         int startX = 0;
         int startY = 0;
         int startPoint = 0;
-        if (Microbot.getClient().isInInstancedRegion()) {
+        if (Microbot.getClient().getTopLevelWorldView().getScene().isInstance()) {
             LocalPoint localPoint = Rs2Player.getLocalLocation();
             startX = localPoint.getSceneX();
             startY = localPoint.getSceneY();
@@ -436,7 +448,7 @@ public abstract class Rs2Tile implements Tile{
         int baseY = 0;
         int x = 0;
         int y = 0;
-        if (Microbot.getClient().isInInstancedRegion()) {
+        if (Microbot.getClient().getTopLevelWorldView().getScene().isInstance()) {
             LocalPoint localPoint = Rs2Player.getLocalLocation();
             x = localPoint.getSceneX();
             y = localPoint.getSceneY();
@@ -686,13 +698,18 @@ public abstract class Rs2Tile implements Tile{
      * @return The Tile at the specified coordinates, or null if the tile is invalid or not in the scene.
      */
     public static Tile getTile(int x, int y) {
-        WorldPoint worldPoint = new WorldPoint(x, y, Microbot.getClient().getPlane());
-        if (worldPoint.isInScene(Microbot.getClient())) {
-            LocalPoint localPoint = LocalPoint.fromWorld(Microbot.getClient(), worldPoint);
-            if (localPoint == null) return null;
-            return Microbot.getClient().getScene().getTiles()[worldPoint.getPlane()][localPoint.getSceneX()][localPoint.getSceneY()];
+        WorldPoint worldPoint = new WorldPoint(x, y, Microbot.getClient().getTopLevelWorldView().getPlane());
+        LocalPoint localPoint;
+
+        if (Microbot.getClient().getTopLevelWorldView().getScene().isInstance()) {
+            localPoint = Rs2LocalPoint.fromWorldInstance(worldPoint);
+        } else {
+            localPoint = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), worldPoint);
         }
-        return null;
+
+        if (localPoint == null) return null;
+
+        return Microbot.getClient().getTopLevelWorldView().getScene().getTiles()[worldPoint.getPlane()][localPoint.getSceneX()][localPoint.getSceneY()];
     }
 
     /**
@@ -993,5 +1010,27 @@ public abstract class Rs2Tile implements Tile{
             checkpointTileNumber++;
         }
         return checkpointTiles;
+    }
+
+    /**
+     * Hovers over the given tile using the natural mouse.
+     *
+     * @param tile The tile to hover over.
+     * @return True if successfully hovered, otherwise false.
+     */
+    public static boolean hoverOverTile(Tile tile) {
+        if (!Rs2AntibanSettings.naturalMouse) {
+            if (Rs2AntibanSettings.devDebug)
+                Microbot.log("Natural mouse is not enabled, can't hover");
+            return false;
+        }
+
+        Point point = Rs2UiHelper.getClickingPoint(Rs2UiHelper.getTileClickbox(tile), true);
+
+        // If the point is 1,1 then the tile is not on screen and we should return false
+        if (point.getX() == 1 && point.getY() == 1) return false;
+
+        Microbot.getNaturalMouse().moveTo(point.getX(), point.getY());
+        return true;
     }
 }

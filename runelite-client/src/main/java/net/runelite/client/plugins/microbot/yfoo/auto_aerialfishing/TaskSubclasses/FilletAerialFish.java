@@ -124,7 +124,7 @@ public class FilletAerialFish extends Task {
 
     private boolean slowFillet() {
         Microbot.log("Rolled slow fillet");
-        boolean combined = Rs2Inventory.combineClosest(rs2Item -> rs2Item.getId() == ItemID.KNIFE, rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
+        boolean combined = false;
         if(!combined) {
             Microbot.log("Combination failed");
             return false;
@@ -152,7 +152,7 @@ public class FilletAerialFish extends Task {
         int loopIterations = RngUtil.randomInclusive(lowBound, numFish);
         Microbot.log(String.format("Running %d combinations", loopIterations));
         for(int i = 0; i < loopIterations; i++) {
-            Rs2Inventory.combineClosest(rs2Item -> rs2Item.getId() == ItemID.KNIFE, rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
+            // Rs2Inventory.combineClosest(rs2Item -> rs2Item.getId() == ItemID.KNIFE, rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
             script.sleep(RngUtil.gaussian(200, 50, 0, 300));
         }
         return true;
@@ -164,7 +164,7 @@ public class FilletAerialFish extends Task {
         int loopIterations = numFish / RngUtil.randomInclusive(2, 4);
         Microbot.log(String.format("Running %d combinations", loopIterations));
         for(int i = 0; i < loopIterations; i++) {
-            Rs2Inventory.combineClosest(rs2Item -> rs2Item.getId() == ItemID.KNIFE, rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
+            // Rs2Inventory.combineClosest(rs2Item -> rs2Item.getId() == ItemID.KNIFE, rs2Item -> AERIAL_FISH.contains(rs2Item.getId()));
             script.sleep(RngUtil.gaussian(200, 50, 0, 300));
         }
 
