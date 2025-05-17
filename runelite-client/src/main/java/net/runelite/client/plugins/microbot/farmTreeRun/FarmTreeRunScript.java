@@ -263,7 +263,7 @@ public class FarmTreeRunScript extends Script {
                 System.out.println("Total time for loop " + totalTime);
 
             } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
             }
         }, 0, 600, TimeUnit.MILLISECONDS);
         return true;
@@ -460,7 +460,7 @@ public class FarmTreeRunScript extends Script {
 
         // Gagex named actions differently, sometimes it's Pick-fruit and sometimes Pick-banana.
         // Also seen "Chop down" and "Chop-down".
-        List<String> exactTreeActions = Arrays.stream(Rs2GameObject.findObjectComposition(treePatch.getId()).getImpostor().getActions()).collect(Collectors.toList());
+        List<String> exactTreeActions = Arrays.stream(Rs2GameObject.findObjectComposition(treePatch.getId()).getActions()).collect(Collectors.toList());
         for (String action : exactTreeActions) {
             if (action == null)
                 continue;

@@ -440,7 +440,7 @@ public class Rs2Antiban {
      *                 .right("Version: " + MotherloadMineScript.version)
      *                 .build());
      *     } catch (Exception ex) {
-     *         System.out.println(ex.getMessage());
+     *         Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
      *     }
      *     return super.render(graphics);
      * }
@@ -548,11 +548,15 @@ public class Rs2Antiban {
 
     // reset all the variables
     public static void resetAntibanSettings() {
+        resetAntibanSettings(false);
+    }
+
+    public static void resetAntibanSettings(boolean forceReset) {
+        if (!forceReset && Rs2AntibanSettings.overwriteScriptSettings) return;
         Rs2AntibanSettings.reset();
         Rs2Antiban.playStyle = null;
         Rs2Antiban.activity = null;
         Rs2Antiban.activityIntensity = ActivityIntensity.EXTREME;
         Rs2Antiban.category = null;
     }
-
 }

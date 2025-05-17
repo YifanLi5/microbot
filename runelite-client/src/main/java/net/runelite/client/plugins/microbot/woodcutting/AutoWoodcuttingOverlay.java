@@ -44,7 +44,7 @@ public class AutoWoodcuttingOverlay extends OverlayPanel {
                     .build());
 
             if (config.distanceToStray() < 21) {
-                LocalPoint lp =  LocalPoint.fromWorld(Microbot.getClient(), AutoWoodcuttingScript.initPlayerLoc(config));
+                LocalPoint lp =  LocalPoint.fromWorld(Microbot.getClient(), AutoWoodcuttingScript.getReturnPoint(config));
                 if (lp != null) {
                     Polygon poly = Perspective.getCanvasTileAreaPoly(Microbot.getClient(), lp, config.distanceToStray() * 2);
 
@@ -56,7 +56,7 @@ public class AutoWoodcuttingOverlay extends OverlayPanel {
             }
 
         } catch(Exception ex) {
-            System.out.println(ex.getMessage());
+            Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
         }
         return super.render(graphics);
     }

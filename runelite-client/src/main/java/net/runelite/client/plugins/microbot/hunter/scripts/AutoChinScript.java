@@ -76,7 +76,7 @@ public class AutoChinScript extends Script {
                 System.out.println("Total time for loop " + totalTime);
 
             } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
             }
         }, 0, 600, TimeUnit.MILLISECONDS);
         return true;
@@ -165,7 +165,7 @@ public class AutoChinScript extends Script {
             // We're going on break in 1 minute or less.
             // Save Trap locations
             for (int trapId : trapIds) {
-                List<GameObject> gameObjects = Rs2GameObject.getGameObjects(trapId);
+                List<GameObject> gameObjects = Rs2GameObject.getGameObjects(obj -> obj.getId() == trapId);
                     if (gameObjects != null) {
                         for (GameObject gameObject : gameObjects) {
                             if (gameObject != null) {

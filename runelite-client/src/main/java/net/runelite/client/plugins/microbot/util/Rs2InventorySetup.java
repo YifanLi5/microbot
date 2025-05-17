@@ -9,6 +9,7 @@ import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
+import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +67,7 @@ public class Rs2InventorySetup {
      *
      * @return true if the scheduler is cancelled, false otherwise.
      */
-    private boolean isMainSchedulerCancelled() {
+    public boolean isMainSchedulerCancelled() {
         return _mainScheduler != null && _mainScheduler.isCancelled();
     }
 
@@ -102,7 +103,9 @@ public class Rs2InventorySetup {
                 inventorySetupsItem.setName(lowerCaseName.replaceAll("\\s+[1-9]\\d*$", ""));
             }
 
-            if (!Rs2Bank.hasBankItem(lowerCaseName, withdrawQuantity)) {
+            boolean exact = !inventorySetupsItem.isFuzzy();
+
+            if (!Rs2Bank.hasBankItem(lowerCaseName, withdrawQuantity, exact)) {
                 Microbot.pauseAllScripts = true;
                 Microbot.showMessage("Bank is missing the following item " + inventorySetupsItem.getName(), 10);
                 break;
@@ -195,6 +198,20 @@ public class Rs2InventorySetup {
             Rs2Bank.depositAllExcept(itemsToNotDeposit());
         }
 
+
+        /*
+            Check if we have extra equipment already equipped before attempting to gear
+            For example, player is wearing full graceful set but your desired inventory setup does not contain boots, keeping the graceful boots equipped
+         */
+        boolean hasExtraGearEquipped = Rs2Equipment.contains(equip ->
+                inventorySetup.getEquipment().stream().noneMatch(setup -> setup.getId() == equip.getId())
+        );
+
+        if (hasExtraGearEquipped) {
+            Microbot.log("Found Extra Gear that is not contained within the setup", Level.DEBUG);
+            Rs2Bank.depositEquipment();
+        }
+
         for (InventorySetupsItem inventorySetupsItem : inventorySetup.getEquipment()) {
             if (isMainSchedulerCancelled()) break;
             if (InventorySetupsItem.itemIsDummy(inventorySetupsItem)) continue;
@@ -214,6 +231,11 @@ public class Rs2InventorySetup {
                 if (Rs2Equipment.isWearing(inventorySetupsItem.getName()))
                     continue;
 
+                if (Rs2Inventory.hasItem(inventorySetupsItem.getName())) {
+                    Rs2Bank.wearItem(inventorySetupsItem.getName());
+                    continue;
+                }
+
                 if (inventorySetupsItem.getQuantity() > 1) {
                     Rs2Bank.withdrawAllAndEquip(inventorySetupsItem.getName());
                     sleep(100, 250);
@@ -222,7 +244,7 @@ public class Rs2InventorySetup {
                     sleep(100, 250);
                 }
             } else {
-                if (inventorySetupsItem.getId() == -1 || !Rs2Bank.hasItem(inventorySetupsItem.getName()))
+                if (inventorySetupsItem.getId() == -1 || (!Rs2Bank.hasItem(inventorySetupsItem.getName()) && !Rs2Inventory.hasItem(inventorySetupsItem.getName())))
                     continue;
                 if (Rs2Inventory.hasItem(inventorySetupsItem.getName())) {
                     Rs2Bank.wearItem(inventorySetupsItem.getName());
@@ -263,6 +285,9 @@ public class Rs2InventorySetup {
      * @return true if the inventory matches the setup, false otherwise.
      */
     public boolean doesInventoryMatch() {
+        if( inventorySetup.getInventory() == null) {
+            return false;
+        }
         Map<Integer, List<InventorySetupsItem>> groupedByItems = inventorySetup.getInventory().stream().collect(Collectors.groupingBy(InventorySetupsItem::getId));
         boolean found = true;
         for (Integer key : groupedByItems.keySet()) {
@@ -327,12 +352,21 @@ public class Rs2InventorySetup {
     }
 
     /**
+     * Retrieves the list of additional items from the setup, excluding any dummy items (ID == -1).
+     *
+     * @return A list of valid additional filtered items.
+     */
+    public List<InventorySetupsItem> getAdditionalItems() {
+        return inventorySetup.getAdditionalFilteredItems().values().stream().filter(x -> x.getId() != -1).collect(Collectors.toList());
+    }
+
+    /**
      * Creates a list of item names that should not be deposited into the bank.
      * Combines items from both the inventory setup and the equipment setup.
      *
      * @return A list of item names that should not be deposited.
      */
-    public List<String> itemsToNotDeposit() {
+    public Map<String, Boolean> itemsToNotDeposit() {
         List<InventorySetupsItem> inventorySetupItems = getInventoryItems();
         List<InventorySetupsItem> equipmentSetupItems = getEquipmentItems();
 
@@ -341,7 +375,12 @@ public class Rs2InventorySetup {
         combined.addAll(inventorySetupItems);
         combined.addAll(equipmentSetupItems);
 
-        return combined.stream().map(InventorySetupsItem::getName).collect(Collectors.toList());
+        return combined.stream()
+                .collect(Collectors.toMap(
+                        InventorySetupsItem::getName,
+                        InventorySetupsItem::isFuzzy,
+                        (existing, replacement) -> existing)
+                );
     }
 
     /**

@@ -25,11 +25,7 @@
 package net.runelite.client.plugins;
 
 import java.awt.*;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -46,6 +42,7 @@ public @interface PluginDescriptor
     String Bank = "<html>[<font color=#9900ff>B</font>] ";
     String Forn = "<html>[<font color=#AF2B1E>F</font>] ";
     String See1Duck = "<html>[<font color=#ffff1a>\uD83E\uDD86</font>] ";
+    String TaFCat = "<html>[<font color=#ffff1a>\uD83D\uDC31</font>] ";
     String GMason = "<html>[<font color=#0077B6>G</font>] ";
     String Pumster = "<html>[<font color=#03ff4e>P</font>] ";
     String Basche = "<html>[<font color=#07A6F0>B</font>] ";
@@ -55,10 +52,11 @@ public @interface PluginDescriptor
     String Bttqjs = "<html>[<font color=#e57373>J</font>] ";
     String zuk = "<html>[<font color=#5F9596>Z</font>] ";
     String GZ = "<html>[<font color=#0077B6>\u2728</font>] ";
+	String VOX = "<html>[<font color=#5F0F40>\uD83C\uDF33</font>] ";
     String StickToTheScript = "<html>[<font color=#FF4F00>STTS</font>] ";
     String Gabulhas = "<html>[<font color=#F44FB0>Gab</font>] ";
     String zerozero ="<html>[<font color=#000000>00</font>] " ;
-    String LiftedMango = "<html>[<font color=#FF7F50>\uD83E\uDD6D</font>] ";
+    String LiftedMango = "<html>[<font color=#00FFFF>LM</font>] ";
     String eXioStorm = "<html>[<font color=#ff00dc>§</font>] "; Color stormColor = new Color(255, 0, 220);
     String Girdy = "<html>[<font color=#3DED97>\u01E5</font>] ";
     String Cicire = "<html>[<font color=#68ff00>Ci</font>] ";
@@ -68,6 +66,7 @@ public @interface PluginDescriptor
 	String Bradley = "<html>[<font color=#E32636>BR</font>] ";
 	String Frosty = "<html>[<font color=#00FFFF>\u2744</font>] ";
 	String yfoo = "<html>[<font color=#00FFFF>Y</font>] ";
+	String Maxxin = "<html>[<font color='#8B0000'>MX</font>] ";
 
 
 
@@ -117,5 +116,5 @@ public @interface PluginDescriptor
 
 	boolean loadInSafeMode() default true;
 
-	boolean canBeScheduled() default false;
+	boolean priority() default false;
 }

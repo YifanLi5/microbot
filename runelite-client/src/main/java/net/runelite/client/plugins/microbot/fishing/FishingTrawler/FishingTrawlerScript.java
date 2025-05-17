@@ -63,18 +63,19 @@ public class FishingTrawlerScript extends Script {
                 if (config.stopat50()&&ContributionValue >= 50)return;
 
                 if (!Rs2Player.isInteracting() && !Rs2Player.isMoving() && Rs2Npc.getNpc("Enormous Tentacle") != null) {
-                    if(Rs2Npc.getNpc("Enormous Tentacle").getAnimation()==8910) {return;}
-                    if (Rs2Npc.interact("Enormous Tentacle", "Chop")) {
-                        tentacle = true;
-                        lootnet = true;
-//                    }
-                    }
+                    awaitExecutionUntil(() -> {
+                                Rs2Npc.interact("Enormous Tentacle", "Chop");
+                                tentacle = true;
+                                lootnet = true;
+                                Rs2Player.waitForAnimation();
+                            }
+                    ,() -> Rs2Npc.getNpc("Enormous Tentacle").getAnimation()==8953, 100);
                 }
 
                  if (!Rs2Player.isInteracting() && !Rs2Player.isMoving() && Rs2Npc.getNpc("Enormous Tentacle") == null && tentacle) {
 //                    if(Rs2Npc.getNpc("Enormous Tentacle").getAnimation()==8953) {
                     WorldPoint currentLocation = Rs2Player.getWorldLocation();
-                    WorldPoint ladder = Rs2GameObject.getGameObjects(4139).stream().findFirst().get().getWorldLocation();
+                    WorldPoint ladder = Rs2GameObject.getGameObject(4139).getWorldLocation();
 //                  Microbot.log(""+ladder.dx(1).getX());
                     if (Rs2Player.getWorldLocation().getY() == 4823) {
                         Rs2Walker.walkFastCanvas(new WorldPoint(ladder.dx(1).getX(), currentLocation.dy(4).getY(), Rs2Player.getWorldLocation().getPlane()));
@@ -93,9 +94,9 @@ public class FishingTrawlerScript extends Script {
                 System.out.println("Total time for loop " + totalTime);
 
             } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+                Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
             }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        }, 0, 600, TimeUnit.MILLISECONDS);
         return true;
     }
 

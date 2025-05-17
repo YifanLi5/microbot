@@ -29,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static net.runelite.client.plugins.microbot.util.Global.sleepGaussian;
-
 public class WintertodtScript extends Script {
     public static QoLConfig config;
     public static GameObject unlitBrazier;
@@ -63,8 +61,8 @@ public class WintertodtScript extends Script {
                 } else {
                     wintertodtHp = -1;
                 }
-                brokenBrazier = Rs2GameObject.getGameObjects(ObjectID.BRAZIER_29313).stream().filter(gameObject -> gameObject.getWorldLocation().distanceTo2D(Rs2Player.getWorldLocation()) < 5).findFirst().orElse(null);
-                unlitBrazier = Rs2GameObject.getGameObjects(ObjectID.BRAZIER_29312).stream().filter(gameObject -> gameObject.getWorldLocation().distanceTo2D(Rs2Player.getWorldLocation()) < 5).findFirst().orElse(null);
+                brokenBrazier = Rs2GameObject.getGameObject(obj -> obj.getId() == ObjectID.BRAZIER_29313, 5);
+                unlitBrazier = Rs2GameObject.getGameObject(obj -> obj.getId() == ObjectID.BRAZIER_29312, 5);
 
                 shouldEat();
 
@@ -73,7 +71,7 @@ public class WintertodtScript extends Script {
 
                 NewMenuEntry actionToResume = config.wintertodtActions().getMenuEntry();
                 if (config.wintertodtActions().equals(WintertodtActions.FEED)) {
-                    GameObject fireBrazier = Rs2GameObject.getGameObjects(ObjectID.BURNING_BRAZIER_29314).stream().findFirst().orElse(null);
+                    GameObject fireBrazier = Rs2GameObject.getGameObject(ObjectID.BURNING_BRAZIER_29314);
                     if (fireBrazier != null && fireBrazier.getWorldLocation().distanceTo2D(Rs2Player.getWorldLocation()) < 5) {
                         if (!Rs2Inventory.contains(ItemID.BRUMA_ROOT) && !Rs2Inventory.contains(ItemID.BRUMA_KINDLING)) {
                             qolPlugin.updateLastWinthertodtAction(WintertodtActions.NONE);
@@ -98,7 +96,7 @@ public class WintertodtScript extends Script {
                 }
 
             } catch (Exception e) {
-                Microbot.log("Error in QoL Wintertodt script: " + e.getMessage());
+                Microbot.logStackTrace(this.getClass().getSimpleName(), e);
             }
         }, 0, 100, TimeUnit.MILLISECONDS);
         return true;
@@ -246,6 +244,11 @@ public class WintertodtScript extends Script {
     private boolean shouldEat() {
         if (getWarmthLevel() <= config.eatFoodPercentage()) {
                 List<Rs2ItemModel> rejuvenationPotions = Rs2Inventory.getPotions();
+
+                if (rejuvenationPotions.isEmpty()) {
+                    return false;
+                }
+
                 Rs2Inventory.interact(rejuvenationPotions.get(0), "Drink");
                 sleepGaussian(600, 150);
                 qolPlugin.updateWintertodtInterupted(true);
