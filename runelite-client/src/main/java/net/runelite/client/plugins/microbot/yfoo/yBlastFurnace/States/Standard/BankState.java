@@ -66,7 +66,7 @@ public class BankState extends StateNode {
                 Microbot.log("Bank is already open");
                 return true;
             }
-            GameObject chest = Rs2GameObject.findChest();
+            GameObject chest = Rs2GameObject.findBank();
             boolean result = Rs2GameObject.interact(chest, "use") && ExtendableConditionalSleep.sleep(5000, () -> Rs2Bank.isOpen(), null, () -> Rs2Player.isMoving());
             HoverBoundsUtil.hoverRandom();
             script.sleep(RngUtil.gaussian(400, 100, 100, 600));
