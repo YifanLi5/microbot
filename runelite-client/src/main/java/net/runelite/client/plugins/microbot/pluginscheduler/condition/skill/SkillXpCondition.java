@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.GameState;
 import net.runelite.api.Skill;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.pluginscheduler.condition.ConditionType;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 
@@ -26,8 +27,9 @@ public class SkillXpCondition extends SkillCondition {
     private transient long currentTargetXp;// relative and absolute mode difference
     private final long targetXpMin;
     private final long targetXpMax;
-    private transient long startXp;
+    private transient long startXp  = -1;
     private transient long[] startXpBySkill; // Used for total XP tracking
+    private transient boolean SKILL_DATA_INITIALIZED = false;
     private final boolean randomized;
     @Getter
     private final boolean relative; // Whether this is a relative or absolute XP target
@@ -94,6 +96,17 @@ public class SkillXpCondition extends SkillCondition {
      * Initialize XP tracking for individual skill or all skills if total
      */
     private void initializeXpTracking() {
+        
+        if (!Microbot.isLoggedIn()){
+            this.SKILL_DATA_INITIALIZED = false;
+            return; // Don't initialize if not logged in
+        }
+        if( SKILL_DATA_INITIALIZED) {
+            
+            return; // Already initialized, no need to re-initialize
+        }
+        log.info("\n\t--Initializing XP tracking for skill: \"{}\"", skill);
+        super.forceUpdate();    
         if (isTotal()) {
             Skill[] skills = getAllTrackableSkills();
             this.startXpBySkill = new long[skills.length];
@@ -102,6 +115,7 @@ public class SkillXpCondition extends SkillCondition {
         } else {
             this.startXp = getCurrentXp();
         }
+        SKILL_DATA_INITIALIZED = true;
     }
     
     @Override
@@ -109,6 +123,7 @@ public class SkillXpCondition extends SkillCondition {
         if (randomize) {
             currentTargetXp = (long)Rs2Random.between((int)targetXpMin, (int)targetXpMax);
         }
+        SKILL_DATA_INITIALIZED = false; // Reset initialization state
         initializeXpTracking();
     }
     
@@ -143,6 +158,11 @@ public class SkillXpCondition extends SkillCondition {
     
     @Override
     public boolean isSatisfied() {
+        // A condition cannot be satisfied while paused
+        if (isPaused) {
+            return false;
+        }
+        
         if (relative) {
             // For relative mode, we need to check if we've gained the target amount of XP
             return getXpGained() >= currentTargetXp;
@@ -156,10 +176,14 @@ public class SkillXpCondition extends SkillCondition {
      * Gets the amount of XP gained since condition was created
      */
     public long getXpGained() {
-        if (isTotal()) {
-            return getTotalXp() - startXp;
-        } else {
-            return getCurrentXp() - startXp;
+        if (startXp != -1){
+            if (isTotal()) {
+                return getTotalXp() - startXp;
+            } else {
+                return getCurrentXp() - startXp;
+            }
+        }else{
+            return 0;
         }
     }
     
@@ -208,7 +232,7 @@ public class SkillXpCondition extends SkillCondition {
             }
             
             if (currentTargetXp <= 0) {
-                return 100.0;
+                return 0;
             }
             
             return (100.0 * xpGained) / currentTargetXp;
@@ -234,19 +258,20 @@ public class SkillXpCondition extends SkillCondition {
         
         if (relative) {
             long xpGained = getXpGained();
-            long currentXp = getCurrentXp();                       
+            long currentXp = getCurrentXp();
+            long startXp = getStartingXp();                       
             String randomRangeInfo = "";
             
             if (targetXpMin != targetXpMax) {
                 randomRangeInfo = String.format(" (randomized from %d-%d)", targetXpMin, targetXpMax);
             }
             
-            return String.format("Gain Relative %d %s XP%s (gained: %d - %.1f%%, current total: %d)", 
+            return String.format("Gain Relative %d %s XP%s (gained: %d - %.1f%%, current total: %d  starting: %d)", 
                 currentTargetXp, 
                 skillName,
                 randomRangeInfo,                
                 xpGained,
-                getProgressPercentage(),currentXp);
+                getProgressPercentage(),currentXp, startXp);
         } else {
             long currentXp = getCurrentXp();
             String randomRangeInfo = "";
@@ -379,8 +404,51 @@ public class SkillXpCondition extends SkillCondition {
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
         if (gameStateChanged.getGameState() == GameState.LOGGED_IN) {
             super.onGameStateChanged(gameStateChanged);
+            log.debug("Game state changed to LOGGED_IN, re-initializing XP tracking for skill: {}", skill);
             initializeXpTracking();
         }else{
+            
+        }
+    }
+    @Override
+    public void pause() {
+        // Call parent class pause method to capture pause state
+        super.pause();
+    }
+    
+    @Override
+    public void resume() {
+        if (isPaused) {
+            // Call parent class resume method to clear pause state
+            super.resume();
+            // For both relative and absolute mode, we need to adjust baselines to exclude XP gained during pause
+            if (isTotal()) { //tracking total XP
+                // Adjust total XP baseline
+                long xpGainedDuringPause = getTotalXpGainedDuringPause();
+                if (relative) {
+                    startXp += xpGainedDuringPause;
+                    log.debug("Adjusted total XP baseline by {} XP gained during pause for relative mode", xpGainedDuringPause);
+                } else {
+                    // For absolute mode, increase target to exclude paused gains
+                    currentTargetXp += xpGainedDuringPause;
+                    log.debug("Adjusted total XP target by {} XP gained during pause for absolute mode. New target: {}", 
+                             xpGainedDuringPause, currentTargetXp);
+                }
+            } else {
+                // Adjust individual skill XP baseline
+                long xpGainedDuringPause = getXpGainedDuringPause(skill);
+                if (relative) {
+                    startXp += xpGainedDuringPause;
+                    log.info("Adjusted {} XP baseline by {} XP gained during pause for relative mode", 
+                            skill.getName(), xpGainedDuringPause);
+                } else {
+                    // For absolute mode, increase target to exclude paused gains
+                    currentTargetXp += xpGainedDuringPause;
+                    log.info("Adjusted {} XP target by {} XP gained during pause for absolute mode. New target: {}", 
+                             skill.getName(), xpGainedDuringPause, currentTargetXp);
+                }
+            }
+            
             
         }
     }

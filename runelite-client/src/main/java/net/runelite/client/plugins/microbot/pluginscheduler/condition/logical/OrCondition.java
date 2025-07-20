@@ -1,8 +1,10 @@
 package net.runelite.client.plugins.microbot.pluginscheduler.condition.logical;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-
 import lombok.EqualsAndHashCode;
 import net.runelite.client.plugins.microbot.pluginscheduler.condition.Condition;
 import net.runelite.client.plugins.microbot.pluginscheduler.condition.time.TimeCondition;
@@ -22,7 +24,47 @@ public class OrCondition extends LogicalCondition {
         return conditions.stream().anyMatch(Condition::isSatisfied);
     }
     
-
+    /**
+     * Gets the estimated time until this OR condition will be satisfied.
+     * For an OR condition, this returns the minimum (earliest) estimated time
+     * among all child conditions, since any one of them being satisfied
+     * will satisfy the entire OR condition.
+     * 
+     * @return Optional containing the estimated duration until satisfaction, or empty if not determinable
+     */
+    @Override
+    public Optional<Duration> getEstimatedTimeWhenIsSatisfied() {
+        if (conditions.isEmpty()) {
+            return Optional.of(Duration.ZERO);
+        }
+        
+        // If any condition is already satisfied, return zero
+        if (isSatisfied()) {
+            return Optional.of(Duration.ZERO);
+        }
+        
+        Duration shortestTime = null;
+        boolean hasEstimate = false;
+        
+        for (Condition condition : conditions) {
+            Optional<Duration> estimate = condition.getEstimatedTimeWhenIsSatisfied();
+            if (estimate.isPresent()) {
+                hasEstimate = true;
+                Duration currentEstimate = estimate.get();
+                
+                if (shortestTime == null || currentEstimate.compareTo(shortestTime) < 0) {
+                    shortestTime = currentEstimate;
+                }
+                
+                // If any condition has zero duration (satisfied), return immediately
+                if (currentEstimate.isZero()) {
+                    return Optional.of(Duration.ZERO);
+                }
+            }
+        }
+        
+        return hasEstimate ? Optional.of(shortestTime) : Optional.empty();
+    }
     
     /**
      * Gets the next time this OR condition will be satisfied.
@@ -68,6 +110,24 @@ public class OrCondition extends LogicalCondition {
             return Optional.empty();
         }        
         
+    }
+    
+    /**
+     * For an OR condition, all conditions must be unsatisfied to block the entire OR.
+     * This method returns all child conditions if none are satisfied, or an empty list
+     * if at least one is satisfied (meaning the OR condition itself is satisfied).
+     * 
+     * @return List of all child conditions if none are satisfied, otherwise an empty list
+     */
+    @Override
+    public List<Condition> getBlockingConditions() {
+        // For an OR condition, if any condition is satisfied, nothing is blocking
+        if (isSatisfied()) {
+            return new ArrayList<>();
+        }
+        
+        // If we reach here, none are satisfied, so all conditions are blocking
+        return new ArrayList<>(conditions);
     }
     
     /**
@@ -153,5 +213,22 @@ public class OrCondition extends LogicalCondition {
         }
         
         return sb.toString();
+    }
+    public void pause() {
+        // Pause all child conditions
+        for (Condition condition : conditions) {
+            condition.pause();
+        }
+                
+        
+    }
+    
+   
+    public void resume() {
+        // Resume all child conditions
+        for (Condition condition : conditions) {
+            condition.resume();
+        }        
+        
     }
 }

@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.cluesolver.cluetask;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
@@ -18,6 +19,7 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 @Slf4j
 public class AnagramClueTask extends ClueTask {
@@ -25,7 +27,7 @@ public class AnagramClueTask extends ClueTask {
     private final EventBus eventBus;
     private final ExecutorService backgroundExecutor;
     private WorldPoint location;
-
+    private Future<?> currentTask;
     private enum State {
         WALKING_TO_LOCATION,
         INTERACTING_WITH_OBJECT,
@@ -55,17 +57,33 @@ public class AnagramClueTask extends ClueTask {
 
     private void walkToLocation() {
         log.info("Walking to location: {}", location);
-        boolean startedWalking = Rs2Walker.walkTo(location, 1);
+        boolean startedWalking = Rs2Walker.walkTo(location, 2);
         if (!startedWalking) {
             log.error("Failed to initiate walking to location: {}", location);
             completeTask(false);
         }
     }
 
+    @SneakyThrows
     @Subscribe
     public void onGameTick(GameTick event) {
+        if (currentTask != null && !currentTask.isDone()) {
+            log.warn("Previous task is still running, skipping this tick.");
+            return;
+        }
+        currentTask = backgroundExecutor.submit(() -> {
+            try {
+                processGameTick(event);
+            } catch (Exception ex) {
+                log.error("Error processing game tick", ex);
+            }
+        });
+    }
+
+    private void processGameTick(GameTick event) {
         Player player = client.getLocalPlayer();
-        if (player == null) return;
+        if (player == null)
+            return;
 
         switch (state) {
             case WALKING_TO_LOCATION:
@@ -113,10 +131,11 @@ public class AnagramClueTask extends ClueTask {
         }
     }
 
+
     private void transitionToInteractionState() {
         if (clue.getObjectId() != -1) {
             state = State.INTERACTING_WITH_OBJECT;
-        } else if (clue.getNpc() != null && Rs2Npc.getNpc(clue.getNpc()) != null) {
+        } else if (clue.getNpcProvider() != null && Rs2Npc.getNpc(clue.getNpcName(clueScrollPlugin)) != null) {
             state = State.INTERACTING_WITH_NPC;
         } else {
             log.warn("No valid interaction target found.");
@@ -141,18 +160,18 @@ public class AnagramClueTask extends ClueTask {
     }
 
     private boolean interactWithNpc() {
-        NPC targetNpc = Rs2Npc.getNpc(clue.getNpc());
+        var targetNpc = Rs2Npc.getNpc(clue.getNpcName(clueScrollPlugin));
         if (targetNpc == null) {
-            log.warn("NPC {} not found.", clue.getNpc());
+            log.warn("NPC {} not found.", clue.getNpcName(clueScrollPlugin));
             return false;
         }
 
         boolean interacted = Rs2Npc.interact(targetNpc, "Talk-to");
         if (interacted) {
-            log.info("Talking to NPC: {}", clue.getNpc());
+            log.info("Talking to NPC: {}", clue.getNpcName(clueScrollPlugin));
             Rs2Dialogue.sleepUntilInDialogue();
         } else {
-            log.warn("Failed to talk to NPC: {}", clue.getNpc());
+            log.warn("Failed to talk to NPC: {}", clue.getNpcName(clueScrollPlugin));
         }
         return interacted;
     }
@@ -167,6 +186,7 @@ public class AnagramClueTask extends ClueTask {
             }
 
             Rs2Keyboard.typeString(answer);
+            Rs2Keyboard.enter();
             Rs2Dialogue.sleepUntilHasContinue();
 
             if (Rs2Dialogue.hasContinue()) {

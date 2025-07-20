@@ -5,6 +5,7 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
@@ -12,6 +13,7 @@ import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.coords.Rs2LocalPoint;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -32,18 +34,63 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
  * TODO: This class should be cleaned up, less methods by passing filters instead of multiple parameters
  */
 public class Rs2GameObject {
-    private static final Function<Tile, Collection<? extends GameObject>> GAMEOBJECT_EXTRACTOR = tile -> Arrays.asList(tile.getGameObjects());
-    private static final Function<Tile, Collection<? extends GroundObject>> GROUNDOBJECT_EXTRACTOR = tile ->
-            Collections.singletonList(tile.getGroundObject());
-    private static final Function<Tile, Collection<? extends DecorativeObject>> DECORATIVEOBJECT_EXTRACTOR = tile ->
-            Collections.singletonList(tile.getDecorativeObject());
-    private static final Function<Tile, Collection<? extends WallObject>> WALLOBJECT_EXTRACTOR = tile ->
-            Collections.singletonList(tile.getWallObject());
-    private static final Function<Tile, Collection<? extends TileObject>> TILEOBJECT_EXTRACTOR = tile -> Arrays.asList(
-            tile.getDecorativeObject(),
-            tile.getGroundObject(),
-            tile.getWallObject()
-    );
+	/**
+	 * Extracts all {@link GameObject}s located on a given {@link Tile}.
+	 *
+	 * @see Tile#getGameObjects()
+	 * @param tile the tile from which to extract game objects
+	 * @return a {@link List} of {@link GameObject} instances on the tile (never null)
+	 */
+	private static final Function<Tile, Collection<? extends GameObject>> GAMEOBJECT_EXTRACTOR =
+		tile -> Arrays.asList(tile.getGameObjects());
+
+	/**
+	 * Extracts the {@link GroundObject} located on a given {@link Tile}.
+	 *
+	 * @see Tile#getGroundObject()
+	 * @param tile the tile from which to extract the ground object
+	 * @return a singleton {@link List} containing the {@link GroundObject},
+	 *         or a list with a single null element if none is present
+	 */
+	private static final Function<Tile, Collection<? extends GroundObject>> GROUNDOBJECT_EXTRACTOR =
+		tile -> Collections.singletonList(tile.getGroundObject());
+
+	/**
+	 * Extracts the {@link DecorativeObject} located on a given {@link Tile}.
+	 *
+	 * @see Tile#getDecorativeObject()
+	 * @param tile the tile from which to extract the decorative object
+	 * @return a singleton {@link List} containing the {@link DecorativeObject},
+	 *         or a list with a single null element if none is present
+	 */
+	private static final Function<Tile, Collection<? extends DecorativeObject>> DECORATIVEOBJECT_EXTRACTOR =
+		tile -> Collections.singletonList(tile.getDecorativeObject());
+
+	/**
+	 * Extracts the {@link WallObject} located on a given {@link Tile}.
+	 *
+	 * @see Tile#getWallObject()
+	 * @param tile the tile from which to extract the wall object
+	 * @return a singleton {@link List} containing the {@link WallObject},
+	 *         or a list with a single null element if none is present
+	 */
+	private static final Function<Tile, Collection<? extends WallObject>> WALLOBJECT_EXTRACTOR =
+		tile -> Collections.singletonList(tile.getWallObject());
+
+	/**
+	 * Extracts all types of {@link TileObject} (decorative, ground, wall) from a given {@link Tile}.
+	 *
+	 * @param tile the tile from which to extract all tile objects
+	 * @return a {@link List} containing the {@link DecorativeObject}, {@link GroundObject},
+	 *         and {@link WallObject} (some entries may be null if that object is not present)
+	 */
+	private static final Function<Tile, Collection<? extends TileObject>> TILEOBJECT_EXTRACTOR =
+		tile -> Arrays.asList(
+			tile.getDecorativeObject(),
+			tile.getGroundObject(),
+			tile.getWallObject()
+		);
+
 
     public static boolean interact(WorldPoint worldPoint) {
         return interact(worldPoint, "");
@@ -59,7 +106,7 @@ public class Rs2GameObject {
     }
 
     public static boolean interact(TileObject tileObject) {
-        return clickObject(tileObject, null);
+        return clickObject(tileObject, "");
     }
 
     public static boolean interact(TileObject tileObject, String action) {
@@ -144,7 +191,27 @@ public class Rs2GameObject {
         return findObjectById(id) != null;
     }
 
-    @Deprecated
+	public static boolean canReach(WorldPoint target, int objectSizeX, int objectSizeY, int pathSizeX, int pathSizeY) {
+		if (target == null) return false;
+
+		List<WorldPoint> path = Rs2Player.getRs2WorldPoint().pathTo(target, true);
+		if (path == null || path.isEmpty()) return false;
+
+		WorldArea pathArea = new WorldArea(path.get(path.size() - 1), pathSizeX, pathSizeY);
+		WorldArea objectArea = new WorldArea(target, objectSizeX + 2, objectSizeY + 2);
+
+		return pathArea.intersectsWith2D(objectArea);
+	}
+
+	public static boolean canReach(WorldPoint target, int objectSizeX, int objectSizeY) {
+		return canReach(target, objectSizeX, objectSizeY, 3, 3);
+	}
+
+	public static boolean canReach(WorldPoint target) {
+		return canReach(target, 2, 2, 2, 2);
+	}
+
+	@Deprecated
     public static TileObject findObjectById(int id) {
         return getAll(o -> o.getId() == id).stream().findFirst().orElse(null);
     }
@@ -310,6 +377,18 @@ public class Rs2GameObject {
                 return false;
             }
 
+			// Lunar Isle (exception)
+			// There is a bank booth @ Lunar Isle that is only accessible when Dream Mentor is completed
+			if (loc.equals(new WorldPoint(2099, 3920, 0)) && Rs2Player.getQuestState(Quest.DREAM_MENTOR) != QuestState.FINISHED) {
+				return false;
+			}
+
+			// Lunar Isle (additional exception to not use these banks if no seal of passage)
+			if ((loc.equals(new WorldPoint(2098, 3920, 0)) || loc.equals(new WorldPoint(2097, 3920, 0))) &&
+				!(Rs2Inventory.hasItem(ItemID.LUNAR_SEAL_OF_PASSAGE) || Rs2Equipment.isWearing(ItemID.LUNAR_SEAL_OF_PASSAGE))) {
+				return false;
+			}
+
             ObjectComposition comp = convertToObjectComposition(gameObject);
             if (comp == null) return false;
             return hasAction(comp, "Bank", false) || hasAction(comp, "Collect", false);
@@ -357,32 +436,6 @@ public class Rs2GameObject {
         return findGrandExchangeBooth(20);
     }
 
-    @Deprecated(since = "1.5.7 - use signature with Integer[] ids", forRemoval = true)
-    public static TileObject findObject(List<Integer> ids) {
-        for (int id : ids) {
-            TileObject object = findObjectById(id);
-            if (object == null) continue;
-            if (Rs2Player.getWorldLocation().getPlane() != object.getPlane()) continue;
-            if (object instanceof GroundObject && !Rs2Walker.canReach(object.getWorldLocation()))
-                continue;
-
-            //exceptions if the pathsize needs to be bigger
-            if (object.getId() == net.runelite.api.ObjectID.MARKET_STALL_14936) {
-                if (object instanceof GameObject && !Rs2Walker.canReach(object.getWorldLocation(), ((GameObject) object).sizeX(), ((GameObject) object).sizeY(), 4, 4))
-                    continue;
-            } else if (object.getId() == net.runelite.api.ObjectID.BEAM_42220) {
-                if (object.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) > 6)
-                    continue;
-            } else {
-                if (object instanceof GameObject && !Rs2Walker.canReach(object.getWorldLocation(), ((GameObject) object).sizeX(), ((GameObject) object).sizeY()))
-                    continue;
-            }
-
-            return object;
-        }
-        return null;
-    }
-
     @Deprecated
     public static ObjectComposition convertGameObjectToObjectComposition(TileObject tileObject) {
         return convertToObjectComposition(tileObject);
@@ -392,6 +445,23 @@ public class Rs2GameObject {
     public static ObjectComposition convertGameObjectToObjectComposition(int objectId) {
         return convertToObjectComposition(objectId);
     }
+
+	public static String getObjectType(TileObject object)
+	{
+		String type;
+		if (object instanceof WallObject) {
+			type = "WallObject";
+		} else if (object instanceof DecorativeObject) {
+			type = "DecorativeObject";
+		} else if (object instanceof GameObject) {
+			type = "GameObject";
+		} else if (object instanceof GroundObject) {
+			type = "GroundObject";
+		} else {
+			type = "TileObject";
+		}
+		return type;
+	}
 
     public static List<Tile> getTiles(int maxTileDistance) {
         int maxDistance = Math.max(2400, maxTileDistance * 128);
@@ -429,13 +499,25 @@ public class Rs2GameObject {
     }
 
     public static <T extends TileObject> List<TileObject> getAll(Predicate<? super T> predicate) {
-        return getAll(predicate, (Constants.SCENE_SIZE / 2));
+        return getAll(predicate, Constants.SCENE_SIZE);
     }
 
-    public static <T extends TileObject> List<TileObject> getAll(Predicate<? super T> predicate, int distance) {
+	public static <T extends TileObject> List<TileObject> getAll(Predicate<? super T> predicate, int distance) {
+		Player player = Microbot.getClient().getLocalPlayer();
+		if (player == null) {
+			return Collections.emptyList();
+		}
+		return getAll(predicate, player.getWorldLocation(), distance);
+	}
+
+	public static <T extends TileObject> List<TileObject> getAll(Predicate<? super T> predicate, WorldPoint anchor) {
+		return getAll(predicate, anchor, Constants.SCENE_SIZE);
+	}
+
+    public static <T extends TileObject> List<TileObject> getAll(Predicate<? super T> predicate, WorldPoint anchor, int distance) {
         List<TileObject> all = new ArrayList<>();
-        all.addAll(fetchGameObjects(predicate, distance));
-        all.addAll(fetchTileObjects(predicate, distance));
+        all.addAll(fetchGameObjects(predicate, anchor, distance));
+		all.addAll(fetchTileObjects(predicate, anchor, distance));
         return all;
     }
 
@@ -514,7 +596,7 @@ public class Rs2GameObject {
     }
 
     public static TileObject getTileObject(String objectName, LocalPoint anchorLocal, int distance) {
-        return getTileObject(nameMatches(objectName, false), anchorLocal, distance);
+        return getTileObject(nameMatches(objectName), anchorLocal, distance);
     }
 
     public static TileObject getTileObject(Predicate<TileObject> predicate) {
@@ -1497,7 +1579,7 @@ public class Rs2GameObject {
         return to -> isWithinTiles(anchor, to.getLocalLocation(), distance);
     }
 
-    private static Optional<String> getCompositionName(TileObject obj) {
+    public static Optional<String> getCompositionName(TileObject obj) {
         ObjectComposition comp = convertToObjectComposition(obj);
         if (comp == null) {
             return Optional.empty();
@@ -1508,7 +1590,18 @@ public class Rs2GameObject {
                 : Optional.of(Rs2UiHelper.stripColTags(name));
     }
 
-    private static <T extends TileObject> Predicate<T> nameMatches(String objectName, boolean exact) {
+	/**
+	 * Creates a predicate that matches TileObjects whose name matches the given name.
+	 * Optionally, it can require an exact match or allow partial (contains) match.
+	 *
+	 * @param objectName The name of the object to match.
+	 * @param exact      If true, the object name must exactly match (case-insensitive).
+	 *                   If false, the name must only contain the given string (case-insensitive).
+	 * @param <T>        A type that extends TileObject.
+	 * @return A predicate that returns true if the object's name matches the given name.
+	 */
+    public static <T extends TileObject> Predicate<T> nameMatches(String objectName, boolean exact)
+	{
         String normalizedForIds = objectName.toLowerCase().replace(" ", "_");
         Set<Integer> ids = new HashSet<>(getObjectIdsByName(normalizedForIds));
 
@@ -1525,14 +1618,89 @@ public class Rs2GameObject {
         };
     }
 
+	/**
+	 * Creates a predicate that matches TileObjects whose name contains the given name (case-insensitive).
+	 *
+	 * @param objectName The partial or full name to match against.
+	 * @param <T>        A type that extends TileObject.
+	 * @return A predicate that returns true if the object's name contains the given string.
+	 */
+	public static <T extends TileObject> Predicate<T> nameMatches(String objectName)
+	{
+		return nameMatches(objectName, false);
+	}
+
+	/**
+	 * Creates a predicate that matches TileObjects whose name and one of the actions match the given values.
+	 * Matching can be exact or partial based on the 'exact' parameter.
+	 *
+	 * @param objectName The name of the object to match.
+	 * @param actionName The action text to match (e.g. "Open", "Climb").
+	 * @param exact      If true, both the name and action must match exactly (case-insensitive).
+	 *                   If false, both may partially match (case-insensitive).
+	 * @param <T>        A type that extends TileObject.
+	 * @return A predicate that returns true if both the name and action match.
+	 */
+	public static <T extends TileObject> Predicate<T> nameAndActionMatches(String objectName, String actionName, boolean exact)
+	{
+		Predicate<T> namePredicate = nameMatches(objectName, exact);
+		Predicate<T> actionPredicate = obj -> {
+			ObjectComposition comp = convertToObjectComposition(obj);
+			return hasAction(comp, actionName, exact);
+		};
+
+		return namePredicate.and(actionPredicate);
+	}
+
+	/**
+	 * Creates a predicate that matches TileObjects by name and action using partial (contains) matching.
+	 *
+	 * @param objectName The name of the object to match.
+	 * @param actionName The action text to match (e.g. "Open", "Climb").
+	 * @param <T>        A type that extends TileObject.
+	 * @return A predicate that returns true if both the name and action partially match.
+	 */
+	public static <T extends TileObject> Predicate<T> nameAndActionMatches(String objectName, String actionName)
+	{
+		return nameAndActionMatches(objectName, actionName, false);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends TileObject> List<T> fetchTileObjects(Predicate<? super T> predicate, WorldPoint anchor, int distance) {
+		return (List<T>) getTileObjects((Predicate<TileObject>) predicate, anchor, distance);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends TileObject> List<T> fetchGameObjects(Predicate<? super T> predicate, WorldPoint anchor, int distance) {
+		return (List<T>) getGameObjects((Predicate<GameObject>) predicate, anchor, distance);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends TileObject> List<T> fetchTileObjects(Predicate<? super T> predicate, WorldPoint anchor) {
+		return fetchTileObjects(predicate, anchor, Constants.SCENE_SIZE);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends TileObject> List<T> fetchGameObjects(Predicate<? super T> predicate, WorldPoint anchor) {
+		return fetchTileObjects(predicate, anchor, Constants.SCENE_SIZE);
+	}
+
     @SuppressWarnings("unchecked")
     private static <T extends TileObject> List<T> fetchTileObjects(Predicate<? super T> predicate, int distance) {
-        return (List<T>) getTileObjects((Predicate<TileObject>) predicate, distance);
+		Player player = Microbot.getClient().getLocalPlayer();
+		if (player == null) {
+			return Collections.emptyList();
+		}
+        return fetchTileObjects(predicate, player.getWorldLocation(), distance);
     }
 
     @SuppressWarnings("unchecked")
     private static <T extends TileObject> List<T> fetchGameObjects(Predicate<? super T> predicate, int distance) {
-        return (List<T>) getGameObjects((Predicate<GameObject>) predicate, distance);
+		Player player = Microbot.getClient().getLocalPlayer();
+		if (player == null) {
+			return Collections.emptyList();
+		}
+        return fetchGameObjects(predicate, player.getWorldLocation(), distance);
     }
 
     @SuppressWarnings("unchecked")

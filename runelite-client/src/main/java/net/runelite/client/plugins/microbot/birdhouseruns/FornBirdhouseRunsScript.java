@@ -1,6 +1,8 @@
 package net.runelite.client.plugins.microbot.birdhouseruns;
 
-import net.runelite.api.ItemID;
+import net.runelite.api.gameval.ItemID;
+import net.runelite.api.Quest;
+import net.runelite.api.QuestState;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.Notifier;
@@ -10,11 +12,8 @@ import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.birdhouseruns.FornBirdhouseRunsInfo.states;
 import net.runelite.client.plugins.microbot.util.Rs2InventorySetup;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
-import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
-import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
@@ -49,18 +48,34 @@ public class FornBirdhouseRunsScript extends Script {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!Microbot.isLoggedIn()) return;
+             
                 if (!initialized) {
+                    if (Rs2Player.getQuestState(Quest.BONE_VOYAGE) != QuestState.FINISHED) {
+                        Microbot.log("You need to finish the quest 'BONE VOYAGE' to use this script");
+                        plugin.reportFinished("Birdhouse run failed, you need to finish the quest 'BONE VOYAGE'",false);
+                        this.shutdown();
+                        return;
+                    }
                     initialized = true;
-                    var inventorySetup = new Rs2InventorySetup(config.inventorySetup(), mainScheduledFuture);
-                    if (!inventorySetup.doesInventoryMatch() || !inventorySetup.doesEquipmentMatch()) {
-                        Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint(), 20);
-                        if (!inventorySetup.loadEquipment() || !inventorySetup.loadInventory()) {
-                            Microbot.log("Failed to load inventory setup");
-                            plugin.reportFinished("Birdhouse run failed to load inventory setup",false);                                                        
-                            this.shutdown();
-                            return;
+                    
+                    boolean hasInventorySetup =  config.inventorySetup()!= null && Rs2InventorySetup.isInventorySetup(config.inventorySetup().getName());
+                    if (hasInventorySetup) {
+                        var inventorySetup = new Rs2InventorySetup(config.inventorySetup(), mainScheduledFuture);
+                        if (!inventorySetup.doesInventoryMatch() || !inventorySetup.doesEquipmentMatch()) {
+                            Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint(), 20);
+                            if (!inventorySetup.loadEquipment() || !inventorySetup.loadInventory()) {
+                                Microbot.log("Failed to load inventory setup");
+                                plugin.reportFinished("Birdhouse run failed to load inventory setup",false);                                                        
+                                this.shutdown();
+                                return;
+                            }
+                            if (Rs2Bank.isOpen()) Rs2Bank.closeBank();
                         }
-                        if (Rs2Bank.isOpen()) Rs2Bank.closeBank();
+                    }else{
+                        Microbot.log("Failed to load inventory, inventory setup not found:"+ config.inventorySetup());
+                        plugin.reportFinished("Birdhouse run failed to load inventory setup",false);                                                        
+                        this.shutdown();
+                        return;
                     }
                     botStatus = states.TELEPORTING;
                 }
@@ -147,20 +162,20 @@ public class FornBirdhouseRunsScript extends Script {
 
     private void emptyNests() {
         var ids = List.of(
-                ItemID.BIRD_NEST,
-                ItemID.BIRD_NEST_5071,
-                ItemID.BIRD_NEST_5072,
-                ItemID.BIRD_NEST_5073,
-                ItemID.BIRD_NEST_5074,
-                ItemID.BIRD_NEST_22798,
-                ItemID.BIRD_NEST_22800
+                ItemID.BIRD_NEST_EGG_RED,
+                ItemID.BIRD_NEST_EGG_GREEN,
+                ItemID.BIRD_NEST_EGG_BLUE,
+                ItemID.BIRD_NEST_SEEDS,
+                ItemID.BIRD_NEST_RING,
+                ItemID.BIRD_NEST_SEEDS_JAN2019,
+                ItemID.BIRD_NEST_DECENTSEEDS_JAN2019
         );
 
-        for (Rs2ItemModel item : Rs2Inventory.items()) {
-            if (ids.contains(item.id)) {
+        Rs2Inventory.items().forEachOrdered(item -> {
+            if (ids.contains(item.getId())) {
                 Rs2Inventory.interact(item, "Search");
             }
-        }
+        });
     }
 
     @Override
@@ -186,7 +201,7 @@ public class FornBirdhouseRunsScript extends Script {
     }
 
     private void buildBirdhouse(WorldPoint worldPoint, states status) {
-        if (!Rs2Inventory.hasItem("bird house") && Rs2Inventory.hasItem(ItemID.CLOCKWORK)) {
+        if (!Rs2Inventory.hasItem("bird house") && Rs2Inventory.hasItem(ItemID.POH_CLOCKWORK_MECHANISM)) {
             Rs2Inventory.use(ItemID.HAMMER);
             Rs2Inventory.use(" logs");
             Rs2Inventory.waitForInventoryChanges(5000);

@@ -18,14 +18,13 @@ import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
-import net.runelite.client.plugins.microbot.util.math.Random;
-import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.event.KeyEvent;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntilTrue;
@@ -78,7 +77,7 @@ public class AutoCookingScript extends Script {
                     getState(config, location);
                 }
 
-                if (Rs2Player.isMoving() || Rs2Player.isAnimating() || Microbot.pauseAllScripts) return;
+                if (Rs2Player.isMoving() || Rs2Player.isAnimating()) return;
 
                 switch (state) {
                     case COOKING:
@@ -144,9 +143,14 @@ public class AutoCookingScript extends Script {
                             shutdown();
                             return;
                         }
-                        
-                        Rs2Bank.withdrawAll(cookingItem.getRawItemName(), true);
-                        Rs2Inventory.waitForInventoryChanges(1800);
+                        if (Objects.equals(config.cookingItem().getRawItemName(), "giant seaweed")) {
+                            Rs2Bank.withdrawX(cookingItem.getRawItemName(), 4, true);
+                            Rs2Inventory.waitForInventoryChanges(1800);
+
+                        } else {
+                            Rs2Bank.withdrawAll(cookingItem.getRawItemName(), true);
+                            Rs2Inventory.waitForInventoryChanges(1800);
+                        }
                         
                         state = CookingState.WALKING;
                         Rs2Bank.closeBank();

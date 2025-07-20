@@ -31,7 +31,9 @@ public class Rs2Potion
                 "Super restore",
                 "Moonlight potion",
                 "Moonlight moth mix",
-                "Egniol potion"
+                "Egniol potion",
+                "Tears of elidinis",
+                "Sanfew serum"
         );
     }
 

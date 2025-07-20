@@ -2,12 +2,11 @@ package net.runelite.client.plugins.microbot.herbrun;
 
 import lombok.Getter;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.client.plugins.microbot.questhelper.helpers.mischelpers.herbrun.FarmingHandler;
-import net.runelite.client.plugins.microbot.questhelper.helpers.mischelpers.herbrun.FarmingPatch;
-import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.questhelper.helpers.mischelpers.farmruns.FarmingHandler;
+import net.runelite.client.plugins.microbot.questhelper.helpers.mischelpers.farmruns.FarmingPatch;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.enums.Herbs;
-import net.runelite.client.plugins.timetracking.farming.CropState;
+import net.runelite.client.plugins.microbot.questhelper.helpers.mischelpers.farmruns.CropState;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -28,9 +27,9 @@ public class HerbPatch {
         this.location = getHerbFromName(regionName).getWorldPoint();
         switch (regionName) {
             case "Ardougne":
-                if (Rs2Bank.hasItem("Ardougne cloak 4")) {
-                    this.items.put("Ardougne cloak", 1);
-                }
+//                if (Rs2Bank.hasItem("Ardougne cloak")) {
+//                    this.items.put("Ardougne cloak", 1);
+//                }
                 this.enabled = config.enableArdougne();
                 break;
             case "Catherby":
@@ -93,7 +92,7 @@ public class HerbPatch {
         } else if(Objects.equals(regionName, "Troll Stronghold")) {
             return Rs2Player.getWorldLocation().getRegionID() == 11321;
         } else {
-            return Rs2Player.distanceTo(location) < distance;
+            return Rs2Player.getWorldLocation().distanceTo(location) < distance;
         }
     }
 

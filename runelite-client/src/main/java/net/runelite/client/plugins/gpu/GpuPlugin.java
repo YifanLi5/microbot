@@ -1120,10 +1120,14 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		final int height = bufferProvider.getHeight();
 
 		GL43C.glBindBuffer(GL43C.GL_PIXEL_UNPACK_BUFFER, interfacePbo);
-		GL43C.glMapBuffer(GL43C.GL_PIXEL_UNPACK_BUFFER, GL43C.GL_WRITE_ONLY)
-			.asIntBuffer()
-			.put(pixels, 0, width * height);
-		GL43C.glUnmapBuffer(GL43C.GL_PIXEL_UNPACK_BUFFER);
+		ByteBuffer interfaceBuf = GL43C.glMapBuffer(GL43C.GL_PIXEL_UNPACK_BUFFER, GL43C.GL_WRITE_ONLY);
+		if (interfaceBuf != null)
+		{
+			interfaceBuf
+				.asIntBuffer()
+				.put(pixels, 0, width * height);
+			GL43C.glUnmapBuffer(GL43C.GL_PIXEL_UNPACK_BUFFER);
+		}
 		GL43C.glBindTexture(GL43C.GL_TEXTURE_2D, interfaceTexture);
 		GL43C.glTexSubImage2D(GL43C.GL_TEXTURE_2D, 0, 0, 0, width, height, GL43C.GL_BGRA, GL43C.GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 		GL43C.glBindBuffer(GL43C.GL_PIXEL_UNPACK_BUFFER, 0);
@@ -1352,7 +1356,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		{
 			// Notice that for some machines the GPU plugin might crash after long session
 			// Pause all scripts if this happens to avoid getting stuck
-			Microbot.pauseAllScripts = true;
+			Microbot.pauseAllScripts.compareAndSet(false, true);
 			// this is always fatal
 			if (!canvas.isValid())
 			{

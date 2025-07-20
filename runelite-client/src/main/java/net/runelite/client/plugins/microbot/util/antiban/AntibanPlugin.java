@@ -143,7 +143,7 @@ public class AntibanPlugin extends Plugin {
             } else {
                 Rs2AntibanSettings.actionCooldownActive = false;
                 if (Rs2AntibanSettings.universalAntiban && !Rs2AntibanSettings.microBreakActive)
-                    Microbot.pauseAllScripts = false;
+					Microbot.pauseAllScripts.compareAndSet(true, false);
             }
         }
     }
@@ -159,7 +159,7 @@ public class AntibanPlugin extends Plugin {
                 .priority(1)
                 .panel(panel)
                 .build();
-        
+        Rs2AntibanSettings.reset();
         validateAndSetBreakDurations();
 
         Timer timer = new Timer();
@@ -197,6 +197,11 @@ public class AntibanPlugin extends Plugin {
         GameState state = event.getGameState();
 
         switch (state) {
+            case LOGIN_SCREEN:
+                if(Rs2AntibanSettings.actionCooldownActive) {
+                    Rs2Antiban.TIMEOUT = 0;
+                    Rs2AntibanSettings.actionCooldownActive = false;
+                }
             case LOGGING_IN:
             case HOPPING:
                 ready = true;

@@ -19,6 +19,7 @@ import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Spellbook;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
@@ -39,7 +40,7 @@ import static net.runelite.client.plugins.microbot.Microbot.log;
 
 public class GotrScript extends Script {
 
-    public static String version = "1.2.0";
+    public static String version = "1.2.1";
     public static long totalTime = 0;
     public static boolean shouldMineGuardianRemains = true;
     public static final String rewardPointRegex = "Total elemental energy:[^>]+>([\\d,]+).*Total catalytic energy:[^>]+>([\\d,]+).";
@@ -63,6 +64,7 @@ public class GotrScript extends Script {
     String GUARDIAN_ESSENCE = "guardian essence";
 
     boolean initCheck = false;
+    boolean optimizedEssenceLoop = false;
 
     static boolean useNpcContact = true;
     private final List<Integer> runeIds = ImmutableList.of(
@@ -113,7 +115,7 @@ public class GotrScript extends Script {
 
                 if (!initCheck) {
                     initializeGuardianPortalInfo();
-                    if (!Rs2Magic.isLunar()) {
+                    if (!Rs2Magic.isSpellbook(Rs2Spellbook.LUNAR)) {
                         Microbot.log("Lunar spellbook not found...disabling npc contact");
                         useNpcContact = false;
                     }
@@ -161,24 +163,26 @@ public class GotrScript extends Script {
                         return;
                     }
 
-                    if (powerUpGreatGuardian()) return;
-                    if (repairCells()) return;
-
                     if (usePortal()) return;
                     //mine huge guardian remains
                     if (mineHugeGuardianRemain()) return;
-                    //deposit runes
-                    if (depositRunesIntoPool()) return;
+
+                    if (powerUpGreatGuardian()) return;
+                    if (repairCells()) return;
+
 
                     if (!shouldMineGuardianRemains) {
                         //Create fragments into whatever
                         if (isOutOfFragments()) return;
 
+                        //deposit runes
+                        if (depositRunesIntoPool()) return;
+
                         if (fillPouches()) {
                             craftGuardianEssences();
                             return;
                         }
-                        if (!Rs2Inventory.isFull()) {
+                        if (!Rs2Inventory.isFull() && !optimizedEssenceLoop) {
                             if (leaveLargeMine()) return;
 
                             if (state == GotrState.CRAFT_GUARDIAN_ESSENCE && (Rs2Player.isAnimating() || Rs2Player.isMoving())) return;
@@ -191,7 +195,7 @@ public class GotrScript extends Script {
                         }
                     } else {
                         if (getGuardiansPower() > 70) {
-                            if (Rs2Inventory.hasItemAmount(GUARDIAN_FRAGMENTS, Rs2Random.between(25, 35))) {
+                            if (Rs2Inventory.hasItemAmount(GUARDIAN_FRAGMENTS, Rs2Random.between(Rs2Inventory.getEmptySlots()+Rs2Inventory.getRemainingCapacityInPouches(), Rs2Inventory.getEmptySlots()+Rs2Inventory.getRemainingCapacityInPouches()+3))) {
                                 shouldMineGuardianRemains = false;
                             }
                         } else {
@@ -258,7 +262,7 @@ public class GotrScript extends Script {
     }
 
     private boolean repairCells() {
-        Rs2ItemModel cell = Rs2Inventory.get(CellType.PoweredCellList().toArray(Integer[]::new));
+        Rs2ItemModel cell = Rs2Inventory.get(CellType.PoweredCellList().stream().mapToInt(i -> i).toArray());
         if (cell != null && isInMainRegion() && isInMiniGame() && !shouldMineGuardianRemains && !isInLargeMine() && !isInHugeMine()) {
             int cellTier = CellType.GetCellTier(cell.getId());
             List<Integer> shieldCellIds = Rs2GameObject.getObjectIdsByName("cell_tile");
@@ -328,7 +332,7 @@ public class GotrScript extends Script {
     }
 
     private boolean usePortal() {
-        if (!isInHugeMine() && Microbot.getClient().hasHintArrow() && Rs2Inventory.size() < config.maxAmountEssence()) {
+        if (!isInHugeMine() && Microbot.getClient().hasHintArrow() && Rs2Inventory.count() < config.maxAmountEssence()) {
             if (leaveLargeMine()) return true;
             Rs2Walker.walkFastCanvas(Microbot.getClient().getHintArrowPoint());
             sleepUntil(Rs2Player::isMoving);
@@ -343,7 +347,7 @@ public class GotrScript extends Script {
     }
 
     private boolean depositRunesIntoPool() {
-        if (Rs2Inventory.hasItem(runeIds.toArray(Integer[]::new)) && !isInLargeMine() && !isInHugeMine() && !Rs2Inventory.isFull()) {
+        if (config.shouldDepositRunes() && Rs2Inventory.hasItem(runeIds.stream().mapToInt(i -> i).toArray()) && !isInLargeMine() && !isInHugeMine() && !Rs2Inventory.isFull() && !optimizedEssenceLoop) {
             if (Rs2Player.isMoving()) return true;
             if (Rs2GameObject.interact(ObjectID.DEPOSIT_POOL)) {
                 log("Deposit runes into pool...");
@@ -422,6 +426,7 @@ public class GotrScript extends Script {
                 }
                 if (Rs2Inventory.hasItem(GUARDIAN_ESSENCE)) {
                     state = GotrState.CRAFTING_RUNES;
+                    optimizedEssenceLoop = false;
                     Rs2GameObject.interact(rcAltar.getId());
                     log("Crafting runes on altar " + rcAltar.getId());
                     sleep(Rs2Random.randomGaussian(Rs2Random.between(1000, 1500), 300));
@@ -480,6 +485,7 @@ public class GotrScript extends Script {
             if (getGuardiansPower() == 0) {
                 repairPouches();
                 leaveHugeMine();
+                optimizedEssenceLoop = false;
                 return false;
             }
             if (!Rs2Inventory.isFull()) {
@@ -491,6 +497,8 @@ public class GotrScript extends Script {
                 }
             } else {
                 if (Rs2Inventory.allPouchesFull()) {
+                    if(Rs2Inventory.hasItem("guardian stone"))
+                        optimizedEssenceLoop = true;
                     leaveHugeMine();
                 } else {
                     Rs2Inventory.fillPouches();
@@ -517,7 +525,7 @@ public class GotrScript extends Script {
             leaveHugeMine();
             return;
         }
-        if (Rs2Player.getSkillRequirement(Skill.AGILITY, 56) && getTimeSincePortal() < 85) {
+        if (Rs2Player.getSkillRequirement(Skill.AGILITY, 56) && getTimeSincePortal() < 85 && !Rs2Inventory.hasItem(GUARDIAN_ESSENCE)) {
             if (!isInLargeMine() && !isInHugeMine() && (!Rs2Inventory.hasItem(GUARDIAN_FRAGMENTS) || getStartTimer() == -1)) {
                 if (Rs2Walker.walkTo(new WorldPoint(3632, 9503, 0), 20)) {
                     log("Traveling to large mine...");

@@ -2,9 +2,10 @@ package net.runelite.client.plugins.microbot.GirdyScripts.cannonballsmelter;
 
 
 import net.runelite.api.Client;
-import net.runelite.api.ItemID;
-import net.runelite.api.ObjectID;
+import net.runelite.api.GameObject;
 import net.runelite.api.TileObject;
+import net.runelite.api.gameval.ItemID;
+import net.runelite.api.gameval.ObjectID;
 import net.runelite.client.plugins.microbot.GirdyScripts.cannonballsmelter.enums.CannonballSmelterStates;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -12,6 +13,7 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -25,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CannonballSmelterScript extends Script {
 
-    public static String version = "1.0.1";
+    public static String version = "1.0.2";
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
     @Inject
     private CannonballSmelterConfig config;
@@ -39,7 +41,7 @@ public class CannonballSmelterScript extends Script {
 
 
     private boolean hasBalls() {
-        return Rs2Inventory.hasItem(ItemID.CANNONBALL);
+        return Rs2Inventory.hasItem(ItemID.MCANNONBALL);
     }
     private boolean hasBars() {
         return Rs2Inventory.hasItem(ItemID.STEEL_BAR);
@@ -47,6 +49,8 @@ public class CannonballSmelterScript extends Script {
     private boolean required() {return (Rs2Inventory.hasItem(ItemID.AMMO_MOULD) || Rs2Inventory.hasItem(ItemID.DOUBLE_AMMO_MOULD));}
 
     public boolean run(CannonballSmelterConfig config) {
+        Rs2Camera.setZoom(260);
+        Rs2Camera.adjustPitch(383);
         Rs2Antiban.resetAntibanSettings();
         cannonballAntiBan();
         Rs2AntibanSettings.actionCooldownChance = 0.1;
@@ -54,7 +58,7 @@ public class CannonballSmelterScript extends Script {
         Microbot.runEnergyThreshold = 5000;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                if (!super.run() || !Microbot.isLoggedIn() || Microbot.pauseAllScripts) return;
+                if (!super.run() || !Microbot.isLoggedIn()) return;
                 if (Rs2AntibanSettings.actionCooldownActive) return;
                 startTime = System.currentTimeMillis();
 
@@ -94,7 +98,7 @@ public class CannonballSmelterScript extends Script {
     }
 
     public void smelt() {
-        TileObject furnace = Rs2GameObject.findObjectById(ObjectID.FURNACE_16469);
+        GameObject furnace = Rs2GameObject.getGameObject(ObjectID.VARROCK_DIARY_FURNACE);
         if (furnace != null) {
             Rs2GameObject.interact(furnace, "Smelt");
             Microbot.status = "Moving to furnace...";
@@ -115,55 +119,61 @@ public class CannonballSmelterScript extends Script {
     }
 
     public void bank() {
-        if (hasBalls() && !hasBars()) {
-            Microbot.status = "Banking...";
-            if(!Rs2Bank.isOpen()) {
-                Rs2Bank.openBank();
-                Microbot.status = "Banking...";
-                sleepUntil(() -> Rs2Bank.isOpen());
-            }
-            if(!Rs2Bank.hasItem(ItemID.STEEL_BAR)) {
-                Microbot.showMessage("Can't find Steel bars in bank, exiting...");
-                sleep(3000,5000);
-                shutdown();
-            }
-            Rs2Bank.withdrawAll(ItemID.STEEL_BAR);
-            sleepUntil(() -> hasBars());
-            if(hasBars()) {
-                Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
-            }
-            if (!hasBars()) {
-                Microbot.showMessage("Could not find item in bank.");
-                shutdown();
-            }
+        if (!hasBalls() || hasBars()) return;
+    
+        Microbot.status = "Banking...";
+        int attempts = 0;
+    
+        while (!Rs2Bank.isOpen() && attempts++ < 10) {
+            if (!isRunning()) break;
+            Rs2Bank.openBank();
+            sleep(300, 600);
+        }
+    
+        if (Rs2Bank.isOpen() && !Rs2Bank.hasItem(ItemID.STEEL_BAR)) {
+            Microbot.showMessage("No steel bars in bank. Halting.");
+            sleep(3000, 5000);
+            shutdown();
+            return;
+        }
+    
+        Rs2Bank.withdrawAll(ItemID.STEEL_BAR);
+        sleepUntil(this::hasBars);
+    
+        if (hasBars()) {
+            Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
+        } else {
+            Microbot.showMessage("Failed to withdraw steel bars.");
+            shutdown();
         }
     }
+    
 
     public void getMould() {
         if(!Rs2Inventory.hasItem("ammo mould")) {
             if(!Rs2Bank.isOpen()) {
                 Rs2Bank.openBank();
             }
-            sleepUntil(() -> Rs2Bank.isOpen());
+            sleepUntil(Rs2Bank::isOpen);
             if(!Rs2Bank.hasItem("ammo mould")) {
                 Microbot.showMessage("Could not find ammo mould in bank, exiting...");
                 sleep(3000, 5000);
                 shutdown();
             }
             Rs2Bank.withdrawOne("ammo mould");
-            sleepUntil(() -> required(), 3000);
+            sleepUntil(this::required, 3000);
         }
-        if(!Rs2Bank.hasItem("steel bar")) {
+        if(!Rs2Bank.hasItem(ItemID.STEEL_BAR)) {
             Microbot.showMessage("Can't find Steel bars in bank, exiting...");
             sleep(3000,5000);
             shutdown();
         }
-        Rs2Bank.withdrawAll(2353);
-        sleepUntil(() -> Rs2Inventory.hasItem("steel bar"));
-        if(Rs2Inventory.hasItem("steel bar")) {
+        Rs2Bank.withdrawAll(ItemID.STEEL_BAR);
+        sleepUntil(() -> Rs2Inventory.hasItem(ItemID.STEEL_BAR));
+        if(Rs2Inventory.hasItem(ItemID.STEEL_BAR)) {
             Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
         }
-        if (!Rs2Inventory.hasItem("steel bar")) {
+        if (!Rs2Inventory.hasItem(ItemID.STEEL_BAR)) {
             Microbot.showMessage("Could not find item in bank.");
             shutdown();
         }

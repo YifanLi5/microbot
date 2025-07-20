@@ -155,7 +155,7 @@ public class AirOrbScript extends Script {
                         }
 
                         if (plugin.isUseEnergyPotions()) {
-                            if (!Rs2Inventory.hasItem(Rs2Potion.getRestoreEnergyPotionsVariants())) {
+                            if (!Rs2Inventory.hasItem(Rs2Potion.getRestoreEnergyPotionsVariants().toArray(String[]::new))) {
                                 if (!Rs2Bank.hasItem(Rs2Potion.getRestoreEnergyPotionsVariants())) {
                                     Microbot.showMessage("Missing Energy Restore Potions");
                                     shutdown();
@@ -165,7 +165,7 @@ public class AirOrbScript extends Script {
                                 Rs2ItemModel energyRestoreItem = Rs2Bank.bankItems()
                                         .stream()
                                         .filter(item -> Rs2Potion.getRestoreEnergyPotionsVariants().stream()
-                                                .anyMatch(potion -> item.name.contains(potion)))
+                                                .anyMatch(potion -> item.getName().contains(potion)))
                                         .findFirst()
                                         .orElse(null);
 

@@ -11,7 +11,6 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grandexchange.Rs2GrandExchange;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Potion;
@@ -135,7 +134,7 @@ public class DemonicGorillaScript extends Script {
         return true;
     }
 
-private void handleTravel(DemonicGorillaConfig config) {
+    private void handleTravel(DemonicGorillaConfig config) {
         if (Rs2Walker.walkTo(GORILLA_LOCATION)) {
             BOT_STATUS = State.FIGHTING;
         }
@@ -252,11 +251,11 @@ private void handleTravel(DemonicGorillaConfig config) {
         currentTarget = null;
         currentOverheadIcon = null;
         currentTripKillCount = 0;
-        Microbot.pauseAllScripts = true;
+		Microbot.pauseAllScripts.compareAndSet(false, true);
         escapeTosafety();
         sleepUntil(() -> Microbot.getClient().getLocalPlayer().getWorldLocation().equals(SAFE_LOCATION), 5000);
         disableAllPrayers();
-        Microbot.pauseAllScripts = false;
+        Microbot.pauseAllScripts.compareAndSet(true, false);
         BOT_STATUS = State.BANKING;
         Microbot.log("Changing to default gear");
         switchGear(config, HeadIcon.RANGED);
@@ -369,10 +368,7 @@ private void handleTravel(DemonicGorillaConfig config) {
 
             // Handle AOE attack
             if (currentAnimation == DEMONIC_GORILLA_AOE_ATTACK && demonicGorillaRockPosition != null) {
-                List<WorldPoint> dangerousWorldPoints = Rs2Tile.getDangerousGraphicsObjectTiles()
-                        .stream()
-                        .map(Pair::getKey)
-                        .collect(Collectors.toList());
+                List<WorldPoint> dangerousWorldPoints = new ArrayList<>(Rs2Tile.getDangerousGraphicsObjectTiles().keySet());
                 dangerousWorldPoints.add(Microbot.getClient().getLocalPlayer().getWorldLocation());
                 dangerousWorldPoints.add(currentTarget.getWorldLocation());
                 dangerousWorldPoints.add(location);
@@ -566,12 +562,12 @@ private void handleTravel(DemonicGorillaConfig config) {
     private void activateOffensivePrayer(DemonicGorillaConfig config) {
         Rs2PrayerEnum newOffensivePrayer = null;
 
-        if (config.useMagicStyle() && magicGear.doesEquipmentMatch()) {
-            newOffensivePrayer = Rs2PrayerEnum.AUGURY;
-        } else if (config.useRangeStyle() && rangeGear.doesEquipmentMatch()) {
-            newOffensivePrayer = Rs2PrayerEnum.RIGOUR;
-        } else if (config.useMeleeStyle() && meleeGear.doesEquipmentMatch()) {
-            newOffensivePrayer = Rs2PrayerEnum.PIETY;
+        if (config.useMagicStyle() && currentGear == ArmorEquiped.MAGIC) {
+            newOffensivePrayer = Rs2Prayer.getBestMagePrayer();
+        } else if (config.useRangeStyle() && currentGear == ArmorEquiped.RANGED) {
+            newOffensivePrayer = Rs2Prayer.getBestRangePrayer();
+        } else if (config.useMeleeStyle() && currentGear == ArmorEquiped.MELEE) {
+            newOffensivePrayer = Rs2Prayer.getBestMeleePrayer();
         }
 
         if (newOffensivePrayer != null && newOffensivePrayer != currentOffensivePrayer) {
@@ -649,7 +645,7 @@ private void handleTravel(DemonicGorillaConfig config) {
         int currentHealth = Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS);
         int currentPrayer = Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER);
         boolean noFood = Rs2Inventory.getInventoryFood().isEmpty();
-        boolean noPrayerPotions = Rs2Inventory.items().stream()
+        boolean noPrayerPotions = Rs2Inventory.items()
                 .noneMatch(item -> item != null && item.getName() != null && !Rs2Potion.getPrayerPotionsVariants().contains(item.getName()));
 
         return (noFood && currentHealth <= config.healthThreshold()) || (noPrayerPotions && currentPrayer < 10);
@@ -682,7 +678,7 @@ private void handleTravel(DemonicGorillaConfig config) {
     }
 
     private void consumePotion(List<String> keyword) {
-        var potion = Rs2Inventory.get(keyword);
+        var potion = Rs2Inventory.get(keyword.toArray(String[]::new));
         if (potion != null) {
             Rs2Inventory.interact(potion, "Drink");
         }

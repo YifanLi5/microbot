@@ -2,7 +2,7 @@ package net.runelite.client.plugins.microbot.util.misc;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.runelite.api.ItemID;
+import net.runelite.api.gameval.ItemID;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -99,5 +99,9 @@ public enum Rs2Food {
     public static Set<Integer> getIds() {
         return Arrays.stream(values()).map(Rs2Food::getId).collect(Collectors.toSet());
     }
+
+	public static Set<Integer> getFastFoodIds() {
+		return Arrays.stream(values()).filter(f -> f.getTickdelay() == 1).map(Rs2Food::getId).collect(Collectors.toSet());
+	}
 
 }

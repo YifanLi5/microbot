@@ -30,6 +30,7 @@ import net.runelite.client.plugins.microbot.util.walker.WalkerState;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ShootingStarScript extends Script {
     public static ShootingStarState state;
@@ -73,7 +74,7 @@ public class ShootingStarScript extends Script {
                     return;
                 }
 
-                if (Rs2Player.isMoving() || Rs2Antiban.getCategory().isBusy() || Microbot.pauseAllScripts) return;
+                if (Rs2Player.isMoving() || Rs2Antiban.getCategory().isBusy()) return;
                 if (Rs2AntibanSettings.actionCooldownActive) return;
                 
                 if (Rs2Gembag.isUnknown()) {
@@ -169,7 +170,7 @@ public class ShootingStarScript extends Script {
                         if (!isBankOpen || !Rs2Bank.isOpen()) return;
 
                         if (Rs2Inventory.hasItem("uncut")) {
-                            Rs2Bank.depositAll(x -> x.name.toLowerCase().contains("uncut"));
+                            Rs2Bank.depositAll(x -> x.getName().toLowerCase().contains("uncut"));
                         }
 
                         if (isUsingInventorySetup()) {
@@ -287,7 +288,7 @@ public class ShootingStarScript extends Script {
                 if (Rs2Inventory.hasItem("pickaxe") || Rs2Equipment.isWearing("pickaxe")) {
                     pickaxe = getBestPickaxe(Rs2Equipment.items());
                     if (pickaxe == null) {
-                        pickaxe = getBestPickaxe(Rs2Inventory.items());
+                        pickaxe = getBestPickaxe(Rs2Inventory.items().collect(Collectors.toList()));
                     }
                 }
             }
@@ -373,7 +374,7 @@ public class ShootingStarScript extends Script {
         Pickaxe bestPickaxe = null;
 
         for (Pickaxe pickaxe : Pickaxe.values()) {
-            if (items.stream().noneMatch(i -> i.name.toLowerCase().contains(pickaxe.getItemName()))) continue;
+            if (items.stream().noneMatch(i -> i.getName().toLowerCase().contains(pickaxe.getItemName()))) continue;
             if (pickaxe.hasRequirements()) {
                 if (bestPickaxe == null || pickaxe.getMiningLevel() > bestPickaxe.getMiningLevel()) {
                     bestPickaxe = pickaxe;

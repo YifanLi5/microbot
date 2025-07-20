@@ -2,22 +2,15 @@ package net.runelite.client.plugins.microbot.example;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.MicrobotApi;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util.BFUtils;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
-
-import static net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFPlugin.parseCoalBagMessage;
 
 @PluginDescriptor(
         name = PluginDescriptor.Default + "Example",
@@ -47,6 +40,7 @@ public class ExamplePlugin extends Plugin {
     protected void startUp() throws AWTException {
         if (overlayManager != null) {
             overlayManager.add(exampleOverlay);
+            exampleOverlay.myButton.hookMouseListener();
         }
         exampleScript.run(config);
     }
@@ -54,6 +48,7 @@ public class ExamplePlugin extends Plugin {
     protected void shutDown() {
         exampleScript.shutdown();
         overlayManager.remove(exampleOverlay);
+        exampleOverlay.myButton.unhookMouseListener();
     }
     int ticks = 10;
     @Subscribe
@@ -67,19 +62,6 @@ public class ExamplePlugin extends Plugin {
             ticks = 10;
         }
 
-    }
-
-    @Subscribe
-    public void onChatMessage(ChatMessage chatMessage) {
-        if (chatMessage.getType() != ChatMessageType.GAMEMESSAGE) {
-            return;
-        }
-        String message = chatMessage.getMessage();
-        if(message.contains("coal bag")) {
-            int numCoal = parseCoalBagMessage(message);
-            Microbot.log("DEBUG Coal bag now contains: " + numCoal);
-            BFUtils.setNumCoalInBag(numCoal);
-        }
     }
 
 }

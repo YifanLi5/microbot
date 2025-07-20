@@ -2,8 +2,8 @@ package net.runelite.client.plugins.microbot.util.slayer;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.EnumID;
-import net.runelite.api.ItemID;
-import net.runelite.api.VarPlayer;
+import net.runelite.api.gameval.ItemID;
+import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.shortestpath.ShortestPathPlugin;
@@ -18,14 +18,24 @@ import net.runelite.client.plugins.microbot.util.slayer.enums.ProtectiveEquipmen
 import net.runelite.client.plugins.microbot.util.slayer.enums.SlayerMaster;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.slayer.Task;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The type Rs 2 slayer.
+ */
 @Slf4j
 public class Rs2Slayer {
 
+    /**
+     * The constant slayerTaskMonsterTarget.
+     */
     public static String slayerTaskMonsterTarget;
+    /**
+     * The constant blacklistedSlayerMonsters.
+     */
     public static List<String> blacklistedSlayerMonsters = new ArrayList<>();
 
     /**
@@ -45,7 +55,7 @@ public class Rs2Slayer {
      * @return the size of the player's current Slayer task as an integer
      */
     public static int getSlayerTaskSize() {
-        return Microbot.getVarbitPlayerValue(VarPlayer.SLAYER_TASK_SIZE);
+        return Microbot.getVarbitPlayerValue(VarPlayerID.SLAYER_COUNT);
     }
 
     /**
@@ -54,7 +64,7 @@ public class Rs2Slayer {
      * @return the name of the Slayer task creature as a String, or null if the player does not have an active task
      */
     public static String getSlayerTask() {
-        int taskId = Microbot.getVarbitPlayerValue(VarPlayer.SLAYER_TASK_CREATURE);
+        int taskId = Microbot.getVarbitPlayerValue(VarPlayerID.SLAYER_TARGET);
         if (taskId == 0) {
             return null;
         }
@@ -113,10 +123,22 @@ public class Rs2Slayer {
         return monsterLocation;
     }
 
+    /**
+     * Gets slayer task location.
+     *
+     * @param minClustering the min clustering
+     *
+     * @return the slayer task location
+     */
     public static MonsterLocation getSlayerTaskLocation(int minClustering) {
         return getSlayerTaskLocation(minClustering, true);
     }
 
+    /**
+     * Gets slayer task location.
+     *
+     * @return the slayer task location
+     */
     public static MonsterLocation getSlayerTaskLocation() {
         return getSlayerTaskLocation(3, true);
     }
@@ -156,6 +178,11 @@ public class Rs2Slayer {
         return Microbot.getClientThread().runOnClientThreadOptional(() -> Microbot.getClient().getItemDefinition(itemId).getName()).orElse("");
     }
 
+    /**
+     * Gets slayer task weakness.
+     *
+     * @return the slayer task weakness
+     */
     public static int getSlayerTaskWeakness() {
         String taskName = getSlayerTask();
         if (taskName == null) {
@@ -194,10 +221,24 @@ public class Rs2Slayer {
         return itemName == null ? "None" : itemName;
     }
 
+    /**
+     * Walk to slayer master boolean.
+     *
+     * @param master the master
+     *
+     * @return the boolean
+     */
     public static boolean walkToSlayerMaster(SlayerMaster master) {
         return Rs2Walker.walkTo(master.getWorldPoint());
     }
 
+    /**
+     * Prepare item transports list.
+     *
+     * @param cachedMonsterLocation the cached monster location
+     *
+     * @return the list
+     */
     public static List<Transport> prepareItemTransports(WorldPoint cachedMonsterLocation) {
         ShortestPathPlugin.getPathfinderConfig().setUseBankItems(true);
         List<Transport> transports = Rs2Walker.getTransportsForPath(Rs2Walker.getWalkPath(cachedMonsterLocation), 0)
@@ -205,7 +246,7 @@ public class Rs2Slayer {
                 .filter(t -> t.getType() == TransportType.TELEPORTATION_ITEM || t.getType() == TransportType.FAIRY_RING)
                 .peek(t -> {
                     if (t.getType() == TransportType.FAIRY_RING) {
-                        t.setItemIdRequirements(Set.of(Set.of(ItemID.DRAMEN_STAFF, ItemID.LUNAR_STAFF)));
+                        t.setItemIdRequirements(Set.of(Set.of(ItemID.DRAMEN_STAFF, ItemID.LUNAR_MOONCLAN_LIMINAL_STAFF)));
                     }
                 })
                 .collect(Collectors.toList());
@@ -221,8 +262,8 @@ public class Rs2Slayer {
         if (transport.getType() == TransportType.FAIRY_RING) {
             return Rs2Inventory.hasItem(ItemID.DRAMEN_STAFF) ||
                     Rs2Equipment.isWearing(ItemID.DRAMEN_STAFF) ||
-                    Rs2Inventory.hasItem(ItemID.LUNAR_STAFF) ||
-                    Rs2Equipment.isWearing(ItemID.LUNAR_STAFF);
+                    Rs2Inventory.hasItem(ItemID.LUNAR_MOONCLAN_LIMINAL_STAFF) ||
+                    Rs2Equipment.isWearing(ItemID.LUNAR_MOONCLAN_LIMINAL_STAFF);
         } else if (transport.getType() == TransportType.TELEPORTATION_ITEM) {
             return transport.getItemIdRequirements()
                     .stream()
@@ -232,13 +273,20 @@ public class Rs2Slayer {
         return false;
     }
 
-    private static List<Transport> getMissingItemTransports(List<Transport> transports) {
+    private static List<Transport> getMissingItemTransports(@NotNull List<Transport> transports) {
         return transports.stream()
                 .filter(t -> !hasRequiredTeleportItem(t))
                 .collect(Collectors.toList());
     }
 
-    public static List<Integer> getMissingItemIds(List<Transport> transports) {
+    /**
+     * Gets missing item ids.
+     *
+     * @param transports the transports
+     *
+     * @return the missing item ids
+     */
+    public static List<Integer> getMissingItemIds(@NotNull List<Transport> transports) {
         return transports.stream()
                 .flatMap(transport -> transport.getItemIdRequirements()
                         .stream()

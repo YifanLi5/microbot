@@ -1,7 +1,9 @@
 package net.runelite.client.plugins.microbot.pluginscheduler.condition.logical;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -421,7 +423,11 @@ public abstract class LogicalCondition implements Condition {
         
     }
 
-
+    public void hardReset(){
+        for (Condition condition : conditions) {
+            condition.hardReset();
+        }    
+    }
     /**
      * Adds a condition to a specific position in the condition tree
      * Useful for preserving ordering when reconstructing the tree.
@@ -521,8 +527,36 @@ public abstract class LogicalCondition implements Condition {
      */
     public String getTooltipHtml() {
         return getHtmlDescription(100);
+    }        
+    /**
+     * Recursively finds all LockConditions within this LogicalCondition structure.
+     * This utility method is used by the break handler to detect locked conditions
+     * that should prevent breaks from occurring.
+     * 
+     * @return List of all LockConditions found in the structure
+     */
+    public List<LockCondition> findAllLockConditions() {
+        List<LockCondition> lockConditions = new ArrayList<>();
+        
+        for (Condition condition : conditions) {
+            if (condition instanceof LockCondition) {
+                lockConditions.add((LockCondition) condition);
+            } else if (condition instanceof LogicalCondition) {
+                // Recursively search in nested logical conditions
+                lockConditions.addAll(((LogicalCondition) condition).findAllLockConditions());
+            } else if (condition instanceof NotCondition) {
+                // Check if the wrapped condition is a LockCondition or contains LockConditions
+                Condition wrappedCondition = ((NotCondition) condition).getCondition();
+                if (wrappedCondition instanceof LockCondition) {
+                    lockConditions.add((LockCondition) wrappedCondition);
+                } else if (wrappedCondition instanceof LogicalCondition) {
+                    lockConditions.addAll(((LogicalCondition) wrappedCondition).findAllLockConditions());
+                }
+            }
+        }
+        
+        return lockConditions;
     }
-
     /**
      * Recursively finds all TimeCondition instances in this logical condition structure.
      * This searches through the entire hierarchy including nested logical conditions.
@@ -1302,6 +1336,138 @@ public abstract class LogicalCondition implements Condition {
         }
         
         return differences.length() > 0 ? differences.toString() : "No differences";
+    }
+
+    /**
+     * Gets a list of all conditions that are currently blocking this logical condition
+     * from being satisfied. This is useful for diagnosing why a complex condition tree
+     * is not being satisfied.
+     * is not being satisfied.
+     * 
+     * The specific behavior depends on the type of logical condition:
+     * - For AND conditions: Returns all unsatisfied conditions
+     * - For OR conditions: Returns all conditions only if none are satisfied
+     * 
+     * @return List of conditions that are preventing satisfaction
+     */
+    public abstract List<Condition> getBlockingConditions();
+
+    /**
+     * Gets a list of all "leaf" conditions that are blocking this logical condition.
+     * Leaf conditions are the non-logical conditions that represent the actual root causes 
+     * for why the logical structure is not satisfied.
+     * 
+     * @return List of leaf conditions that are preventing satisfaction
+     */
+    public List<Condition> getLeafBlockingConditions() {
+        List<Condition> blockingLeaves = new ArrayList<>();
+        
+        for (Condition condition : getBlockingConditions()) {
+            if (condition instanceof LogicalCondition) {
+                // Recursively get leaf conditions from nested logical conditions
+                blockingLeaves.addAll(((LogicalCondition) condition).getLeafBlockingConditions());
+            } else {
+                // This is a leaf condition
+                blockingLeaves.add(condition);
+            }
+        }
+        
+        return blockingLeaves;
+    }
+
+    /**
+     * Gets a human-readable explanation of why this logical condition is not satisfied,
+     * detailing the specific blocking conditions in the tree structure.
+     * 
+     * @return A string explaining why the condition is not satisfied
+     */
+    public String getBlockingExplanation() {
+        if (isSatisfied()) {
+            return "Condition is already satisfied";
+        }
+        
+        StringBuilder explanation = new StringBuilder();
+        explanation.append(getClass().getSimpleName()).append(" is not satisfied because:\n");
+        
+        // Add explanations for each blocking condition
+        List<Condition> blockingConditions = getBlockingConditions();
+        for (int i = 0; i < blockingConditions.size(); i++) {
+            Condition condition = blockingConditions.get(i);
+            explanation.append("  ").append(i + 1).append(") ");
+            
+            if (condition instanceof LogicalCondition) {
+                // For nested logical conditions, include their blocking explanations
+                explanation.append(((LogicalCondition) condition).getBlockingExplanation().replace("\n", "\n  "));
+            } else {
+                // For leaf conditions, include their descriptions
+                explanation.append(condition.getDescription())
+                          .append(" (").append(condition.getClass().getSimpleName()).append(")");
+            }
+            
+            if (i < blockingConditions.size() - 1) {
+                explanation.append("\n");
+            }
+        }
+        
+        return explanation.toString();
+    }
+
+    /**
+     * Gets a concise summary of the root causes why this logical condition is not satisfied.
+     * This focuses only on the leaf conditions that are blocking satisfaction.
+     * 
+     * @return A string summarizing the root causes for non-satisfaction
+     */
+    public String getRootCausesSummary() {
+        if (isSatisfied()) {
+            return "Condition is satisfied";
+        }
+        
+        List<Condition> leafBlockingConditions = getLeafBlockingConditions();
+        
+        if (leafBlockingConditions.isEmpty()) {
+            return "No specific blocking conditions found";
+        }
+        
+        StringBuilder summary = new StringBuilder();
+        summary.append("Root causes preventing satisfaction (").append(leafBlockingConditions.size()).append("):\n");
+        
+        for (int i = 0; i < leafBlockingConditions.size(); i++) {
+            Condition condition = leafBlockingConditions.get(i);
+            summary.append("  ").append(i + 1).append(") ")
+                   .append(condition.getDescription())
+                   .append(" (").append(condition.getClass().getSimpleName()).append(")");
+            
+            // Add progress information if available
+            double progress = condition.getProgressPercentage();
+            if (progress > 0 && progress < 100) {
+                summary.append(" - ").append(String.format("%.1f%%", progress)).append(" complete");
+            }
+            
+            if (i < leafBlockingConditions.size() - 1) {
+                summary.append("\n");
+            }
+        }
+        
+        return summary.toString();
+    }
+    
+    /**
+     * Base implementation for estimated satisfaction time in logical conditions.
+     * This is overridden by specific logical condition types (And/Or) to provide
+     * appropriate logic for their semantics.
+     * 
+     * @return Optional containing the estimated duration until satisfaction, or empty if not determinable
+     */
+    @Override
+    public Optional<Duration> getEstimatedTimeWhenIsSatisfied() {
+        if (conditions.isEmpty()) {
+            return Optional.of(Duration.ZERO);
+        }
+        
+        // This base implementation should be overridden by concrete classes
+        // Default behavior: return empty if we can't determine
+        return Optional.empty();
     }
 }
 

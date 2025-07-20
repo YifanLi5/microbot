@@ -15,12 +15,15 @@ public enum SchedulerState {
     SCHEDULING("SCHEDULING", "Scheduler is running and monitoring", new Color(76, 175, 80)),
     STARTING_PLUGIN("Starting Plugin", "Starting a scheduled plugin", new Color(200, 230, 0)),
     RUNNING_PLUGIN("Running Plugin", "Scheduled plugin is running", new Color(0, 200, 83)),
+    RUNNING_PLUGIN_PAUSED("Plugin Paused", "Current plugin execution is paused", new Color(255, 140, 0)),
+    SCHEDULER_PAUSED("Scheduler Paused", "All scheduler activities are paused", new Color(255, 165, 0)),
     WAITING_FOR_LOGIN("Waiting for Login", "Waiting for user to log in", new Color(255, 215, 0)),
     HARD_STOPPING_PLUGIN("Hard Stopping Plugin", "Stopping the current plugin", new Color(255, 120, 0)),
     SOFT_STOPPING_PLUGIN("Soft Stopping Plugin", "Stopping the current plugin", new Color(255, 120, 0)),
     HOLD("Stopped", "Scheduler was manually stopped", new Color(244, 67, 54)),
     ERROR("Error", "Scheduler encountered an error", new Color(255, 0, 0)),
-    SHORT_BREAK("Short Break", "Taking a short break until next plugin", new Color(100, 149, 237)),
+    BREAK("Break", "Taking a break until next plugin", new Color(100, 149, 237)),
+    PLAYSCHEDULE_BREAK("Play Schedule Break", "Braking based on the configured Play Schedule", new Color(100, 149, 237)),
     WAITING_FOR_SCHEDULE("Next Schedule Soon", "Waiting for upcoming scheduled plugin", new Color(147, 112, 219)),
     WAITING_FOR_STOP_CONDITION("Waiting For Stop Condition", "Waiting For Stop Condition", new Color(255, 140, 0)),
     LOGIN("Login", "Try To Login", new Color(255, 215, 0));
@@ -53,16 +56,15 @@ public enum SchedulerState {
         this != SchedulerState.INITIALIZING &&
         this != SchedulerState.ERROR &&
         this != SchedulerState.HOLD &&
-        this != SchedulerState.READY;
+        this != SchedulerState.READY && !isPaused();
     }
 
     /**
      * Determines if the scheduler is actively running a plugin or about to run one
      */
-    public boolean isActivelyRunning() {
+    public boolean isPluginRunning() {
         return isSchedulerActive() && 
-               (this == SchedulerState.RUNNING_PLUGIN
-               );
+               (this == SchedulerState.RUNNING_PLUGIN);
     }
     public boolean isAboutStarting() {
         return this == SchedulerState.STARTING_PLUGIN || this== SchedulerState.WAITING_FOR_STOP_CONDITION ||
@@ -74,9 +76,12 @@ public enum SchedulerState {
      */
     public boolean isWaiting() {
         return isSchedulerActive() &&
-               (this == SchedulerState.SCHEDULING ||
+               (               this == SchedulerState.SCHEDULING ||
                this == SchedulerState.WAITING_FOR_SCHEDULE ||
-               this == SchedulerState.SHORT_BREAK);
+               this == SchedulerState.BREAK || this == SchedulerState.PLAYSCHEDULE_BREAK);
+    }
+    public boolean isBreaking() {
+        return (this == SchedulerState.BREAK || this == SchedulerState.PLAYSCHEDULE_BREAK);
     }
 
     public boolean isInitializing() {
@@ -86,4 +91,9 @@ public enum SchedulerState {
         return this == SchedulerState.SOFT_STOPPING_PLUGIN ||
         this == SchedulerState.HARD_STOPPING_PLUGIN;
     }
+    public boolean isPaused() {
+            return this == SchedulerState.SCHEDULER_PAUSED ||
+                   this == SchedulerState.RUNNING_PLUGIN_PAUSED;
+    }
+
 }

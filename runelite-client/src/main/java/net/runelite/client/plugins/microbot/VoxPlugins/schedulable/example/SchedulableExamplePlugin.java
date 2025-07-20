@@ -71,8 +71,7 @@ public class SchedulableExamplePlugin extends Plugin implements SchedulablePlugi
     private WorldPoint lastLocation = null;
     private int itemsCollected = 0;
     private int npcKilled = 0;
-    private LocationStartNotificationOverlay locationOverlay;
-    private Condition currentCondition;
+    private LocationStartNotificationOverlay locationOverlay;    
     private LockCondition lockCondition;
     private LogicalCondition startCondition = null;
     private LogicalCondition stopCondition = null;
@@ -92,7 +91,7 @@ public class SchedulableExamplePlugin extends Plugin implements SchedulablePlugi
             String reason = config.finishReason() + " (success)";
             boolean success = true;
             log.info("Manually triggering plugin finish: reason='{}', success={}", reason, success);
-            reportFinished(reason, success);
+            Microbot.getClientThread().invokeLater( () ->  {reportFinished(reason, success); return true;});
         }
     };
      // HotkeyListener for testing PluginScheduleEntryFinishedEvent
@@ -102,7 +101,7 @@ public class SchedulableExamplePlugin extends Plugin implements SchedulablePlugi
             String reason = config.finishReason()+ " (not success)";
             boolean success = false;
             log.info("Manually triggering plugin finish: reason='{}', success={}", reason, success);
-            reportFinished(reason, success);
+            Microbot.getClientThread().invokeLater( () ->  {reportFinished(reason, success); return true;});
         }
     };
     
@@ -110,7 +109,12 @@ public class SchedulableExamplePlugin extends Plugin implements SchedulablePlugi
     private final HotkeyListener lockConditionHotkeyListener = new HotkeyListener(() -> config.lockConditionHotkey()) {
         @Override
         public void hotkeyPressed() {
-            boolean newState = toggleLock(currentCondition);
+            log.info("Toggling lock condition for plugin: {}", getName());
+            if (stopCondition == null || stopCondition.getConditions().isEmpty()) {
+                log.warn("Stop condition is not initialized. Cannot toggle lock condition.");
+                return;
+            }
+            boolean newState = toggleLock((Condition)(stopCondition));
             log.info("Lock condition toggled: {}", newState ? "LOCKED - " + config.lockDescription() : "UNLOCKED");
         }
     };
@@ -267,10 +271,12 @@ public class SchedulableExamplePlugin extends Plugin implements SchedulablePlugi
          // Add a lock condition that can be toggled manually
          // NOTE: This condition uses AND logic with the other conditions since it's in an AND condition
          AndCondition andCondition = new AndCondition();
-         andCondition.addCondition(orCondition);
-         andCondition.addCondition(lockCondition);
-         this.currentCondition = andCondition;         
-         //log.info("\nCreated stop condition: \n{}", andCondition.getDescription());
+         //andCondition.addCondition(orCondition);
+         andCondition.addCondition(lockCondition);         
+         
+         List<LockCondition> all = andCondition.findAllLockConditions();
+         log.info("\nCreated stop condition: \n{}"+"\nFound {} lock conditions in stop condition: {}", andCondition.getDescription(), all.size(), all);
+    
          return andCondition;
        
     }
@@ -657,18 +663,22 @@ public class SchedulableExamplePlugin extends Plugin implements SchedulablePlugi
             if (Microbot.isLoggedIn()) {
                 currentLocation = Rs2Player.getWorldLocation();
             }
+            if ( Microbot.getConfigManager() == null) {
+                log.warn("Cannot save last location - ConfigManager or current location is null");
+                return;
+            }
             Microbot.getConfigManager().setConfiguration("SchedulableExample", "lastLocation", currentLocation);
-            log.info("Scheduling stop for plugin: {}", event.getPlugin().getClass().getSimpleName());
-            
+            log.info("onPluginScheduleEntrySoftStopEvent - Scheduling stop for plugin: {}", event.getPlugin().getClass().getSimpleName());
+            Microbot.stopPlugin(this);
             // Schedule the stop operation on the client thread
-            Microbot.getClientThread().invokeLater(() -> {
-                try {                    
-                    Microbot.getPluginManager().setPluginEnabled(this, false);
-                    Microbot.getPluginManager().stopPlugin(this);
-                } catch (Exception e) {
-                    log.error("Error stopping plugin", e);
-                }
-            });
+            // Microbot.getClientThread().invokeLater(() -> {
+            //     try {                    
+            //         Microbot.getPluginManager().setPluginEnabled(this, false);
+            //         Microbot.getPluginManager().stopPlugin(this);
+            //     } catch (Exception e) {
+            //         log.error("Error stopping plugin", e);
+            //     }
+            // });
         }
     }
     

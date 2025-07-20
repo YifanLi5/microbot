@@ -125,6 +125,14 @@ public interface QoLConfig extends Config {
     )
     String craftingSection = "craftingSection";
 
+    // Section for Auto Prayer
+    @ConfigSection(
+        name = "Auto Prayer",
+        description = "Settings for automatic protection prayers against players",
+        position = 90
+    )
+    String autoPrayerSection = "autoPrayerSection";
+
     // boolean to render Max Hit Overlay
     @ConfigItem(
             keyName = "renderMaxHitOverlay",
@@ -170,6 +178,18 @@ public interface QoLConfig extends Config {
             section = doLastSection
     )
     default boolean useDoLastAnvil() {
+        return true;
+    }
+
+    // boolean to use DoLast action on cooking
+    @ConfigItem(
+            keyName = "useDoLastCooking",
+            name = "Use Do-Last Cooking",
+            description = "Use Do-Last Cooking",
+            position = 3,
+            section = doLastSection
+    )
+    default boolean useDoLastCooking() {
         return true;
     }
 
@@ -258,12 +278,23 @@ public interface QoLConfig extends Config {
         return true;
     }
 
+    // boolean to enable Potion Manager
+    @ConfigItem(
+            keyName = "enablePotionManager",
+            name = "Auto Potion Manager",
+            description = "Toggle the Potion Manager on or off",
+            position = 0,
+            section = upkeepSection
+    )
+    default boolean enablePotionManager() {
+        return false;
+    }
     // boolean to auto eat food
     @ConfigItem(
             keyName = "autoEatFood",
             name = "Auto Eat Food",
             description = "Auto Eat Food",
-            position = 0,
+            position = 2,
             section = upkeepSection
     )
     default boolean autoEatFood() {
@@ -290,8 +321,8 @@ public interface QoLConfig extends Config {
     @ConfigItem(
             keyName = "autoDrinkPrayerPot",
             name = "Auto Drink Prayer Pot",
-            description = "Auto Drink Prayer Pot",
-            position = 0,
+            description = "Auto Drink Prayer Pot (if potion manager is enabled this setting will be ignored)",
+            position = 1,
             section = upkeepSection
     )
     default boolean autoDrinkPrayerPot() {
@@ -306,8 +337,8 @@ public interface QoLConfig extends Config {
     @ConfigItem(
             keyName = "drinkPrayerPotPoints",
             name = "Drink Prayer Pot Points",
-            description = "Drink Prayer Pot Points",
-            position = 0,
+            description = "Drink Prayer Pot Points (if potion manager is enabled this setting will be ignored)",
+            position = 1,
             section = upkeepSection
     )
     default int drinkPrayerPotPoints() {
@@ -855,4 +886,41 @@ public interface QoLConfig extends Config {
     default boolean useQuickTeleportToHouse() {
         return true;
     }
+
+    // boolean to auto pray against player attacks
+    @ConfigItem(
+        keyName = "autoPrayAgainstPlayers",
+        name = "Auto Pray Against Players",
+        description = "Automatically activate protection prayers when attacked by other players",
+        position = 0,
+        section = autoPrayerSection
+    )
+    default boolean autoPrayAgainstPlayers() {
+        return false;
+    }
+
+    // boolean to enable Protect Item with anti-PK prayers
+    @ConfigItem(
+        keyName = "enableProtectItemPrayer",
+        name = "Enable Protect Item Prayer",
+        description = "Toggle using Protect Item prayer alongside protection prayers when attacked by a player",
+        position = 1,
+        section = autoPrayerSection
+    )
+    default boolean enableProtectItemPrayer() {
+        return true;
+    }
+
+    // Aggressive Anti-PK mode
+    @ConfigItem(
+        keyName = "aggressiveAntiPkMode",
+        name = "Aggressive Anti-PK Mode",
+        description = "Follow and swap prayers based on the attacker's equipped weapon for 10 seconds after being attacked.",
+        position = 2,
+        section = autoPrayerSection
+    )
+    default boolean aggressiveAntiPkMode() {
+        return false;
+    }
+
 }

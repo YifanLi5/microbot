@@ -67,7 +67,7 @@ public class ClientThread
 	@SneakyThrows
 	@Deprecated(since = "1.7.9", forRemoval = true)
 	public <T> T runOnClientThread(Callable<T> method) {
-		if (Microbot.getClient().isClientThread()) {
+		if (client.isClientThread()) {
 			return method.call();
 		}
 		final FutureTask<T> task = new FutureTask<>(method);
@@ -79,8 +79,9 @@ public class ClientThread
                 Thread.currentThread().interrupt();
 				return null;
             }
+			task.cancel(true);
 			if (!Microbot.isDebug()) {
-				Microbot.log("Exception during task execution: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+				log.error("Exception during task execution: {}: {}\n{}", e.getClass().getSimpleName(), e.getMessage(),e);
 			}
 			return null;
 		}
@@ -94,12 +95,12 @@ public class ClientThread
 	 */
 	@SneakyThrows
 	public <T> Optional<T> runOnClientThreadOptional(Callable<T> method) {
-		if (Microbot.getClient().isClientThread()) {
+		if (client.isClientThread()) {
 			try {
 				return Optional.ofNullable(method.call());
 			} catch (Exception e) {
 				if (!Microbot.isDebug()) {
-					Microbot.log("Exception in client thread execution: " + e.getMessage());
+					log.error("Exception in client thread execution: {}\n{}", e.getMessage(),e);
 				}
 				return Optional.empty();
 			}
@@ -112,9 +113,10 @@ public class ClientThread
 			if (e instanceof InterruptedException) {
 				Thread.currentThread().interrupt();
 				return Optional.empty();
-			}
+			}			
+			task.cancel(true);
 			if (!Microbot.isDebug()) {
-				Microbot.log("Exception during task execution: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+				log.error("Exception during task execution: {}: {}\n{}", e.getClass().getSimpleName(), e.getMessage(),e);
 			}
 			return Optional.empty();
 		}
@@ -125,7 +127,7 @@ public class ClientThread
 	 * @param method
 	 */
 	@SneakyThrows
-	public void runOnSeperateThread(Callable method) {
+	public void runOnSeperateThread(Callable<?> method) {
 		if (scheduledFuture != null && !scheduledFuture.isDone()) return;
 		scheduledFuture = scheduledExecutorService.submit(() -> method.call());
 	}
