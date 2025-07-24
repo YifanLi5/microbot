@@ -13,6 +13,7 @@ import net.runelite.client.plugins.microbot.util.misc.Rs2Potion;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
@@ -34,7 +35,7 @@ public class BankState extends StateNode {
     }
 
     private static BankState instance;
-    private static boolean tookMicroBreak = false;
+    static boolean idled;
 
     WithdrawOre withdrawOre = new WithdrawOre(config);
     FillCoalBag fillCoalBag = new FillCoalBag();
@@ -49,6 +50,7 @@ public class BankState extends StateNode {
     public static BankState initInstance(BFScript script) {
         if (instance == null)
             instance = new BankState(script);
+        BankState.idled = false;
         return instance;
     }
 
@@ -65,16 +67,16 @@ public class BankState extends StateNode {
     public void initStateSteps() {
         this.stateSteps = new LinkedHashMap<>();
         this.stateSteps.put(RestockStates.OPEN_BANK, () ->  {
-            tookMicroBreak = false;
             if(Rs2Bank.isOpen()) {
                 Microbot.log("Bank is already open");
                 return true;
             }
+
             GameObject chest = Rs2GameObject.findBank();
             Rs2GameObject.interact(chest, "use");
             HoverBoundsUtil.hoverRandom();
 
-            tookMicroBreak = Rs2Antiban.takeMicroBreakByChance();
+            if(!idled) IdleSleep.chanceIdleSleep();
 
             return ExtendableConditionalSleep.sleep(5000, () -> Rs2Bank.isOpen(), null, () -> Rs2Player.isMoving());
         });
@@ -84,7 +86,7 @@ public class BankState extends StateNode {
                 return Rs2Bank.depositAll(item -> item.getName().contains("bar"));
             }
 
-            if(!tookMicroBreak) tookMicroBreak = Rs2Antiban.takeMicroBreakByChance();
+            if(!idled) IdleSleep.chanceIdleSleep();
 
             return true;
         });
@@ -98,7 +100,7 @@ public class BankState extends StateNode {
         });
         this.stateSteps.put(RestockStates.WITHDRAW_ORE, () -> {
             try {
-                if(!tookMicroBreak) tookMicroBreak = Rs2Antiban.takeMicroBreakByChance();
+                if(!idled) IdleSleep.chanceIdleSleep();
                 return MicroAction.runActionsInRandomOrder(Arrays.asList(withdrawOre, fillCoalBag));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -112,6 +114,7 @@ public class BankState extends StateNode {
         if(coffer < 25000) {
             RefillCofferState.getInstance().runStateSteps();
         }
+        idled = false;
         return super.runStateSteps();
     }
 

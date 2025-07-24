@@ -6,6 +6,7 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManager;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Hybrid.*;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard.*;
@@ -38,14 +39,13 @@ public class BFScript extends Script {
         }
 
         StateManager.queueState(StartingState.getInstance());
+        IdleSleep.randomizeFields();
         Rs2Antiban.setActivityIntensity(ActivityIntensity.VERY_LOW);
         Rs2AntibanSettings.naturalMouse = true;
         Rs2AntibanSettings.dynamicActivity = true;
         Rs2AntibanSettings.dynamicIntensity = true;
-        Rs2AntibanSettings.actionCooldownChance = 0.1;
-        Rs2AntibanSettings.microBreakChance = 0.01;
-        Rs2AntibanSettings.microBreakDurationLow = 0;
-        Rs2AntibanSettings.microBreakDurationHigh = 3;
+
+
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             if (!super.run() || !Microbot.isLoggedIn()) {

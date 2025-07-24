@@ -9,6 +9,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
@@ -77,7 +78,7 @@ public class RetrieveBarsState extends StateNode {
             return true;
         });
         this.stateSteps.put(States.RETRIEVE_BARS, () -> {
-            Rs2Antiban.takeMicroBreakByChance();
+            IdleSleep.chanceIdleSleep();
             boolean allOreProcessed = script.sleepUntil(() -> config.barType().getNumOreInFurnace() <= 0);
             if(!allOreProcessed && config.barType().furnaceRequiresMoreCoal()) {
                 if(config.barType().furnaceRequiresMoreCoal()) {
