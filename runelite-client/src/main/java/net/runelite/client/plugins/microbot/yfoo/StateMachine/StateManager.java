@@ -13,7 +13,7 @@ import java.util.List;
 public class StateManager {
 
     public static boolean stopScript = false;
-    public final static boolean LOGOUT_ON_SCRIPT_STOP = false;
+    public final static boolean LOGOUT_ON_SCRIPT_STOP = true;
 
     static List<StateNode> initializedStates;
     static List<StateNode> nextStates;

@@ -34,11 +34,19 @@ public class BFScript extends Script {
             StateManager.addState(BankState.initInstance(this));
             StateManager.addState(DropOffRocksState.initInstance(this));
             StateManager.addState(RetrieveBarsState.initInstance(this));
+            StateManager.addState(RefillCofferState.initInstance(this));
         }
 
         StateManager.queueState(StartingState.getInstance());
         Rs2Antiban.setActivityIntensity(ActivityIntensity.VERY_LOW);
         Rs2AntibanSettings.naturalMouse = true;
+        Rs2AntibanSettings.dynamicActivity = true;
+        Rs2AntibanSettings.dynamicIntensity = true;
+        Rs2AntibanSettings.actionCooldownChance = 0.1;
+        Rs2AntibanSettings.microBreakChance = 0.01;
+        Rs2AntibanSettings.microBreakDurationLow = 0;
+        Rs2AntibanSettings.microBreakDurationHigh = 3;
+
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             if (!super.run() || !Microbot.isLoggedIn()) {
                 return;
@@ -53,7 +61,7 @@ public class BFScript extends Script {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-        }, 0, 600, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
         return true;
     }
 

@@ -23,6 +23,10 @@ public class RngUtil {
         return ThreadLocalRandom.current().nextInt((max - min) + 1) + min;
     }
 
+    public static boolean boolD100Roll(int trueChance) {
+        return ThreadLocalRandom.current().nextInt(101) <= trueChance;
+    }
+
     public static <T> T rollForWeightedAction(Map<T, Integer> weightedMap) {
         if (weightedMap.isEmpty()) {
             throw new IllegalArgumentException("Weighted map cannot be empty.");

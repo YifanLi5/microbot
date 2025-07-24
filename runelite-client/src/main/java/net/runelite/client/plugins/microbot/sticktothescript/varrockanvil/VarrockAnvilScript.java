@@ -52,7 +52,7 @@ public class VarrockAnvilScript extends Script {
         Rs2AntibanSettings.dynamicActivity = true;
         Rs2AntibanSettings.dynamicIntensity = true;
         Rs2AntibanSettings.actionCooldownChance = 0.1;
-        Rs2AntibanSettings.microBreakChance = 0.01;
+        Rs2AntibanSettings.microBreakChance = 0.005;
         Rs2AntibanSettings.microBreakDurationLow = 0;
         Rs2AntibanSettings.microBreakDurationHigh = 3;
 

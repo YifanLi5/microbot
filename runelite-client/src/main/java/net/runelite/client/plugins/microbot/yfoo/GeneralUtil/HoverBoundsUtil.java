@@ -22,7 +22,6 @@ public class HoverBoundsUtil {
         hoverBounds = new HashMap<>();
     }
 
-    // Method to handle hovering by key
     public static void hover(String key)  {
         if (!hoverBounds.containsKey(key)) {
             Microbot.log("WARN: hoverBounds does not contain key: " + key);
@@ -40,6 +39,7 @@ public class HoverBoundsUtil {
     }
 
     public static void hoverRandom() {
+        if(ThreadLocalRandom.current().nextInt(100) < 65) return;
         if (hoverBounds.isEmpty()) {
             Microbot.log("WARN: hoverBounds is empty, cannot hover randomly.");
             return;

@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard;
 import net.runelite.api.Varbits;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -64,11 +65,11 @@ public class RetrieveBarsState extends StateNode {
     public void initStateSteps() {
         this.stateSteps = new LinkedHashMap<>();
         this.stateSteps.put(States.MOVE_TO_DISPENSER, () -> {
+            script.sleep(RngUtil.gaussian(400, 200, 0, 1500));
             if(config.barType().getNumBarsInDispenser() > 0) {
                 Microbot.log("bars already in dispenser");
                 return true;
             }
-            script.sleep(RngUtil.gaussian(400, 200, 0, 1500));
             if(Rs2Player.distanceTo(new WorldPoint(1940, 4962, 0)) > 3) {
                 WorldPoint randomWP = RngUtil.rollForWeightedAction(worldPointWeightings);
                 Rs2Walker.walkFastCanvas(randomWP);
@@ -76,6 +77,7 @@ public class RetrieveBarsState extends StateNode {
             return true;
         });
         this.stateSteps.put(States.RETRIEVE_BARS, () -> {
+            Rs2Antiban.takeMicroBreakByChance();
             boolean allOreProcessed = script.sleepUntil(() -> config.barType().getNumOreInFurnace() <= 0);
             if(!allOreProcessed && config.barType().furnaceRequiresMoreCoal()) {
                 if(config.barType().furnaceRequiresMoreCoal()) {

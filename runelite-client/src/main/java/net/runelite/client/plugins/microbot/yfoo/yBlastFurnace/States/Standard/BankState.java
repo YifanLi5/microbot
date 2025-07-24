@@ -2,7 +2,9 @@ package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard;
 
 import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -32,6 +34,7 @@ public class BankState extends StateNode {
     }
 
     private static BankState instance;
+    private static boolean tookMicroBreak = false;
 
     WithdrawOre withdrawOre = new WithdrawOre(config);
     FillCoalBag fillCoalBag = new FillCoalBag();
@@ -62,35 +65,54 @@ public class BankState extends StateNode {
     public void initStateSteps() {
         this.stateSteps = new LinkedHashMap<>();
         this.stateSteps.put(RestockStates.OPEN_BANK, () ->  {
+            tookMicroBreak = false;
             if(Rs2Bank.isOpen()) {
                 Microbot.log("Bank is already open");
                 return true;
             }
             GameObject chest = Rs2GameObject.findBank();
-            boolean result = Rs2GameObject.interact(chest, "use") && ExtendableConditionalSleep.sleep(5000, () -> Rs2Bank.isOpen(), null, () -> Rs2Player.isMoving());
+            Rs2GameObject.interact(chest, "use");
             HoverBoundsUtil.hoverRandom();
-            script.sleep(RngUtil.gaussian(400, 100, 100, 600));
-            return result;
+
+            tookMicroBreak = Rs2Antiban.takeMicroBreakByChance();
+
+            return ExtendableConditionalSleep.sleep(5000, () -> Rs2Bank.isOpen(), null, () -> Rs2Player.isMoving());
         });
         this.stateSteps.put(RestockStates.DEPOSIT_BARS, () -> {
             if(Rs2Inventory.onlyContains(ItemID.COAL_BAG_12019)) return true;
-            return Rs2Bank.depositAll(item -> item.getName().contains("bar"));
+            if(Rs2Inventory.contains(item -> item.getName().contains("bar"))) {
+                return Rs2Bank.depositAll(item -> item.getName().contains("bar"));
+            }
+
+            if(!tookMicroBreak) tookMicroBreak = Rs2Antiban.takeMicroBreakByChance();
+
+            return true;
         });
         this.stateSteps.put(RestockStates.CHECK_RUN_ENERGY, () -> {
             if(!rollForRunRestore(20)) {
                 Microbot.log("Skip stamina");
                 return true;
             }
+
             return withdrawAndUseStamina();
         });
         this.stateSteps.put(RestockStates.WITHDRAW_ORE, () -> {
             try {
+                if(!tookMicroBreak) tookMicroBreak = Rs2Antiban.takeMicroBreakByChance();
                 return MicroAction.runActionsInRandomOrder(Arrays.asList(withdrawOre, fillCoalBag));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
         });
+    }
+
+    @Override
+    public boolean runStateSteps() throws InterruptedException {
+        int coffer = Microbot.getVarbitValue(VarbitID.BLAST_FURNACE_COFFER);
+        if(coffer < 25000) {
+            RefillCofferState.getInstance().runStateSteps();
+        }
+        return super.runStateSteps();
     }
 
     @Override
@@ -126,7 +148,7 @@ public class BankState extends StateNode {
                 .orElse(null);
 
         if (staminaPotionItem == null) {
-            Microbot.showMessage("Unable to find Stamina Potion but hasItem?");
+
             return false;
         }
 

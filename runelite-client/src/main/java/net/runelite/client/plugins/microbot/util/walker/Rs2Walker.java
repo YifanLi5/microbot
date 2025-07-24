@@ -957,7 +957,7 @@ public class Rs2Walker {
         return false;
     }
 
-    private static boolean handleDoors(List<WorldPoint> path, int index) {
+    public static boolean handleDoors(List<WorldPoint> path, int index) {
         if (ShortestPathPlugin.getPathfinder() == null || index >= path.size() - 1) return false;
 
         List<String> doorActions = List.of("pay-toll", "pick-lock", "walk-through", "go-through", "open");
@@ -3262,4 +3262,5 @@ public class Rs2Walker {
             return WalkerState.EXIT;
         }
     }
+
 }
