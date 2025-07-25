@@ -11,7 +11,7 @@ public class IdleSleep {
     public static int sessionStdDev;
 
     public static void randomizeFields() {
-        idleChance = ThreadLocalRandom.current().nextDouble(0.03, 0.07);
+        idleChance = ThreadLocalRandom.current().nextDouble(0.01, 0.05);
         sessionMean = ThreadLocalRandom.current().nextInt(4000, 8000);
         sessionStdDev = sessionMean / ThreadLocalRandom.current().nextInt(8, 12);
     }
@@ -20,10 +20,14 @@ public class IdleSleep {
         boolean slept = Math.random() < idleChance;
         Microbot.log("slept: " + slept);
         if(slept) {
-            int sleepTime = RngUtil.gaussian(sessionMean, sessionStdDev, 0, 12000);
-            Microbot.log("Idle for %dms", sleepTime);
-            Global.sleep(sleepTime);
+            idleSleep(sessionMean, sessionStdDev);
         }
         return slept;
+    }
+
+    public static void idleSleep(int mean, int stddev) {
+        int sleepTime = RngUtil.gaussian(sessionMean, sessionStdDev, 0, 12000);
+        Microbot.log("Idle for %dms", sleepTime);
+        Global.sleep(sleepTime);
     }
 }
