@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.yfoo.GeneralUtil;
 
+import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.shortestpath.ShortestPathPlugin;
@@ -17,17 +18,55 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntilTrue;
 import static net.runelite.client.plugins.microbot.util.walker.Rs2Walker.*;
 
 public class CustomWalker {
-    private static WalkerState walkTo(WorldPoint target, int distance) {
-        try {
-            boolean isInit = sleepUntilTrue(() -> ShortestPathPlugin.getPathfinder() != null, 100, 2000);
-            if (!isInit) {
-                Microbot.log("Pathfinder took to long to initialize, exiting walker: 140");
-                setTarget(null);
-                return WalkerState.EXIT;
-            }
 
+    static WorldPoint currentTarget;
+
+    public static boolean walkTo(WorldPoint target, int distance) {
+        return walkWithState(target, distance) == WalkerState.ARRIVED;
+    }
+
+    public static WalkerState walkWithState(WorldPoint target, int distance) {
+        if (Rs2Tile.getReachableTilesFromTile(Rs2Player.getWorldLocation(), distance).containsKey(target)
+                || !Rs2Tile.isWalkable(LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), target)) && Rs2Player.getWorldLocation().distanceTo(target) <= distance) {
+            return WalkerState.ARRIVED;
+        }
+        if (ShortestPathPlugin.getPathfinder() != null && !ShortestPathPlugin.getPathfinder().isDone())
+            return WalkerState.MOVING;
+        if ((currentTarget != null && currentTarget.equals(target)) && ShortestPathPlugin.getMarker() != null)
+            return WalkerState.MOVING;
+        setTarget(target);
+        ShortestPathPlugin.setReachedDistance(distance);
+
+        if (Microbot.getClient().isClientThread()) {
+            Microbot.log("Please do not call the walker from the main thread");
+            return WalkerState.EXIT;
+        }
+        /**
+         * When running the walkTo method from scripts
+         * the code will run on the script thread
+         * If you really like to run this on a seperate thread because you want to do
+         * other actions while walking you can wrap the walkTo from within the script
+         * on a seperate thread
+         */
+        return processShortWalk(target, distance);
+    }
+
+    private static WalkerState processShortWalk(WorldPoint target, int distance) {
+        try {
+
+            if (ShortestPathPlugin.getPathfinder() == null) {
+                if (ShortestPathPlugin.getMarker() == null) {
+                    setTarget(null);
+                }
+                boolean isInit = sleepUntilTrue(() -> ShortestPathPlugin.getPathfinder() != null, 100, 2000);
+                if (!isInit) {
+                    Microbot.log("Pathfinder took to long to initialize, exiting walker: 140");
+                    setTarget(null);
+                    return WalkerState.EXIT;
+                }
+            }
             if (!ShortestPathPlugin.getPathfinder().isDone()) {
-                boolean isDone = sleepUntilTrue(() -> ShortestPathPlugin.getPathfinder().isDone(), 100, 5000);
+                boolean isDone = sleepUntilTrue(() -> ShortestPathPlugin.getPathfinder().isDone(), 100, 10000);
                 if (!isDone) {
                     System.out.println("Pathfinder took to long to calculate path, exiting: 149");
                     setTarget(null);

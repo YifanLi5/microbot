@@ -71,9 +71,10 @@ public class RetrieveBarsState extends StateNode {
                 Microbot.log("bars already in dispenser");
                 return true;
             }
-            if(Rs2Player.distanceTo(new WorldPoint(1940, 4962, 0)) > 3) {
+            if(RngUtil.boolD100Roll(65) && Rs2Player.distanceTo(new WorldPoint(1940, 4962, 0)) > 3) {
                 WorldPoint randomWP = RngUtil.rollForWeightedAction(worldPointWeightings);
                 Rs2Walker.walkFastCanvas(randomWP);
+                script.sleep(RngUtil.gaussian(800, 300, 0, 2500));
             }
             return true;
         });
@@ -111,6 +112,6 @@ public class RetrieveBarsState extends StateNode {
 
     @Override
     public StateNode nextState() {
-        return BankState.getInstance();
+        return BreakState.getInstance();
     }
 }

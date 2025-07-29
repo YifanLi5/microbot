@@ -36,15 +36,13 @@ public class BFScript extends Script {
             StateManager.addState(DropOffRocksState.initInstance(this));
             StateManager.addState(RetrieveBarsState.initInstance(this));
             StateManager.addState(RefillCofferState.initInstance(this));
+            StateManager.addState(BreakState.initInstance(this));
         }
 
         StateManager.queueState(StartingState.getInstance());
         IdleSleep.randomizeFields();
         Rs2Antiban.setActivityIntensity(ActivityIntensity.VERY_LOW);
         Rs2AntibanSettings.naturalMouse = true;
-        Rs2AntibanSettings.dynamicActivity = true;
-        Rs2AntibanSettings.dynamicIntensity = true;
-
 
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {

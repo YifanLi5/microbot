@@ -18,7 +18,6 @@ public class IdleSleep {
 
     public static boolean chanceIdleSleep() {
         boolean slept = Math.random() < idleChance;
-        Microbot.log("slept: " + slept);
         if(slept) {
             idleSleep(sessionMean, sessionStdDev);
         }

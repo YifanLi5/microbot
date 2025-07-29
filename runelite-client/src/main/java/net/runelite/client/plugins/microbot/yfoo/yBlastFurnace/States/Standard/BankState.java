@@ -101,7 +101,8 @@ public class BankState extends StateNode {
         this.stateSteps.put(RestockStates.WITHDRAW_ORE, () -> {
             try {
                 if(!idled) IdleSleep.chanceIdleSleep();
-                return MicroAction.runActionsInRandomOrder(Arrays.asList(withdrawOre, fillCoalBag));
+                MicroAction.runActionsInRandomOrder(Arrays.asList(withdrawOre, fillCoalBag));
+                return Rs2Inventory.isFull();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

@@ -16,6 +16,7 @@ import net.runelite.client.plugins.microbot.util.Global;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.CustomWalker;
 
 public interface AgilityCourseHandler
 {
@@ -160,7 +161,8 @@ public interface AgilityCourseHandler
 		if (playerWorldLocation.distanceTo(getStartPoint()) > 12)
 		{
 			Microbot.log("Going back to course's starting point");
-			Rs2Walker.walkTo(getStartPoint(), 2);
+			CustomWalker.walkTo(getStartPoint(), 6);
+			//Rs2Walker.walkTo(getStartPoint(), 6);
 			return true;
 		}
 		return false;

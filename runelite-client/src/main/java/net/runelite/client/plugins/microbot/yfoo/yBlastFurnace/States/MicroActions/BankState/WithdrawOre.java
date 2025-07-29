@@ -43,9 +43,7 @@ public class WithdrawOre extends MicroAction {
         HoverBoundsUtil.addBankItemHoverHounds(withdrawItem);
 
         Rs2Bank.withdrawAll(oreId);
-        boolean debug = Global.sleepUntil(() -> Rs2Inventory.contains(oreId), 2000);
-        Microbot.log("%s in inventory? %s", oreId, debug);
-        return debug;
+        return Global.sleepUntil(() -> Rs2Inventory.contains(oreId), 2000);
     }
 
     private int getOreIdToWithdraw() {
