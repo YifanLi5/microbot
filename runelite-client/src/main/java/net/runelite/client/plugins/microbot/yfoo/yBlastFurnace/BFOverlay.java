@@ -10,6 +10,9 @@ import javax.inject.Inject;
 import java.awt.*;
 
 public class BFOverlay extends OverlayPanel {
+
+    static int barsMade;
+
     @Inject
     BFOverlay(BFPlugin plugin)
     {
@@ -17,6 +20,7 @@ public class BFOverlay extends OverlayPanel {
         setPosition(OverlayPosition.TOP_LEFT);
         setNaughty();
     }
+
     @Override
     public Dimension render(Graphics2D graphics) {
         try {
@@ -29,7 +33,8 @@ public class BFOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder().build());
 
             panelComponent.getChildren().add(LineComponent.builder()
-                    .left(Microbot.status)
+                    .left("Bars Made")
+                    .right(String.valueOf(barsMade))
                     .build());
 
 
@@ -37,5 +42,13 @@ public class BFOverlay extends OverlayPanel {
             System.out.println(ex.getMessage());
         }
         return super.render(graphics);
+    }
+
+    public static void resetBars() {
+        barsMade = 0;
+    }
+
+    public static void incrementBars(int amt) {
+        barsMade += amt;
     }
 }

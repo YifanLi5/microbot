@@ -43,6 +43,7 @@ public class BFScript extends Script {
         IdleSleep.randomizeFields();
         Rs2Antiban.setActivityIntensity(ActivityIntensity.VERY_LOW);
         Rs2AntibanSettings.naturalMouse = true;
+        BFOverlay.resetBars();
 
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {

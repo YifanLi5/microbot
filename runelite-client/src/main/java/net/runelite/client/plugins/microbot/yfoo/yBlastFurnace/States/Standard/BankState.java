@@ -16,6 +16,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFOverlay;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
 import net.runelite.client.plugins.microbot.yfoo.MicroAction.MicroAction;
@@ -82,7 +83,9 @@ public class BankState extends StateNode {
         });
         this.stateSteps.put(RestockStates.DEPOSIT_BARS, () -> {
             if(Rs2Inventory.onlyContains(ItemID.COAL_BAG_12019)) return true;
-            if(Rs2Inventory.contains(item -> item.getName().contains("bar"))) {
+            int amt = Rs2Inventory.count(item -> item.getName().contains("bar"));
+            if(amt > 0) {
+                BFOverlay.incrementBars(amt);
                 return Rs2Bank.depositAll(item -> item.getName().contains("bar"));
             }
 

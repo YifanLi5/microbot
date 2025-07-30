@@ -71,7 +71,9 @@ public class RetrieveBarsState extends StateNode {
                 Microbot.log("bars already in dispenser");
                 return true;
             }
-            if(RngUtil.boolD100Roll(65) && Rs2Player.distanceTo(new WorldPoint(1940, 4962, 0)) > 3) {
+            if(Microbot.getVarbitValue(Varbits.BAR_DISPENSER) >= 2
+                    && RngUtil.boolD100Roll(35)
+            ) {
                 WorldPoint randomWP = RngUtil.rollForWeightedAction(worldPointWeightings);
                 Rs2Walker.walkFastCanvas(randomWP);
                 script.sleep(RngUtil.gaussian(800, 300, 0, 2500));

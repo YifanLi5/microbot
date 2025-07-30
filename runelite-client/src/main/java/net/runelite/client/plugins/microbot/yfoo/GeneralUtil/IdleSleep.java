@@ -25,7 +25,7 @@ public class IdleSleep {
     }
 
     public static void idleSleep(int mean, int stddev) {
-        int sleepTime = RngUtil.gaussian(sessionMean, sessionStdDev, 0, 12000);
+        int sleepTime = RngUtil.gaussian(mean, stddev, 0, 12000);
         Microbot.log("Idle for %dms", sleepTime);
         Global.sleep(sleepTime);
     }

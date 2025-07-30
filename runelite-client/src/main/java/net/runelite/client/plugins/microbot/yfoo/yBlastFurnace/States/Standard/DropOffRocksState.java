@@ -69,7 +69,8 @@ public class DropOffRocksState extends StateNode {
                 return name.equals("Coal") || name.endsWith("ore");
             })) {
                 Rs2GameObject.interact(ObjectID.CONVEYOR_BELT, "Put-ore-on");
-                IdleSleep.idleSleep(2500, 1000);
+                IdleSleep.idleSleep(1500, 500);
+                Microbot.log("hover??");
                 HoverBoundsUtil.hover("Coal bag");
                 boolean droppedOffOre = ExtendableConditionalSleep.sleep(4000,
                         successCondition,
