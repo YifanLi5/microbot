@@ -1107,6 +1107,94 @@ public class Rs2Walker {
         return false;
     }
 
+    public static boolean publicHandleDoors(List<WorldPoint> path, int index) {
+        if (ShortestPathPlugin.getPathfinder() == null || index >= path.size() - 1) return false;
+
+        List<String> doorActions = List.of("pay-toll", "pick-lock", "walk-through", "go-through", "open");
+        boolean isInstance = Microbot.getClient()
+                .getTopLevelWorldView()
+                .getScene()
+                .isInstance();
+
+        WorldPoint rawFrom = path.get(index);
+        WorldPoint rawTo = path.get(index + 1);
+        WorldPoint fromWp = isInstance
+                ? Rs2WorldPoint.convertInstancedWorldPoint(rawFrom)
+                : rawFrom;
+        WorldPoint toWp = isInstance
+                ? Rs2WorldPoint.convertInstancedWorldPoint(rawTo)
+                : rawTo;
+
+        boolean diagonal = Math.abs(fromWp.getX() - toWp.getX()) > 0
+                && Math.abs(fromWp.getY() - toWp.getY()) > 0;
+
+        for (int offset = 0; offset <= 1; offset++) {
+            int doorIdx = index + offset;
+            if (doorIdx >= path.size()) continue;
+
+            WorldPoint rawDoorWp = path.get(doorIdx);
+            WorldPoint doorWp = isInstance
+                    ? Rs2WorldPoint.convertInstancedWorldPoint(rawDoorWp)
+                    : rawDoorWp;
+
+            List<WorldPoint> probes = new ArrayList<>();
+            probes.add(doorWp);
+            if (diagonal) {
+                probes.add(new WorldPoint(toWp.getX(), fromWp.getY(), doorWp.getPlane()));
+                probes.add(new WorldPoint(fromWp.getX(), toWp.getY(), doorWp.getPlane()));
+            }
+
+            for (WorldPoint probe : probes) {
+                boolean adjacentToPath = probe.distanceTo(fromWp) <= 1 || probe.distanceTo(toWp) <= 1;
+                if (!adjacentToPath || !Objects.equals(probe.getPlane(), Microbot.getClient().getLocalPlayer().getWorldLocation().getPlane())) continue;
+
+                WallObject wall = Rs2GameObject.getWallObject(o -> o.getWorldLocation().equals(probe), probe, 3);
+
+                TileObject object = (wall != null)
+                        ? wall
+                        : Rs2GameObject.getGameObject(o -> o.getWorldLocation().equals(probe), probe, 3);
+                if (object == null) continue;
+
+                ObjectComposition comp = Rs2GameObject.convertToObjectComposition(object);
+                // We include the name "null" here to ignore imposter objects
+                if (comp == null || comp.getName().equals("null")) continue;
+
+                String action = Arrays.stream(comp.getActions())
+                        .filter(Objects::nonNull)
+                        .filter(act -> doorActions.stream().anyMatch(dact -> act.toLowerCase().startsWith(dact.toLowerCase())))
+                        .min(Comparator.comparing(act -> doorActions.indexOf(doorActions.stream().filter(dact -> act.toLowerCase().startsWith(dact)).findFirst().orElse(""))))
+                        .orElse(null);
+
+                if (action == null) continue;
+
+                boolean found = false;
+
+                if (object instanceof WallObject) {
+                    int orientation = ((WallObject) object).getOrientationA();
+
+                    if (searchNeighborPoint(orientation, probe, fromWp) || searchNeighborPoint(orientation, probe, toWp)) {
+                        found = true;
+                    }
+                } else {
+                    String name = comp.getName();
+                    if (name != null && name.toLowerCase().contains("door")) {
+                        found = true;
+                    }
+                }
+
+                if (found) {
+                    if (!handleDoorException(object, action)) {
+                        Rs2GameObject.interact(object, action);
+                        Rs2Player.waitForWalking();
+                    }
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static boolean handleDoorException(TileObject object, String action) {
         if (isInStrongholdOfSecurity()) {
             return handleStrongholdOfSecurityAnswer(object, action);

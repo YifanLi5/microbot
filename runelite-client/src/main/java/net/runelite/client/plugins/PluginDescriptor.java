@@ -32,6 +32,7 @@ import java.lang.annotation.*;
 @Documented
 public @interface PluginDescriptor
 {
+	String yfoo = "<html>[<font color=#0d937b>Y</font>]";
     String DrDeath = "<html>[<font color=#FF0000>DD</font>]";
     String Bee = "<html>[<font color=#FFD700><b>B</b></font>] ";
     String Nate = "<html>[<font color=orange>N</font>] ";
@@ -71,6 +72,9 @@ public @interface PluginDescriptor
   String Cardew = "<html>[<font color=#824BA3>CD</font>]";
 	String Bolado = "<html>[<font color=#FF0000><b>\uD83D\uDE21</b></font>] ";
  	String Choken = "<html>[<font color=#8A2BE2>\u03A9</font>] ";
+
+
+
 
 	String name();
 
