@@ -10,7 +10,8 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
 
 import net.runelite.client.plugins.microbot.yfoo.MicroAction.MicroAction;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
@@ -32,8 +33,8 @@ public class BankState2 extends StateNode {
 
     private static BankState2 instance;
 
-    WithdrawOre2 withdrawOre = new WithdrawOre2(config);
-    FillCoalBag fillCoalBag = new FillCoalBag();
+    WithdrawOre2 withdrawOre;
+    FillCoalBag fillCoalBag;
 
     public static BankState2 getInstance() {
         if(instance == null) {
@@ -42,14 +43,17 @@ public class BankState2 extends StateNode {
         return instance;
     }
 
-    public static BankState2 initInstance(BFScript script) {
+    public static BankState2 initInstance(Script script) {
         if (instance == null)
             instance = new BankState2(script);
         return instance;
     }
 
-    public BankState2(BFScript script) {
+    public BankState2(Script script) {
         super(script);
+        BFConfig config = script.config;
+        this.withdrawOre = new WithdrawOre2(config);
+        this.fillCoalBag = new FillCoalBag();
     }
 
     @Override

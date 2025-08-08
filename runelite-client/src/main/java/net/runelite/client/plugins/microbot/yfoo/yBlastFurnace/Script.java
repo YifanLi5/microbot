@@ -1,7 +1,6 @@
 package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
@@ -14,12 +13,12 @@ import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.StartingSt
 
 import java.util.concurrent.TimeUnit;
 
-public class BFScript extends Script {
+public class Script extends net.runelite.client.plugins.microbot.Script {
 
     public static final String version = "0.01";
     public BFConfig config;
 
-    public BFScript(BFConfig config) {
+    public Script(BFConfig config) {
         this.config = config;
     }
 

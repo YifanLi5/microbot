@@ -7,7 +7,7 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -29,13 +29,13 @@ public class BreakState extends StateNode {
         return instance;
     }
 
-    public static BreakState initInstance(BFScript script) {
+    public static BreakState initInstance(Script script) {
         if (instance == null)
             instance = new BreakState(script);
         return instance;
     }
 
-    private BreakState(BFScript script) {
+    private BreakState(Script script) {
         super(script);
         this.lastBreakTs = Instant.now();
     }

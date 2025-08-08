@@ -6,6 +6,7 @@ import net.runelite.api.ItemID;
 import net.runelite.api.Varbits;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
@@ -95,8 +96,7 @@ public class BFUtils {
 
     public static boolean shouldDoubleCoal(BFBarRecipes barType) {
         if(barType == BFBarRecipes.STEEL_BAR) return false;
-        // 54 -> 27 inv slots + 27 coal bag
-        int coalAfter = Microbot.getVarbitValue(Varbits.BLAST_FURNACE_COAL) + 54;
+        int coalAfter = Microbot.getVarbitValue(Varbits.BLAST_FURNACE_COAL) + (Rs2Equipment.isWearing(ItemID.SMITHING_CAPE, ItemID.SMITHING_CAPET) ? 63 : 54);
         if(coalAfter > 200) return false;
         else if(canFurnaceProcessOre(barType)) return rollForCoal(coalAfter, barType.coalRequired());
         else return true;

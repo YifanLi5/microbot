@@ -32,7 +32,7 @@ public class BFPlugin extends Plugin {
     @Inject
     private OverlayManager overlayManager;
 
-    private BFScript yBFScript;
+    private Script yBFScript;
     public static AtomicBoolean isShutdown = new AtomicBoolean();
 
     @Provides
@@ -42,7 +42,7 @@ public class BFPlugin extends Plugin {
 
     @Override
     protected void startUp() throws Exception {
-        yBFScript = new BFScript(config);
+        yBFScript = new Script(config);
         isShutdown.set(false);
         yBFScript.run();
         Microbot.log("Startup yBlastFurnace");
