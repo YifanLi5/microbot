@@ -1,9 +1,7 @@
 package net.runelite.client.plugins.microbot.yfoo.StateMachine;
-import net.runelite.client.config.Config;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFPlugin;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,10 +10,10 @@ import java.util.function.BooleanSupplier;
 
 public abstract class StateNode {
 
-    protected Script script;
+    protected BFScript script;
     protected LinkedHashMap<Enum<?>, BooleanSupplier> stateSteps;
 
-    public StateNode(Script script) {
+    public StateNode(BFScript script) {
         this.script = script;
         initStateSteps();
         assert this.stateSteps != null;

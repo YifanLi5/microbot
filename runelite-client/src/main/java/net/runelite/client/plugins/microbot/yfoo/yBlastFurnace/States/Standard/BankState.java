@@ -2,7 +2,6 @@ package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard;
 
 import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
-import net.runelite.api.Varbits;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
@@ -17,11 +16,10 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFOverlay;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
 import net.runelite.client.plugins.microbot.yfoo.MicroAction.MicroAction;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.WithdrawOre;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.WithdrawOre2;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -49,14 +47,14 @@ public class BankState extends StateNode {
         return instance;
     }
 
-    public static BankState initInstance(Script script) {
+    public static BankState initInstance(BFScript script) {
         if (instance == null)
             instance = new BankState(script);
         BankState.idled = false;
         return instance;
     }
 
-    public BankState(Script script) {
+    public BankState(BFScript script) {
         super(script);
         BFConfig config = script.config;
         this.withdrawOre = new WithdrawOre(config);
