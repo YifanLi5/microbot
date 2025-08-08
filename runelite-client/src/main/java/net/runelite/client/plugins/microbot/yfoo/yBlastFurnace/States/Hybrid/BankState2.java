@@ -11,7 +11,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 
 import net.runelite.client.plugins.microbot.yfoo.MicroAction.MicroAction;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
@@ -43,13 +43,13 @@ public class BankState2 extends StateNode {
         return instance;
     }
 
-    public static BankState2 initInstance(Script script) {
+    public static BankState2 initInstance(BFScript script) {
         if (instance == null)
             instance = new BankState2(script);
         return instance;
     }
 
-    public BankState2(Script script) {
+    public BankState2(BFScript script) {
         super(script);
         BFConfig config = script.config;
         this.withdrawOre = new WithdrawOre2(config);

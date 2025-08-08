@@ -12,7 +12,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 
 import java.awt.event.KeyEvent;
 import java.util.LinkedHashMap;
@@ -42,7 +42,7 @@ public class RetrieveBarsState extends StateNode {
         return instance;
     }
 
-    public static RetrieveBarsState initInstance(Script script) {
+    public static RetrieveBarsState initInstance(BFScript script) {
         if (instance == null)
             instance = new RetrieveBarsState(script);
         return instance;
@@ -50,7 +50,7 @@ public class RetrieveBarsState extends StateNode {
 
     BFConfig bfConfig;
 
-    public RetrieveBarsState(Script script) {
+    public RetrieveBarsState(BFScript script) {
         super(script);
         this.bfConfig = script.config;
     }

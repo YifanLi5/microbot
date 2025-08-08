@@ -13,7 +13,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableCondition
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util.BFUtils;
 
 import java.awt.event.KeyEvent;
@@ -38,13 +38,13 @@ public class DropOffRocksState extends StateNode {
         return instance;
     }
 
-    public static DropOffRocksState initInstance(Script script) {
+    public static DropOffRocksState initInstance(BFScript script) {
         if (instance == null)
             instance = new DropOffRocksState(script);
         return instance;
     }
 
-    public DropOffRocksState(Script script) {
+    public DropOffRocksState(BFScript script) {
         super(script);
     }
 

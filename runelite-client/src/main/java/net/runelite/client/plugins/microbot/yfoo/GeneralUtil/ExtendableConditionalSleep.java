@@ -1,6 +1,10 @@
 package net.runelite.client.plugins.microbot.yfoo.GeneralUtil;
 
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ExtendableConditionalSleep {
     public static boolean sleep(int sleepTime, Callable<Boolean> successCondition, Callable<Boolean> failCondition, Callable<Boolean> extendCondition) {
@@ -28,4 +32,21 @@ public class ExtendableConditionalSleep {
         }
     }
 
+    public static boolean sleepUntilAnimStops() {
+        AtomicLong lastAnimTs = new AtomicLong(System.currentTimeMillis());
+        Callable<Boolean> successCondition = () -> {
+            long temp = System.currentTimeMillis() - lastAnimTs.get();
+            return temp >= 3000;
+        };
+        Callable<Boolean> extendCondition = () -> {
+            if(Rs2Player.isAnimating()) {
+                lastAnimTs.set(System.currentTimeMillis());
+                return true;
+            }
+            return false;
+        };
+
+        return sleep(5000, successCondition, null, extendCondition);
+
+    }
 }
