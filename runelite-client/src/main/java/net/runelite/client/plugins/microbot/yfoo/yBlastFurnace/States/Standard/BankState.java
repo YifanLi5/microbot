@@ -2,9 +2,9 @@ package net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.Standard;
 
 import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
+import net.runelite.api.Varbits;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -14,13 +14,14 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
-import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFOverlay;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.FillCoalBag;
 import net.runelite.client.plugins.microbot.yfoo.MicroAction.MicroAction;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.WithdrawOre;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.MicroActions.BankState.WithdrawOre2;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -38,8 +39,8 @@ public class BankState extends StateNode {
     private static BankState instance;
     static boolean idled;
 
-    WithdrawOre withdrawOre = new WithdrawOre(config);
-    FillCoalBag fillCoalBag = new FillCoalBag();
+    WithdrawOre withdrawOre;
+    FillCoalBag fillCoalBag;
 
     public static BankState getInstance() {
         if(instance == null) {
@@ -48,15 +49,18 @@ public class BankState extends StateNode {
         return instance;
     }
 
-    public static BankState initInstance(BFScript script) {
+    public static BankState initInstance(Script script) {
         if (instance == null)
             instance = new BankState(script);
         BankState.idled = false;
         return instance;
     }
 
-    public BankState(BFScript script) {
+    public BankState(Script script) {
         super(script);
+        BFConfig config = script.config;
+        this.withdrawOre = new WithdrawOre(config);
+        this.fillCoalBag = new FillCoalBag();
     }
 
     @Override
@@ -94,6 +98,7 @@ public class BankState extends StateNode {
             return true;
         });
         this.stateSteps.put(RestockStates.CHECK_RUN_ENERGY, () -> {
+            Microbot.log("In here!");
             if(!rollForRunRestore(20)) {
                 Microbot.log("Skip stamina");
                 return true;
@@ -133,6 +138,7 @@ public class BankState extends StateNode {
     }
 
     private static boolean rollForRunRestore(int minEnergy) {
+        Microbot.log("Stamina: {}", Rs2Player.hasStaminaActive());
         if (Rs2Player.hasStaminaActive()) {
             return false;
         }
@@ -148,14 +154,13 @@ public class BankState extends StateNode {
     }
 
     private boolean withdrawAndUseStamina() {
-
         Rs2ItemModel staminaPotionItem = Rs2Bank.bankItems().stream()
                 .filter(rs2Item -> rs2Item.getName().toLowerCase().contains(Rs2Potion.getStaminaPotion().toLowerCase()))
                 .min(Comparator.comparingInt(rs2Item -> getDoseFromName(rs2Item.getName())))
                 .orElse(null);
 
         if (staminaPotionItem == null) {
-
+            Microbot.log("No stamina");
             return false;
         }
 

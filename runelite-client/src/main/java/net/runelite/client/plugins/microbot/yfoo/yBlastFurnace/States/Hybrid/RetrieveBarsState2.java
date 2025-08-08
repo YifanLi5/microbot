@@ -12,7 +12,8 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFConfig;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
 
 import java.awt.event.KeyEvent;
 import java.util.LinkedHashMap;
@@ -42,14 +43,17 @@ public class RetrieveBarsState2 extends StateNode {
         return instance;
     }
 
-    public static RetrieveBarsState2 initInstance(BFScript script) {
+    public static RetrieveBarsState2 initInstance(Script script) {
         if (instance == null)
             instance = new RetrieveBarsState2(script);
         return instance;
     }
 
-    public RetrieveBarsState2(BFScript script) {
+    BFConfig config;
+
+    public RetrieveBarsState2(Script script) {
         super(script);
+        this.config = script.config;
     }
 
     @Override
@@ -67,7 +71,6 @@ public class RetrieveBarsState2 extends StateNode {
         this.stateSteps = new LinkedHashMap<>();
         this.stateSteps.put(States.MOVE_TO_DISPENSER, () -> {
             if(config.barType().getNumBarsInDispenser() > 0) {
-                Microbot.log("bars already in dispenser");
                 return true;
             }
             script.sleep(RngUtil.gaussian(400, 200, 0, 1500));

@@ -13,7 +13,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableCondition
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util.BFUtils;
 
 import java.awt.event.KeyEvent;
@@ -38,13 +38,13 @@ public class DropOffRocksState2 extends StateNode {
         return instance;
     }
 
-    public static DropOffRocksState2 initInstance(BFScript script) {
+    public static DropOffRocksState2 initInstance(Script script) {
         if (instance == null)
             instance = new DropOffRocksState2(script);
         return instance;
     }
 
-    public DropOffRocksState2(BFScript script) {
+    public DropOffRocksState2(Script script) {
         super(script);
         this.doubleEmptyChance = RngUtil.randomInclusive(30, 80);
         Microbot.log("Double Empty Chance: " + doubleEmptyChance);

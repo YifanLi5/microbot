@@ -4,7 +4,6 @@ import net.runelite.api.ItemID;
 import net.runelite.api.ObjectID;
 import net.runelite.api.Varbits;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.util.Global;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -13,9 +12,8 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.IdleSleep;
-import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
 import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Util.BFUtils;
 
 import java.awt.event.KeyEvent;
@@ -40,13 +38,13 @@ public class DropOffRocksState extends StateNode {
         return instance;
     }
 
-    public static DropOffRocksState initInstance(BFScript script) {
+    public static DropOffRocksState initInstance(Script script) {
         if (instance == null)
             instance = new DropOffRocksState(script);
         return instance;
     }
 
-    public DropOffRocksState(BFScript script) {
+    public DropOffRocksState(Script script) {
         super(script);
     }
 
@@ -70,7 +68,6 @@ public class DropOffRocksState extends StateNode {
             })) {
                 Rs2GameObject.interact(ObjectID.CONVEYOR_BELT, "Put-ore-on");
                 IdleSleep.idleSleep(1500, 500);
-                Microbot.log("hover??");
                 HoverBoundsUtil.hover("Coal bag");
                 boolean droppedOffOre = ExtendableConditionalSleep.sleep(4000,
                         successCondition,
@@ -85,15 +82,39 @@ public class DropOffRocksState extends StateNode {
             return true;
         });
         this.stateSteps.put(States.DROP_OFF_COAL_BAG, () -> {
-            if(BFUtils.emptyCoalBag()){
-                Rs2GameObject.interact(ObjectID.CONVEYOR_BELT, "Put-ore-on");
-                return ExtendableConditionalSleep.sleep(4000,
-                        successCondition,
-                        null,
-                        extendCondition
-                );
+            if(!BFUtils.emptyCoalBag()) {
+                Microbot.log("Failed empty coalbag 1");
+                return false;
             }
-            Microbot.log("Didnt get coal?");
+            Rs2GameObject.interact(ObjectID.CONVEYOR_BELT, "Put-ore-on");
+            boolean droppedCoal = ExtendableConditionalSleep.sleep(4000,
+                    successCondition,
+                    null,
+                    extendCondition
+            );
+            if(!droppedCoal) {
+                Microbot.log("Failed drop of coal 1");
+                return false;
+            }
+            if(BFUtils.getNumCoalInBag() <= 0) {
+                return true;
+            }
+
+            // For smithing cape
+            if(!BFUtils.emptyCoalBag()) {
+                Microbot.log("Failed empty coalbag 2");
+                return false;
+            }
+            Rs2GameObject.interact(ObjectID.CONVEYOR_BELT, "Put-ore-on");
+            droppedCoal = ExtendableConditionalSleep.sleep(4000,
+                    successCondition,
+                    null,
+                    extendCondition
+            );
+            if(!droppedCoal) {
+                Microbot.log("Failed drop of coal 2");
+                return false;
+            }
             return true;
         });
     }
