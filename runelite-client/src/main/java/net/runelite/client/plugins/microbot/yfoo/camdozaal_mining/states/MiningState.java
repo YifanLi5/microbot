@@ -5,6 +5,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.Global;
+import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -15,22 +16,15 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.CustomWalker;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableConditionalSleep;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNodeV2;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateStepResult;
+import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.Constants;
 
 import java.util.LinkedHashMap;
 
+import static net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.Constants.*;
+
 public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
 
-    private static final String BARRONITE_ROCKS = "Barronite rocks";
-    private static final String MINE = "Mine";
-    private static Rs2WorldArea miningArea = new Rs2WorldArea(2900, 5800, 50, 25, 0);
-    private static WorldPoint[] miningClusters = {
-            new WorldPoint(2927,5819,0),
-            new WorldPoint(2937,5810,0),
-            new WorldPoint(2937,5810,0),
-            new WorldPoint(2913,5807,0),
-            new WorldPoint(2908,5813,0),
-            new WorldPoint(2917,5816,0),
-    };
+
 
     private static MiningState instance;
 
@@ -78,6 +72,10 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
         });
         this.stateSteps.put(MiningStateSteps.INTERACT_VEIN, () -> {
             WallObject barroniteRocks = Rs2GameObject.getWallObject(BARRONITE_ROCKS);
+
+            if(!Rs2Camera.isTileCenteredOnScreen(barroniteRocks.getLocalLocation(), 35.0)) {
+                Rs2Camera.centerTileOnScreen(barroniteRocks.getLocalLocation(), 35.0);
+            }
             Rs2GameObject.interact(barroniteRocks, MINE);
             boolean result = ExtendableConditionalSleep.sleep(3000, Rs2Player::isAnimating, null, Rs2Player::isMoving);
             if(!result) {

@@ -2,6 +2,9 @@ package net.runelite.client.plugins.microbot.yfoo.camdozaal_mining;
 
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
+import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateEventDispatcher;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManagerV2;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.BankingState;
@@ -24,8 +27,8 @@ public class CamdozaalMiningScript extends Script {
         StateManagerV2.addState(BankingState.initInstance(this));
         StateManagerV2.setNextState(StartingState.getInstance());
 
-
-
+        Rs2Antiban.setActivityIntensity(ActivityIntensity.VERY_LOW);
+        Rs2AntibanSettings.naturalMouse = true;
 
         Microbot.enableAutoRunOn = false;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
