@@ -5,7 +5,6 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
-import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.CustomWalker;
@@ -54,6 +53,7 @@ public class BankingState extends StateNodeV2<BankingState.BankingStateSteps> {
 
     public BankingState(Script script) {
         super(script);
+
     }
 
     @Override

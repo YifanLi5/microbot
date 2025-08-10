@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateEventDispatcher;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -31,21 +32,22 @@ public class CamdozaalMiningPlugin extends Plugin {
     private CamdozaalMiningOverlay exampleOverlay;
 
     @Inject
-    CamdozaalMiningScript exampleScript;
+    CamdozaalMiningScript camdozaalMiningScript;
 
 
     @Override
     protected void startUp() throws AWTException {
+        StateEventDispatcher.init();
+        StateEventDispatcher.addSubscriber(exampleOverlay);
+
         if (overlayManager != null) {
             overlayManager.add(exampleOverlay);
-            exampleOverlay.myButton.hookMouseListener();
         }
-        exampleScript.run(config);
+        camdozaalMiningScript.run(config);
     }
 
     protected void shutDown() {
-        exampleScript.shutdown();
+        camdozaalMiningScript.shutdown();
         overlayManager.remove(exampleOverlay);
-        exampleOverlay.myButton.unhookMouseListener();
     }
 }

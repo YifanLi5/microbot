@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.yfoo.camdozaal_mining;
 
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateEventDispatcher;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManagerV2;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.BankingState;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.MiningState;
@@ -24,6 +25,8 @@ public class CamdozaalMiningScript extends Script {
         StateManagerV2.setNextState(StartingState.getInstance());
 
 
+
+
         Microbot.enableAutoRunOn = false;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
@@ -41,6 +44,7 @@ public class CamdozaalMiningScript extends Script {
     
     @Override
     public void shutdown() {
+        StateEventDispatcher.cleanup();
         super.shutdown();
     }
 }

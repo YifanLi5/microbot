@@ -86,8 +86,15 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
             return new StateStepResult<>(MiningStateSteps.SLEEP_UNTIL_COMPLETE, result);
         });
         this.stateSteps.put(MiningStateSteps.SLEEP_UNTIL_COMPLETE, () -> {
+            long start = System.currentTimeMillis();
             ExtendableConditionalSleep.sleepUntilAnimStops();
-            Global.sleepGaussian(5000, 1000);
+            long end = System.currentTimeMillis();
+            long animTime = end - start;
+
+            if(animTime >= 10000) {
+                Global.sleepGaussian(5000, 1000);
+            }
+
             return new StateStepResult<>(MiningStateSteps.COMPLETE, true);
         });
         this.stateSteps.put(MiningStateSteps.COMPLETE, () -> {
