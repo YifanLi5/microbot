@@ -1,6 +1,7 @@
 package net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states;
 
 import net.runelite.api.ItemID;
+import net.runelite.api.ObjectID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -17,15 +18,12 @@ import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateStepResult;
 
 import java.util.LinkedHashMap;
 
+import static net.runelite.api.ItemID.BARRONITE_DEPOSIT;
+import static net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.Constants.*;
+
 public class SmashingState extends StateNodeV2<SmashingState.SmashingStateSteps> {
 
-    public static final String BARRONITE_DEPOSIT = "Barronite Deposit";
-    public static final String BARRONITE_CRUSHER = "Barronite Crusher";
-    public static final String HAMMER = "Hammer";
-    public static final String SMITH = "Smith";
 
-    private static WorldPoint anvilLocation = new WorldPoint(2957, 5807, 0);
-    private static Rs2WorldArea smashArea = new Rs2WorldArea(2954, 5801, 12, 12, 0);
 
     private static SmashingState instance;
     public static SmashingState getInstance() {
@@ -51,7 +49,7 @@ public class SmashingState extends StateNodeV2<SmashingState.SmashingStateSteps>
 
     @Override
     public boolean canRun() throws InterruptedException {
-        return Rs2Inventory.contains(BARRONITE_DEPOSIT);
+        return Rs2Inventory.contains(ItemID.BARRONITE_DEPOSIT);
     }
 
     @Override
@@ -66,7 +64,7 @@ public class SmashingState extends StateNodeV2<SmashingState.SmashingStateSteps>
             return new StateStepResult<>(SmashingStateSteps.GRAB_HAMMER, inArea);
         });
         this.stateSteps.put(SmashingStateSteps.GRAB_HAMMER, () -> {
-            if(!Rs2Inventory.contains(HAMMER)) {
+            if(!Rs2Inventory.contains(ItemID.HAMMER)) {
                 Microbot.log("Picking up hammer.");
                 if(Rs2Inventory.isFull()) {
                     if(!Rs2Inventory.drop(BARRONITE_DEPOSIT)) {
@@ -88,7 +86,7 @@ public class SmashingState extends StateNodeV2<SmashingState.SmashingStateSteps>
             return new StateStepResult<>(SmashingStateSteps.INTERACT_ANVIL, true);
         });
         this.stateSteps.put(SmashingStateSteps.INTERACT_ANVIL, () -> {
-            Rs2GameObject.interact(BARRONITE_CRUSHER, SMITH);
+            Rs2GameObject.interact(ObjectID.BARRONITE_CRUSHER, SMITH);
             boolean result = ExtendableConditionalSleep.sleep(3000, Rs2Player::isAnimating, null, Rs2Player::isMoving);
             if(!result) {
                 Microbot.log("Player did not start smashing.");

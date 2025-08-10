@@ -34,14 +34,13 @@ public class StateManagerV2 {
             return;
         }
         if(!nextState.canRun()) {
-            StateManager.stopScript = true;
+            stopScript = true;
             Microbot.log("Cannot do state: " + nextState.getClass().getSimpleName());
             return;
         }
         boolean succeededState = false;
         for(int i = 0; i < nextState.retries(); i++) {
-            if (StateManager.stopScript) {
-                stopScript = true;
+            if (stopScript) {
                 if(LOGOUT_ON_SCRIPT_STOP) {
                     Rs2Player.logout();
                 }
