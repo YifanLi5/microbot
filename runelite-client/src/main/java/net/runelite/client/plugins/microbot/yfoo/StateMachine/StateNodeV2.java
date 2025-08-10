@@ -44,7 +44,7 @@ public abstract class StateNodeV2<K extends Enum<K>> {
             loopCount += 1;
 
             Microbot.log("Step: %s | Attempt: %d", currentStep.getKey(), attempt);
-
+            StateEventDispatcher.dispatchEvent(this, currentStep.getKey());
             StateStepResult<K> stepResult = currentStep.getValue().get();
             if(stepResult.isSuccess) {
                 K nextStepEnum = stepResult.getNextStepIfSuccess();
