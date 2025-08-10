@@ -117,13 +117,14 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
             return new StateStepResult<>(MiningStateSteps.SLEEP_UNTIL_COMPLETE, result);
         });
         this.stateSteps.put(MiningStateSteps.SLEEP_UNTIL_COMPLETE, () -> {
+            if(RngUtil.boolD100Roll(75)) {
+                Rs2Antiban.moveMouseOffScreen();
+            }
             long start = System.currentTimeMillis();
             ExtendableConditionalSleep.sleepUntilAnimStops();
             long end = System.currentTimeMillis();
             long animTime = end - start;
-            if(RngUtil.boolD100Roll(75)) {
-                Rs2Antiban.moveMouseOffScreen();
-            }
+
 
             if(animTime >= 10000) {
                 Global.sleepGaussian(5000, 1000);
