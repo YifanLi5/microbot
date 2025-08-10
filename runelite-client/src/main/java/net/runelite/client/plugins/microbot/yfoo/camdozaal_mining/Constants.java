@@ -28,12 +28,15 @@ public class Constants {
     public final static String MINE = "Mine";
     public final static Rs2WorldArea miningArea = new Rs2WorldArea(2900, 5800, 50, 25, 0);
     public final static WorldPoint[] miningClusters = {
-            new WorldPoint(2927,5819,0),
-            new WorldPoint(2937,5810,0),
-            new WorldPoint(2937,5810,0),
-            new WorldPoint(2913,5807,0),
-            new WorldPoint(2908,5813,0),
-            new WorldPoint(2917,5816,0),
+            new WorldPoint(2910,5815,0),
+            new WorldPoint(2914,5816,0),
+            new WorldPoint(2919,5819,0),
+            new WorldPoint(2924,5821,0),
+            new WorldPoint(2928,5820,0),
+            new WorldPoint(2940,5810,0),
+            new WorldPoint(2937,5807,0),
+            new WorldPoint(2911,5806,0),
+            new WorldPoint(2906,5812,0),
     };
 
     public final static String BARRONITE_DEPOSIT = "Barronite Deposit";
