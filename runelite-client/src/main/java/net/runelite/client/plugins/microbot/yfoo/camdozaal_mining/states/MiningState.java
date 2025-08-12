@@ -89,7 +89,7 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
                     return noNearbyPlayers;
                 }).findFirst().orElse(miningClusters[0]);
 
-                if(openPosition.distanceTo(Rs2Player.getRs2WorldPoint().getWorldPoint()) >= 5) {
+                if(openPosition.distanceTo(Rs2Player.getRs2WorldPoint().getWorldPoint()) >= 10) {
                     Microbot.log("Moving to new cluster @ %s", openPosition);
                     CustomWalker.walkTo(openPosition, 3);
                 } else {
