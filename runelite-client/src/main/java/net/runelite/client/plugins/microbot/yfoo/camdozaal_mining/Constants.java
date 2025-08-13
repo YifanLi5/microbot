@@ -20,7 +20,7 @@ public class Constants {
             ItemID.ANCIENT_TREATISE
     };
 
-    public final static Predicate<Rs2ItemModel> keepPredicate = item -> item.getName().contains("pickaxe") || item.getId() == ItemID.HAMMER || item.getId() == ItemID.BARRONITE_SHARDS;
+    public final static Predicate<Rs2ItemModel> keepPredicate = item -> item.getName().contains("pickaxe") || item.getId() == ItemID.HAMMER || item.getId() == ItemID.BARRONITE_SHARDS || item.getId() == ItemID.LAMP;
 
     public final static WorldPoint bankLocation = new WorldPoint(2977, 5798, 0);
 
