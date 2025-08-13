@@ -13,12 +13,12 @@ import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.States.StartingSt
 
 import java.util.concurrent.TimeUnit;
 
-public class Script extends net.runelite.client.plugins.microbot.Script {
+public class BFScript extends net.runelite.client.plugins.microbot.Script {
 
     public static final String version = "0.01";
     public BFConfig config;
 
-    public Script(BFConfig config) {
+    public BFScript(BFConfig config) {
         this.config = config;
     }
 

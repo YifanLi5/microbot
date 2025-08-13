@@ -14,7 +14,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableCondition
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.HoverBoundsUtil;
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNode;
-import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.Script;
+import net.runelite.client.plugins.microbot.yfoo.yBlastFurnace.BFScript;
 
 import java.util.LinkedHashMap;
 
@@ -35,13 +35,13 @@ public class RefillCofferState extends StateNode {
         return instance;
     }
 
-    public static RefillCofferState initInstance(Script script) {
+    public static RefillCofferState initInstance(BFScript script) {
         if (instance == null)
             instance = new RefillCofferState(script);
         return instance;
     }
 
-    public RefillCofferState(Script script) {
+    public RefillCofferState(BFScript script) {
         super(script);
     }
 
