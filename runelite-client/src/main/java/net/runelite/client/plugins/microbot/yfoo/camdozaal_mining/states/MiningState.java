@@ -22,10 +22,7 @@ import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNodeV2;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateStepResult;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.Constants;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.Constants.*;
@@ -33,7 +30,7 @@ import static net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.Constan
 public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
 
 
-
+    private WorldPoint selectedBarroniteVein;
     private static MiningState instance;
 
     public static MiningState getInstance() {
@@ -69,34 +66,22 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
         this.stateSteps.put(MiningStateSteps.WALK_TO_VEINS, () -> {
             if(!miningArea.contains(Rs2Player.getRs2WorldPoint().getWorldPoint())) {
                 Microbot.log("Not in mining area. Walking into it.");
-                WorldPoint p = miningClusters[Rs2Random.between(0, miningClusters.length)];
-                CustomWalker.walkTo(p, 5);
+                this.selectedBarroniteVein = miningClusters.get(Rs2Random.between(0, miningClusters.size()));
             } else {
-                Microbot.log("In mining area, checking players");
-                List<WorldPoint> playerPositions = Rs2Player.getPlayers(p -> miningArea
-                        .contains(p.getWorldLocation()))
-                        .map(ActorModel::getWorldLocation)
-                        .collect(Collectors.toList());
 
-                WorldPoint openPosition = Arrays.stream(miningClusters).filter(worldPoint -> {
-                    boolean noNearbyPlayers = true;
-                    for(WorldPoint position: playerPositions) {
-                        if(position.distanceTo(worldPoint) < 2) {
-                            noNearbyPlayers = false;
-                            break;
-                        }
-                    }
-                    return noNearbyPlayers;
-                }).findFirst().orElse(miningClusters[0]);
+                Microbot.log("In mining area, getting unpopulated cluster");
+                this.selectedBarroniteVein = getRandomUnpopulatedCluster();
 
-                if(openPosition.distanceTo(Rs2Player.getRs2WorldPoint().getWorldPoint()) >= 10) {
-                    Microbot.log("Moving to new cluster @ %s", openPosition);
-                    CustomWalker.walkTo(openPosition, 3);
-                } else {
-                    Microbot.log("Staying with current cluster");
-                }
+
 
             }
+            if(this.selectedBarroniteVein.distanceTo(Rs2Player.getRs2WorldPoint().getWorldPoint()) >= 3) {
+                Microbot.log("Moving to new cluster @ %s", this.selectedBarroniteVein);
+                CustomWalker.walkTo(this.selectedBarroniteVein, 3);
+            } else {
+                Microbot.log("Staying with current cluster");
+            }
+
             boolean inArea = miningArea.contains(Rs2Player.getRs2WorldPoint().getWorldPoint());
             if(!inArea) {
                 Microbot.log("Player not in area.");
@@ -104,7 +89,12 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
             return new StateStepResult<>(MiningStateSteps.INTERACT_VEIN, inArea);
         });
         this.stateSteps.put(MiningStateSteps.INTERACT_VEIN, () -> {
-            WallObject barroniteRocks = Rs2GameObject.getWallObject(BARRONITE_ROCKS);
+            WallObject barroniteRocks;
+            if(this.selectedBarroniteVein != null) {
+                barroniteRocks = Rs2GameObject.getWallObject(BARRONITE_ROCKS, this.selectedBarroniteVein);
+            } else {
+                barroniteRocks = Rs2GameObject.getWallObject(BARRONITE_ROCKS);
+            }
 
             if(!Rs2Camera.isTileCenteredOnScreen(barroniteRocks.getLocalLocation(), 35.0)) {
                 Rs2Camera.centerTileOnScreen(barroniteRocks.getLocalLocation(), 35.0);
@@ -127,7 +117,7 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
 
 
             if(animTime >= 10000) {
-                Global.sleepGaussian(5000, 1000);
+                Global.sleepGaussian(3000, 1000);
             }
 
             return new StateStepResult<>(MiningStateSteps.COMPLETE, true);
