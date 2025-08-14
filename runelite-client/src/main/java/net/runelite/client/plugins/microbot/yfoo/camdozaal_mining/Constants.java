@@ -62,15 +62,15 @@ public class Constants {
         String debug = playerPositions.stream().map(wp -> wp.toString()). collect(Collectors.joining(", "));
         Microbot.log("Player locations: %s", debug);
 
-        boolean nearbyPlayer = false;
+        boolean nearbyPlayerToMe = false;
         WorldPoint myPosition = Rs2Player.getWorldLocation();
         for(WorldPoint pPosition: playerPositions) {
             if(pPosition.distanceTo(myPosition) <= 3) {
-                nearbyPlayer = true;
+                nearbyPlayerToMe = true;
                 break;
             }
         }
-        if(!nearbyPlayer) return getClosestCluster();
+        if(!nearbyPlayerToMe) return getClosestCluster();
 
         Collections.shuffle(miningClusters);
         return miningClusters.stream().filter(worldPoint -> {
