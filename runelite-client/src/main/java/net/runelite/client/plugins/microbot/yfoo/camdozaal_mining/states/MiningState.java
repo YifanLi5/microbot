@@ -20,6 +20,7 @@ import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.ExtendableCondition
 import net.runelite.client.plugins.microbot.yfoo.GeneralUtil.RngUtil;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateNodeV2;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateStepResult;
+import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.CamdozaalMiningConfig;
 import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.Constants;
 
 import java.util.*;
@@ -32,6 +33,7 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
 
     private WorldPoint selectedBarroniteVein;
     private static MiningState instance;
+    private boolean dropDeposits;
 
     public static MiningState getInstance() {
         if(instance == null) {
@@ -40,9 +42,9 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
         return instance;
     }
 
-    public static MiningState initInstance(Script script) {
+    public static MiningState initInstance(Script script, CamdozaalMiningConfig config) {
         if(instance == null)
-            instance = new MiningState(script);
+            instance = new MiningState(script, config);
         return instance;
     }
 
@@ -50,8 +52,10 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
         WALK_TO_VEINS, INTERACT_VEIN, SLEEP_UNTIL_COMPLETE, COMPLETE
     }
 
-    public MiningState(Script script) {
+    public MiningState(Script script, CamdozaalMiningConfig config) {
         super(script);
+        this.dropDeposits = config.dropDeposits();
+        Microbot.log("dropDeposits: " + dropDeposits);
     }
 
     @Override
@@ -68,12 +72,8 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
                 Microbot.log("Not in mining area. Walking into it.");
                 this.selectedBarroniteVein = miningClusters.get(Rs2Random.between(0, miningClusters.size()));
             } else {
-
                 Microbot.log("In mining area, getting unpopulated cluster");
                 this.selectedBarroniteVein = getRandomUnpopulatedCluster();
-
-
-
             }
             if(this.selectedBarroniteVein.distanceTo(Rs2Player.getRs2WorldPoint().getWorldPoint()) >= 3) {
                 Microbot.log("Moving to new cluster @ %s", this.selectedBarroniteVein);
@@ -85,6 +85,7 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
             boolean inArea = miningArea.contains(Rs2Player.getRs2WorldPoint().getWorldPoint());
             if(!inArea) {
                 Microbot.log("Player not in area.");
+                return new StateStepResult<>(MiningStateSteps.WALK_TO_VEINS, false);
             }
             return new StateStepResult<>(MiningStateSteps.INTERACT_VEIN, inArea);
         });
@@ -130,8 +131,9 @@ public class MiningState extends StateNodeV2<MiningState.MiningStateSteps> {
 
     @Override
     public StateNodeV2<?> nextState() throws InterruptedException {
-        if(Rs2Inventory.isFull())
-            return SmashingState.getInstance();
+        if(Rs2Inventory.isFull() || Rs2Inventory.emptySlotCount() < 5) {
+            return dropDeposits ? DropState.getInstance() : SmashingState.getInstance();
+        }
         else return MiningState.getInstance();
     }
 

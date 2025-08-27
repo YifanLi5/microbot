@@ -19,8 +19,10 @@ import java.awt.*;
 )
 @Slf4j
 public class CamdozaalMiningPlugin extends Plugin {
+
     @Inject
     private CamdozaalMiningConfig config;
+
     @Provides
     CamdozaalMiningConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(CamdozaalMiningConfig.class);

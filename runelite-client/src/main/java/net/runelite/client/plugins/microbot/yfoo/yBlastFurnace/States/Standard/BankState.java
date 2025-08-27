@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 public class BankState extends StateNode {
 
     enum RestockStates {
-        OPEN_BANK, DEPOSIT_BARS, CHECK_RUN_ENERGY, WITHDRAW_ORE, COMPLETE
+        OPEN_BANK, DEPOSIT_BARS, GET_COAL_BAG, CHECK_RUN_ENERGY, WITHDRAW_ORE, COMPLETE
     }
 
     private static BankState instance;
@@ -95,8 +95,11 @@ public class BankState extends StateNode {
 
             return true;
         });
+        this.stateSteps.put(RestockStates.GET_COAL_BAG, () -> {
+            if(Rs2Inventory.contains(ItemID.COAL_BAG_12019)) return true;
+            return Rs2Bank.withdrawOne(ItemID.COAL_BAG_12019);
+        });
         this.stateSteps.put(RestockStates.CHECK_RUN_ENERGY, () -> {
-            Microbot.log("In here!");
             if(!rollForRunRestore(20)) {
                 Microbot.log("Skip stamina");
                 return true;
@@ -136,7 +139,7 @@ public class BankState extends StateNode {
     }
 
     private static boolean rollForRunRestore(int minEnergy) {
-        Microbot.log("Stamina: {}", Rs2Player.hasStaminaActive());
+        Microbot.log("has_stamina: %s", Rs2Player.hasStaminaActive());
         if (Rs2Player.hasStaminaActive()) {
             return false;
         }

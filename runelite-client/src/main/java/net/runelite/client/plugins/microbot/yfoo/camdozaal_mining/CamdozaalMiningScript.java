@@ -7,24 +7,21 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateEventDispatcher;
 import net.runelite.client.plugins.microbot.yfoo.StateMachine.StateManagerV2;
-import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.BankingState;
-import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.MiningState;
-import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.SmashingState;
-import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.StartingState;
+import net.runelite.client.plugins.microbot.yfoo.camdozaal_mining.states.*;
 
 import java.util.concurrent.TimeUnit;
 
 public class CamdozaalMiningScript extends Script {
 
-    public static boolean test = false;
 
     public boolean run(CamdozaalMiningConfig config) {
         Microbot.log("*************** Camdozaal Mining Script ***************");
         StateManagerV2.init();
         StateManagerV2.addState(StartingState.initInstance(this));
-        StateManagerV2.addState(MiningState.initInstance(this));
+        StateManagerV2.addState(MiningState.initInstance(this, config));
         StateManagerV2.addState(SmashingState.initInstance(this));
         StateManagerV2.addState(BankingState.initInstance(this));
+        StateManagerV2.addState(DropState.initInstance(this));
         StateManagerV2.setNextState(StartingState.getInstance());
 
         Rs2Antiban.setActivityIntensity(ActivityIntensity.VERY_LOW);
