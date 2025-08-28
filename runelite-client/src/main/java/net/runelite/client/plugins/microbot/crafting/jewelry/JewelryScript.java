@@ -73,8 +73,12 @@ public class JewelryScript extends Script {
                         Rs2Bank.preHover();
                         break;
                     case BANKING:
-                        boolean isBankOpen = Rs2Bank.isNearBank(plugin.getCraftingLocation().getBankLocation(),15) ? Rs2Bank.useBank() : Rs2Bank.walkToBankAndUseBank();
-                        
+
+
+                        boolean isInScene = plugin.getCraftingLocation().getBankLocation().getWorldPoint().isInScene(Microbot.getClient());
+                        boolean isBankOpen = Rs2Bank.isNearBank(plugin.getCraftingLocation().getBankLocation(),15) || isInScene ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank();;
+
+
                         if (!isBankOpen || !Rs2Bank.isOpen()) return;
                         
                         boolean shouldCutGems = plugin.getJewelry().getGem() != Gem.NONE 
